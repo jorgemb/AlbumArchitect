@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name": "fmt",
-      "version>=": "10.1.1"
+      "version>=": "9.1.0#1"
     }
   ],
   "default-features": [],
@@ -14,7 +14,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "3.4.0"
+          "version>=": "3.3.1"
         }
       ]
     }
