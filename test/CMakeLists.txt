@@ -11,15 +11,18 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(AlbumArchitect_test source/AlbumArchitect_test.cpp)
+add_executable(AlbumArchitect_test source/AlbumArchitect_test.cpp
+        source/album/photo_test.cpp)
 target_link_libraries(
-    AlbumArchitect_test PRIVATE
-    AlbumArchitect_lib
-    Catch2::Catch2WithMain
+        AlbumArchitect_test PRIVATE
+        AlbumArchitect_lib
+        Catch2::Catch2WithMain
 )
 target_compile_features(AlbumArchitect_test PRIVATE cxx_std_20)
 
-catch_discover_tests(AlbumArchitect_test)
+catch_discover_tests(AlbumArchitect_test
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/test/"
+)
 
 # ---- End-of-file commands ----
 

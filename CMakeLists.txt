@@ -18,6 +18,9 @@ include(cmake/variables.cmake)
 add_library(
     AlbumArchitect_lib OBJECT
     source/lib.cpp
+        source/album/photo.cpp
+        source/album/photo.h
+        source/album/album_exception.h
 )
 
 target_include_directories(
@@ -29,7 +32,13 @@ target_include_directories(
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 
 find_package(fmt REQUIRED)
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt)
+find_package(Boost REQUIRED COMPONENTS thread filesystem)
+find_package(OpenImageIO CONFIG REQUIRED)
+find_package(imageinfo CONFIG REQUIRED)
+find_package(glog CONFIG REQUIRED)
+
+target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt imageinfo::imageinfo Boost::filesystem Boost::thread Boost::headers)
+target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog)
 
 # ---- Declare executable ----
 

@@ -2,8 +2,7 @@
 
 #include "lib.hpp"
 
-TEST_CASE("Name is AlbumArchitect", "[library]")
-{
+TEST_CASE("Name is AlbumArchitect", "[library]") {
   auto const lib = library {};
   REQUIRE(lib.name == "AlbumArchitect");
 }
