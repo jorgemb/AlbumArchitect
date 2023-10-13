@@ -15,9 +15,18 @@
       "version>=": "2023-01-31"
     },
     {
+      "name": "lcms",
+      "version>=": "2.14"
+    },
+    {
+      "name": "opencv",
+      "version>=": "4.8.0",
+      "features": ["contrib"]
+    },
+    {
       "name": "openimageio",
       "version>=": "2.4.14.0#2",
-      "features": ["opencv", "libheif"]
+      "features": ["opencv", "libheif", "gif", "webp", "libraw", "openjpeg", "ffmpeg", "freetype"]
     }
   ],
   "default-features": [],
@@ -27,7 +36,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "3.3.1"
+          "version>=": "3.4.0"
         }
       ]
     }

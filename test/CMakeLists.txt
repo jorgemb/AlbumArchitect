@@ -16,7 +16,10 @@ add_executable(AlbumArchitect_test source/AlbumArchitect_test.cpp
 target_link_libraries(
         AlbumArchitect_test PRIVATE
         AlbumArchitect_lib
-        Catch2::Catch2WithMain
+        Catch2::Catch2
+        OpenImageIO::OpenImageIO
+        opencv_core
+        Boost::headers
 )
 target_compile_features(AlbumArchitect_test PRIVATE cxx_std_20)
 

@@ -6,40 +6,42 @@
 
 #include "photo.h"
 
+#include <OpenImageIO/imagebuf.h>
 #include <glog/logging.h>
-#include <imageinfo.hpp>
 
 namespace album_architect {
-auto Photo::load(const std::filesystem::path& path) -> std::optional<Photo> {
+
+auto Photo::load(const std::filesystem::path& path) -> std::unique_ptr<Photo> {
   // Check if path exists
   if (!exists(path)) {
     LOG(ERROR) << "Path doesn't exist: " << path;
     return {};
   }
 
-  // Get information about the photo
-  auto info = getImageInfo<IIFilePathReader>(path.string());
-  if (info.getErrorCode() != II_ERR_OK) {
+  // Load the photo
+  auto image = OIIO::ImageBuf(path.string());
+  if (!image.initialized()) {
     // Error while reading image
     LOG(ERROR) << "Couldn't get image information for: " << path
-               << ". Error: " << info.getErrorMsg();
+               << ". Error: " << image.geterror();
     return {};
   }
 
-  // Create photo
-  return std::make_optional(Photo(path, info.getWidth(), info.getHeight()));
+  return std::unique_ptr<Photo>(new Photo(path, std::move(image)));
 }
+
 auto Photo::get_path() const -> const std::filesystem::path& {
   return m_path;
 }
 auto Photo::get_width() const -> int64_t {
-  return m_width;
+  return m_image.spec().width;
 }
 auto Photo::get_height() const -> int64_t {
-  return m_height;
+  return m_image.spec().height;
 }
-Photo::Photo(std::filesystem::path  path, int64_t width, int64_t height)
+Photo::Photo(std::filesystem::path path,
+             OIIO::ImageBuf image)
     : m_path(std::move(path))
-    , m_width(width)
-    , m_height(height) {}
+    , m_image(std::move(image)) {}
+
 }  // namespace album_architect

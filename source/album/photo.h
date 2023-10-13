@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <openimageio/imagebuf.h>
 
 namespace album_architect
 {
@@ -16,21 +17,31 @@ public:
   /// Tries to create a new photo from the given path. Returns
   /// \param path
   /// \return
-  static auto load(const std::filesystem::path& path) -> std::optional<Photo>;
+  static auto load(const std::filesystem::path& path) -> std::unique_ptr<Photo>;
 
-  /// \return Path of the photo
   auto get_path() const -> const std::filesystem::path&;
   auto get_width() const -> int64_t;
   auto get_height() const -> int64_t;
-private:
-  /// Photo can only be created via the load method
-  Photo(std::filesystem::path path, int64_t width, int64_t height);
 
+  /// Destructor
+  virtual ~Photo() = default;
+
+  // Constructors
+  Photo(const Photo& other) = default;
+  Photo(Photo&& other) noexcept = default;
+  auto operator=(const Photo& other) -> Photo& = default;
+  auto operator=(Photo&& other) noexcept -> Photo& = default;
+
+private:
   /// Path of the photo
   std::filesystem::path m_path;
 
-  /// Dimensions of the photo
-  int64_t m_width, m_height;
+  /// Internal photo
+  OIIO::ImageBuf m_image;
+
+  Photo(std::filesystem::path path,
+        OIIO::ImageBuf  image);
+
 };
 
 

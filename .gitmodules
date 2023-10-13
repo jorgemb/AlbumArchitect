@@ -1,0 +1,3 @@
+[submodule "test/sample-images"]
+	path = test/sample-images
+	url = https://github.com/ImageGlass/sample-images.git
