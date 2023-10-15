@@ -7,6 +7,7 @@
 
 #include <album/photo.h>
 #include <boost/algorithm/string.hpp>
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include <glog/logging.h>
 
@@ -31,7 +32,7 @@ auto load_test_data() -> std::vector<TestImageData> {
     return {};
   }
 
-  auto result = std::vector<TestImageData>{};
+  auto result = std::vector<TestImageData> {};
 
   // Parse the information within the test data
   auto line = std::string();
@@ -61,13 +62,13 @@ auto load_test_data() -> std::vector<TestImageData> {
 
     // Try to get the hashes
     for (auto&& hash : elements | views::drop(3)) {
-      if(!test_element.average_hash){
+      if (!test_element.average_hash) {
         test_element.average_hash = std::move(hash);
-      }else if(!test_element.p_hash){
+      } else if (!test_element.p_hash) {
         test_element.p_hash = std::move(hash);
-      }else if(!test_element.color_moment_hash){
+      } else if (!test_element.color_moment_hash) {
         test_element.color_moment_hash = std::move(hash);
-      } else if(!test_element.mh_hash){
+      } else if (!test_element.mh_hash) {
         test_element.mh_hash = std::move(hash);
       } else {
         LOG(WARNING) << "Extra element on line: " << line;
@@ -88,24 +89,57 @@ TEST_CASE("Invalid photo", "[album][photo]") {
   std::cout << std::filesystem::current_path() << '\n';
 }
 
-TEST_CASE("Load sample photos", "[album][photo]"){
+TEST_CASE("Load sample photos", "[album][photo]") {
   // Get test data
   auto test_data = load_test_data();
   REQUIRE_FALSE(test_data.empty());
 
   // Try getting information from each element
-  auto loaded_photos = size_t{};
-  for(const auto &test_element: test_data){
+  auto loaded_photos = size_t {};
+  for (const auto& test_element : test_data) {
     INFO("Trying file: " << test_element.path);
     auto photo = Photo::load(test_element.path);
     CHECK_FALSE(photo == nullptr);
 
-    if(photo){
+    if (photo) {
       loaded_photos++;
+
+      // Check each of the hashes
+      if (test_element.average_hash) {
+        auto test_hash = album_architect::Hash<cv::img_hash::AverageHash> {
+            album_architect::from_hex_to_cv<uint8_t>(
+                test_element.average_hash.value())};
+        auto calculated_hash =
+            photo->calculate_hash<cv::img_hash::AverageHash>();
+        auto difference =
+            album_architect::compare_hashes(test_hash, calculated_hash);
+        REQUIRE(difference == Catch::Approx(0.0));
+      }
+
+      if (test_element.p_hash) {
+        auto test_hash = album_architect::Hash<cv::img_hash::PHash> {
+            album_architect::from_hex_to_cv<uint8_t>(
+                test_element.p_hash.value())};
+        auto calculated_hash = photo->calculate_hash<cv::img_hash::PHash>();
+        auto difference = album_architect::compare_hashes(test_hash, calculated_hash);
+        REQUIRE(difference == Catch::Approx(0.0));
+      }
     }
   }
 
   // Check how many photos worked alright
   INFO("Loaded " << test_data.size() << " sample images");
   REQUIRE(loaded_photos == test_data.size());
+}
+
+TEST_CASE("Convert from Hex to Mat", "[album][photo]") {
+  const auto val1_vector = std::vector<uint8_t> {10, 45, 33, 140};
+  auto val1 = cv::Mat {};
+  cv::transpose(val1_vector, val1);
+  const auto val1_str = "0a2d218c"s;
+
+  auto result1 = album_architect::from_hex_to_cv<uint8_t>(val1_str);
+  auto equal = std::equal(
+      val1.begin<uint8_t>(), val1.end<uint8_t>(), result1.begin<uint8_t>());
+  REQUIRE(equal);
 }

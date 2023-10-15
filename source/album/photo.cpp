@@ -2,12 +2,16 @@
 // Created by jorge on 11/10/2023.
 //
 
+#include <iomanip>
+#include <sstream>
 #include <utility>
 
 #include "photo.h"
 
-#include <OpenImageIO/imagebuf.h>
 #include <glog/logging.h>
+#include <opencv2/img_hash.hpp>
+#include <openimageio/imagebuf.h>
+#include <openimageio/imagebufalgo.h>
 
 namespace album_architect {
 
@@ -39,9 +43,31 @@ auto Photo::get_width() const -> int64_t {
 auto Photo::get_height() const -> int64_t {
   return m_image.spec().height;
 }
-Photo::Photo(std::filesystem::path path,
-             OIIO::ImageBuf image)
+Photo::Photo(std::filesystem::path path, OIIO::ImageBuf image)
     : m_path(std::move(path))
     , m_image(std::move(image)) {}
+
+/// Helper function for calculating a specific hash
+/// \tparam T
+/// \param output
+/// \param input
+/// \return
+template<class T>
+  requires std::is_base_of_v<cv::img_hash::ImgHashBase, T>
+auto calculate_hash(cv::InputArray input, cv::OutputArray output) -> void {
+  auto hasher = T::create();
+  hasher->compute(input, output);
+}
+
+void Photo::load_opencv() {
+  if (m_image_cv.empty()) {
+    m_image.read(0, 0, /*force=*/true);
+    auto is_ok = OIIO::ImageBufAlgo::to_OpenCV(m_image_cv, m_image);
+
+    LOG_IF(ERROR, !is_ok)
+        << "Couldn't create OpenCV image from loaded image. Error: "
+        << OIIO::geterror();
+  }
+}
 
 }  // namespace album_architect
