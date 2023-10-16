@@ -69,5 +69,9 @@ void Photo::load_opencv() {
         << OIIO::geterror();
   }
 }
+auto Photo::get_cv_mat() -> cv::Mat {
+  load_opencv();
+  return m_image_cv;
+}
 
 }  // namespace album_architect

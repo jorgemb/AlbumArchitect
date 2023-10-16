@@ -73,6 +73,9 @@ public:
   /// Destructor
   virtual ~Photo() = default;
 
+  /// Conversion operator to cv::Mat
+  auto get_cv_mat() -> cv::Mat;
+
   // Constructors and assignment
   Photo(const Photo& other) = default;
   Photo(Photo&& other) noexcept = default;
