@@ -72,7 +72,7 @@ public:
 
   /// Tries to detect the faces from within the photo
   /// \return
-  auto get_faces() -> std::vector<cv::Rect>;
+  auto get_faces() -> std::vector<cv::Rect2f>;
 
   /// Destructor
   virtual ~Photo() = default;

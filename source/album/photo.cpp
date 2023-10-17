@@ -77,9 +77,8 @@ auto Photo::get_cv_mat() -> const cv::Mat& {
   load_opencv();
   return m_image_cv;
 }
-auto Photo::get_faces() -> std::vector<cv::Rect> {
-  auto classifier =
-      FaceClassifier::get_cascade_classifier(HaarCascade::frontal_face);
+auto Photo::get_faces() -> std::vector<cv::Rect2f> {
+  auto face_detector = FaceClassifier::get_face_detector();
 
   // Convert to gray and get faces
   load_opencv();
@@ -87,30 +86,25 @@ auto Photo::get_faces() -> std::vector<cv::Rect> {
   // TODO: Get configuration details from Config
 
   // Check if scaling is required
-  const auto max_width = 600.0;
-  double const scale = max_width / m_image_cv.size().width;
-  const auto requires_scaling = scale < 1.0;
+  const auto max_width = 800.0F;
+  const auto scale =
+      std::min(max_width / static_cast<float>(m_image_cv.size().width), 1.0F);
 
-  auto gray = cv::Mat {};
-  cv::cvtColor(m_image_cv, gray, cv::COLOR_BGR2GRAY);
-  if (requires_scaling) {
-    cv::resize(gray, gray, cv::Size(), scale, scale);
-  }
+  auto target = cv::Mat {};
+  cv::resize(m_image_cv, target, cv::Size(), scale, scale);
 
-  auto faces = std::vector<cv::Rect> {};
-  classifier->detectMultiScale(gray, faces);
+  // Detect faces
+  auto detected_faces = cv::Mat {};
+  face_detector->setInputSize(target.size());
+  face_detector->detect(target, detected_faces);
 
-  // Resize rects
-  if (requires_scaling) {
-    std::for_each(faces.begin(),
-                  faces.end(),
-                  [scale](auto& face)
-                  {
-                    face.x /= scale;
-                    face.y /= scale;
-                    face.width /= scale;
-                    face.height /= scale;
-                  });
+  // Extract faces as rects
+  auto faces = std::vector<cv::Rect2f> {};
+  for (auto i = 0; i < detected_faces.rows; ++i) {
+    faces.emplace_back(detected_faces.at<float>(i, 0) / scale,
+                       detected_faces.at<float>(i, 1) / scale,
+                       detected_faces.at<float>(i, 2) / scale,
+                       detected_faces.at<float>(i, 3) / scale);
   }
 
   return faces;

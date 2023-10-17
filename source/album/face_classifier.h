@@ -6,23 +6,16 @@
 #define ALBUMARCHITECT_FACECLASSIFIER_H
 
 #include <utility>
-#include <opencv2/face.hpp>
+#include <opencv2/objdetect.hpp>
 
 namespace album_architect {
 
-enum class HaarCascade{
-  frontal_face,
-  full_body,
-  profile_face,
-};
 
 /// Manages getting each of the available classifiers
 class FaceClassifier {
 public:
-  /// Returns a loaded classifier
-  /// \param type
-  /// \return
-  static auto get_cascade_classifier(HaarCascade type) -> std::shared_ptr<cv::CascadeClassifier>;
+  /// Tries to load the YN face detector
+  static auto get_face_detector() -> std::shared_ptr<cv::FaceDetectorYN>;
 };
 
 }  // namespace album_architect
