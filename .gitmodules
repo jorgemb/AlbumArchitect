@@ -1,3 +1,6 @@
 [submodule "test/sample-images"]
 	path = test/sample-images
 	url = https://github.com/ImageGlass/sample-images.git
+[submodule "3rdparty/opencv_zoo"]
+	path = 3rdparty/opencv_zoo
+	url = https://github.com/opencv/opencv_zoo

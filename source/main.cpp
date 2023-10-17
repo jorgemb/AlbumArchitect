@@ -14,8 +14,6 @@ auto main() -> int {
   auto file = "test/sample-images/Samples/HEIC/IMG_0378.HEIC"s;
   auto photo = album_architect::Photo::load(file);
 
-  auto faces = photo->get_faces();
-  std::cout << "Found: " << faces.size() << " faces\n";
 
   auto original = photo->get_cv_mat();
 
