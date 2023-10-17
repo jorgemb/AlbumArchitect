@@ -14,6 +14,7 @@
 using album_architect::Photo;
 using namespace std::string_literals;
 namespace views = std::ranges::views;
+namespace fs = std::filesystem;
 
 /// Holds data about a test image
 struct TestImageData {
@@ -47,7 +48,7 @@ auto load_test_data() -> std::vector<TestImageData> {
     // Try getting each of the elements
     auto test_element = TestImageData {};
     if (elements.size() >= 3) {
-      test_element.path = std::filesystem::path(elements[0]);
+      test_element.path = fs::path(elements[0]);
       try {
         test_element.width = std::stoull(elements[1]);
         test_element.height = std::stoull(elements[2]);
@@ -86,7 +87,7 @@ TEST_CASE("Invalid photo", "[album][photo]") {
   auto invalid_photo = Photo::load("not_a_path.jpeg");
   REQUIRE_FALSE(invalid_photo);
 
-  std::cout << std::filesystem::current_path() << '\n';
+  std::cout << fs::current_path() << '\n';
 }
 
 TEST_CASE("Load sample photos", "[album][photo]") {
@@ -130,6 +131,15 @@ TEST_CASE("Load sample photos", "[album][photo]") {
   // Check how many photos worked alright
   INFO("Loaded " << test_data.size() << " sample images");
   REQUIRE(loaded_photos == test_data.size());
+}
+
+TEST_CASE("Detect faces", "[album][photo]"){
+  const auto image_path = fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
+  auto photo = Photo::load(image_path);
+
+  const auto expected_faces = 6;
+  auto faces = photo->get_faces();
+  REQUIRE(faces.size() == expected_faces);
 }
 
 TEST_CASE("Convert from Hex to Mat", "[album][photo]") {

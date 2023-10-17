@@ -6,9 +6,9 @@
 #define ALBUMARCHITECT_PHOTO_H
 
 #include <filesystem>
+#include <limits>
 #include <optional>
 #include <ranges>
-#include <limits>
 
 #include <boost/algorithm/hex.hpp>
 #include <opencv2/core/mat.hpp>
@@ -70,11 +70,17 @@ public:
     return Hash<T> {result};
   }
 
+  /// Tries to detect the faces from within the photo
+  /// \return
+  auto get_faces() -> std::vector<cv::Rect>;
+
   /// Destructor
   virtual ~Photo() = default;
 
-  /// Conversion operator to cv::Mat
-  auto get_cv_mat() -> cv::Mat;
+#ifdef _DEBUG
+  /// Get the internal opencv2 representation
+  auto get_cv_mat() -> const cv::Mat&;
+#endif
 
   // Constructors and assignment
   Photo(const Photo& other) = default;
@@ -88,7 +94,7 @@ private:
 
   /// Internal photo
   OIIO::ImageBuf m_image;
-  cv::Mat m_image_cv;
+  mutable cv::Mat m_image_cv;
 
   /// Default constructor
   Photo(std::filesystem::path path, OIIO::ImageBuf image);
@@ -104,8 +110,7 @@ auto from_hex_to_cv(std::string_view hex_string) -> cv::Mat {
   std::vector<T> values;
   boost::algorithm::unhex(hex_string, std::back_insert_iterator(values));
 
-
-  auto result = cv::Mat{};
+  auto result = cv::Mat {};
   cv::transpose(cv::Mat(values, true), result);
   return result;
 }

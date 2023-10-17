@@ -27,6 +27,11 @@ catch_discover_tests(AlbumArchitect_test
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/test/"
 )
 
+# Add required files for testing
+add_custom_command(TARGET AlbumArchitect_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/data/ ${CMAKE_CURRENT_SOURCE_DIR}/data/)
+
 # ---- End-of-file commands ----
 
 add_folders(Test)

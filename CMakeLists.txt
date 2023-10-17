@@ -21,6 +21,8 @@ add_library(
         source/album/photo.cpp
         source/album/photo.h
         source/album/album_exception.h
+        source/album/face_classifier.cpp
+        source/album/face_classifier.h
 )
 
 target_include_directories(

@@ -7,3 +7,6 @@ cmake-build-*/
 prefix/
 CMakeLists.txt.user
 CMakeUserPresets.json
+
+test/data/
+data/
