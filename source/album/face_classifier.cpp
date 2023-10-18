@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 namespace album_architect {
 
-auto FaceClassifier::get_face_detector()
+auto FaceClassifier::get_opencv_face_detector()
     -> std::shared_ptr<cv::FaceDetectorYN> {
   const auto path = fs::path("data") / "face_detection_yunet_2023mar.onnx";
 

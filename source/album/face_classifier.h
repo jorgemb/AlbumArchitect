@@ -15,7 +15,7 @@ namespace album_architect {
 class FaceClassifier {
 public:
   /// Tries to load the YN face detector
-  static auto get_face_detector() -> std::shared_ptr<cv::FaceDetectorYN>;
+  static auto get_opencv_face_detector() -> std::shared_ptr<cv::FaceDetectorYN>;
 };
 
 }  // namespace album_architect

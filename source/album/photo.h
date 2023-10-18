@@ -13,6 +13,7 @@
 #include <boost/algorithm/hex.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
+#include <openimageio/imagebuf.h>
 
 namespace album_architect {
 
@@ -81,11 +82,11 @@ private:
   std::filesystem::path m_path;
 
   /// Internal data
-  struct InternalData;
-  std::unique_ptr<InternalData> m_data;
+  OIIO::ImageBuf m_image;
+  cv::Mat m_image_cv;
 
   /// Default constructor
-  Photo(std::filesystem::path path, std::unique_ptr<InternalData> data);
+  Photo(std::filesystem::path path, OIIO::ImageBuf&& image);
 
   /// Loads OpenCV image on demand
   void load_opencv();
