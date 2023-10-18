@@ -9,6 +9,8 @@
 
 #include "photo.h"
 
+#include <dlib/opencv.h>
+#include <dlib/data_io.h>
 #include <glog/logging.h>
 #include <opencv2/img_hash.hpp>
 #include <opencv2/imgproc.hpp>
@@ -94,15 +96,14 @@ auto Photo::get_cv_mat() -> const cv::Mat& {
 auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   auto face_detector = FaceClassifier::get_opencv_face_detector();
 
-  // Convert to gray and get faces
   load_opencv();
 
   // TODO: Get configuration details from Config
 
   // Check if scaling is required
   const auto max_width = 800.0F;
-  const auto scale = std::min(
-      max_width / static_cast<float>(m_image_cv.size().width), 1.0F);
+  const auto scale =
+      std::min(max_width / static_cast<float>(m_image_cv.size().width), 1.0F);
 
   auto target = cv::Mat {};
   cv::resize(m_image_cv, target, cv::Size(), scale, scale);
@@ -122,6 +123,31 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   }
 
   return faces;
+}
+auto Photo::get_faces_dnn() -> std::vector<cv::Rect2f> {
+  // Get detector
+  auto detector = FaceClassifier::get_dlib_face_detector();
+
+  // Convert image to dlib
+  load_opencv();
+
+  auto image_wrapper = dlib::cv_image<dlib::bgr_pixel>(m_image_cv);
+  auto target_image = dlib::matrix<dlib::rgb_pixel> {};
+  dlib::assign_image(target_image, image_wrapper);
+
+  // Find the faces with the detector and convert to OpenCV
+  auto found_faces = (*detector)(target_image);
+  auto result = std::vector<cv::Rect2f> {};
+
+  for (const auto& face : found_faces) {
+    const auto rect = face.rect;
+    result.emplace_back(static_cast<float>(rect.left()),
+                        static_cast<float>(rect.top()),
+                        static_cast<float>(rect.width()),
+                        static_cast<float>(rect.height()));
+  }
+
+  return result;
 }
 auto Photo::calculate_average_hash() -> Hash<cv::img_hash::AverageHash> {
   load_opencv();

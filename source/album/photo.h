@@ -62,6 +62,10 @@ public:
   /// \return
   auto get_faces() -> std::vector<cv::Rect2f>;
 
+  /// Tries to detect faces from within the photo using DNN
+  /// \return List of rects
+  auto get_faces_dnn() -> std::vector<cv::Rect2f>;
+
   /// Destructor
   virtual ~Photo() = default;
 

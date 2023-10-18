@@ -75,9 +75,9 @@ add_custom_command(TARGET AlbumArchitect_exe POST_BUILD
 # .. dlib
 find_program(7ZIP "7z")
 if (7ZIP)
-    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/dlib_face.dat.bz2)
+    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
     execute_process(
-            COMMAND 7z x ${RUNTIME_MODELS}/dlib_face.dat.bz2 -aos -o${RUNTIME_MODELS})
+            COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
 endif ()
 
 # ---- Install rules ----

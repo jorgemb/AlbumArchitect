@@ -140,6 +140,9 @@ TEST_CASE("Detect faces", "[album][photo]"){
   const auto expected_faces = 6;
   auto faces = photo->get_faces();
   REQUIRE(faces.size() >= expected_faces);
+
+  auto faces_dnn = photo->get_faces_dnn();
+  REQUIRE(faces_dnn.size() >= expected_faces);
 }
 
 TEST_CASE("Convert from Hex to Mat", "[album][photo]") {
