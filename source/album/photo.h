@@ -13,7 +13,6 @@
 #include <boost/algorithm/hex.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
-#include <openimageio/imagebuf.h>
 
 namespace album_architect {
 
@@ -40,6 +39,7 @@ auto compare_hashes(const Hash<T>& lhs, const Hash<T>& rhs) -> double {
   return hasher->compare(lhs.hash, rhs.hash);
 }
 
+/// Represents a photo that can be loaded and processed.
 class Photo {
 public:
   /// Tries to create a new photo from the given path. Returns
@@ -52,23 +52,10 @@ public:
   auto get_height() const -> int64_t;
 
   // Hashes
-
-  /// Calculates a hash of the given type
-  /// \tparam T
-  /// \return
-  template<class T>
-    requires std::is_base_of_v<cv::img_hash::ImgHashBase, T>
-  auto calculate_hash() -> Hash<T> {
-    // Loads the image
-    load_opencv();
-
-    // Create hash
-    auto hasher = T::create();
-    auto result = cv::Mat {};
-    hasher->compute(m_image_cv, result);
-
-    return Hash<T> {result};
-  }
+  auto calculate_average_hash() -> Hash<cv::img_hash::AverageHash>;
+  auto calculate_phash() -> Hash<cv::img_hash::PHash>;
+  auto calculate_color_moment_hash() -> Hash<cv::img_hash::ColorMomentHash>;
+  auto calculate_marr_hildreth_hash() -> Hash<cv::img_hash::MarrHildrethHash>;
 
   /// Tries to detect the faces from within the photo
   /// \return
@@ -83,21 +70,22 @@ public:
 #endif
 
   // Constructors and assignment
-  Photo(const Photo& other) = default;
+  Photo(const Photo& other) = delete;
+  auto operator=(const Photo& other) -> Photo& = delete;
+
   Photo(Photo&& other) noexcept = default;
-  auto operator=(const Photo& other) -> Photo& = default;
   auto operator=(Photo&& other) noexcept -> Photo& = default;
 
 private:
   /// Path of the photo
   std::filesystem::path m_path;
 
-  /// Internal photo
-  OIIO::ImageBuf m_image;
-  mutable cv::Mat m_image_cv;
+  /// Internal data
+  struct InternalData;
+  std::unique_ptr<InternalData> m_data;
 
   /// Default constructor
-  Photo(std::filesystem::path path, OIIO::ImageBuf image);
+  Photo(std::filesystem::path path, std::unique_ptr<InternalData> data);
 
   /// Loads OpenCV image on demand
   void load_opencv();

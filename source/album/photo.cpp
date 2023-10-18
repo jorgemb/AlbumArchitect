@@ -19,6 +19,26 @@
 
 namespace album_architect {
 
+/// Contains the internal data for the photo
+struct Photo::InternalData {
+  OIIO::ImageBuf image;
+  cv::Mat image_cv;
+};
+
+/// Calculates a hash of the given type
+/// \tparam T
+/// \return
+template<class T>
+  requires std::is_base_of_v<cv::img_hash::ImgHashBase, T>
+auto calculate_hash(cv::InputArray input) -> Hash<T> {
+  // Create hash
+  auto hasher = T::create();
+  auto result = cv::Mat {};
+  hasher->compute(input, result);
+
+  return Hash<T> {result};
+}
+
 auto Photo::load(const std::filesystem::path& path) -> std::unique_ptr<Photo> {
   // Check if path exists
   if (!exists(path)) {
@@ -35,21 +55,24 @@ auto Photo::load(const std::filesystem::path& path) -> std::unique_ptr<Photo> {
     return {};
   }
 
-  return std::unique_ptr<Photo>(new Photo(path, std::move(image)));
+  // Internal data
+  auto data = std::make_unique<Photo::InternalData>(image, cv::Mat {});
+
+  return std::unique_ptr<Photo>(new Photo {path, std::move(data)});
 }
 
 auto Photo::get_path() const -> const std::filesystem::path& {
   return m_path;
 }
 auto Photo::get_width() const -> int64_t {
-  return m_image.spec().width;
+  return m_data->image.spec().width;
 }
 auto Photo::get_height() const -> int64_t {
-  return m_image.spec().height;
+  return m_data->image.spec().height;
 }
-Photo::Photo(std::filesystem::path path, OIIO::ImageBuf image)
+Photo::Photo(std::filesystem::path path, std::unique_ptr<InternalData> data)
     : m_path(std::move(path))
-    , m_image(std::move(image)) {}
+    , m_data(std::move(data)) {}
 
 /// Helper function for calculating a specific hash
 /// \tparam T
@@ -64,9 +87,9 @@ auto calculate_hash(cv::InputArray input, cv::OutputArray output) -> void {
 }
 
 void Photo::load_opencv() {
-  if (m_image_cv.empty()) {
-    m_image.read(0, 0, /*force=*/true);
-    auto is_ok = OIIO::ImageBufAlgo::to_OpenCV(m_image_cv, m_image);
+  if (m_data->image_cv.empty()) {
+    m_data->image.read(0, 0, /*force=*/true);
+    auto is_ok = OIIO::ImageBufAlgo::to_OpenCV(m_data->image_cv, m_data->image);
 
     LOG_IF(ERROR, !is_ok)
         << "Couldn't create OpenCV image from loaded image. Error: "
@@ -75,7 +98,7 @@ void Photo::load_opencv() {
 }
 auto Photo::get_cv_mat() -> const cv::Mat& {
   load_opencv();
-  return m_image_cv;
+  return m_data->image_cv;
 }
 auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   auto face_detector = FaceClassifier::get_face_detector();
@@ -87,11 +110,11 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
 
   // Check if scaling is required
   const auto max_width = 800.0F;
-  const auto scale =
-      std::min(max_width / static_cast<float>(m_image_cv.size().width), 1.0F);
+  const auto scale = std::min(
+      max_width / static_cast<float>(m_data->image_cv.size().width), 1.0F);
 
   auto target = cv::Mat {};
-  cv::resize(m_image_cv, target, cv::Size(), scale, scale);
+  cv::resize(m_data->image_cv, target, cv::Size(), scale, scale);
 
   // Detect faces
   auto detected_faces = cv::Mat {};
@@ -108,6 +131,24 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   }
 
   return faces;
+}
+auto Photo::calculate_average_hash() -> Hash<cv::img_hash::AverageHash> {
+  load_opencv();
+  return calculate_hash<cv::img_hash::AverageHash>(m_data->image_cv);
+}
+auto Photo::calculate_phash() -> Hash<cv::img_hash::PHash> {
+  load_opencv();
+  return calculate_hash<cv::img_hash::PHash>(m_data->image_cv);
+}
+auto Photo::calculate_color_moment_hash()
+    -> Hash<cv::img_hash::ColorMomentHash> {
+  load_opencv();
+  return calculate_hash<cv::img_hash::ColorMomentHash>(m_data->image_cv);
+}
+auto Photo::calculate_marr_hildreth_hash()
+    -> Hash<cv::img_hash::MarrHildrethHash> {
+  load_opencv();
+  return calculate_hash<cv::img_hash::MarrHildrethHash>(m_data->image_cv);
 }
 
 }  // namespace album_architect

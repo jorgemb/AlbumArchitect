@@ -36,15 +36,16 @@ target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 find_package(fmt REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
+find_package(OpenCV 4 CONFIG REQUIRED)
+find_package(dlib CONFIG REQUIRED)
+
 find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
-find_package(OpenCV 4 CONFIG REQUIRED)
-
 find_package(OpenImageIO CONFIG REQUIRED)
 find_package(glog CONFIG REQUIRED)
 
 target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb)
-target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core)
+target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
 
 # ---- Declare executable ----
 
@@ -58,6 +59,7 @@ target_compile_features(AlbumArchitect_exe PRIVATE cxx_std_20)
 target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib opencv_highgui)
 
 # Copy runtime data
+set(RUNTIME_MODELS ${CMAKE_SOURCE_DIR}/data)
 set(OPENCV_MODELS ${CMAKE_SOURCE_DIR}/3rdparty/opencv_zoo/models)
 list(APPEND OPENCV_MODEL_FILES
         ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar.onnx
@@ -66,9 +68,17 @@ list(APPEND OPENCV_MODEL_FILES
 
 add_custom_command(TARGET AlbumArchitect_exe POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${CMAKE_SOURCE_DIR}/data/
+        ${RUNTIME_MODELS}
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${OPENCV_MODEL_FILES} ${CMAKE_SOURCE_DIR}/data/)
+        ${OPENCV_MODEL_FILES} ${RUNTIME_MODELS})
+
+# .. dlib
+find_program(7ZIP "7z")
+if (7ZIP)
+    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/dlib_face.dat.bz2)
+    execute_process(
+            COMMAND 7z x ${RUNTIME_MODELS}/dlib_face.dat.bz2 -aos -o${RUNTIME_MODELS})
+endif ()
 
 # ---- Install rules ----
 
