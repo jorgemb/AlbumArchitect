@@ -44,8 +44,9 @@ find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
 find_package(OpenImageIO CONFIG REQUIRED)
 find_package(glog CONFIG REQUIRED)
+find_package(Tesseract CONFIG REQUIRED)
 
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb)
+target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
 target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
 
 # ---- Declare executable ----
