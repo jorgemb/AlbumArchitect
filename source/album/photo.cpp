@@ -14,7 +14,7 @@
 #include <glog/logging.h>
 #include <opencv2/img_hash.hpp>
 #include <opencv2/imgproc.hpp>
-#include <openimageio/imagebufalgo.h>
+#include <OpenImageIO/imagebufalgo.h>
 
 #include "album/face_classifier.h"
 

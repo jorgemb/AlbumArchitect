@@ -58,9 +58,8 @@ void detect_faces() {
     if (!photo) {
       LOG(ERROR) << "Couldn't load photo";
       continue;
-    } else {
-      LOG(INFO) << "Loaded photo: " << path;
     }
+    LOG(INFO) << "Loaded photo: " << path;
 
     // Draw faces
     auto faces = photo->get_faces();

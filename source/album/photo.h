@@ -13,7 +13,7 @@
 #include <boost/algorithm/hex.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
-#include <openimageio/imagebuf.h>
+#include <OpenImageIO//imagebuf.h>
 
 namespace album_architect {
 
