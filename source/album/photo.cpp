@@ -2,19 +2,15 @@
 // Created by jorge on 11/10/2023.
 //
 
-#include <algorithm>
-#include <iomanip>
 #include <sstream>
 #include <utility>
 
 #include "photo.h"
 
-#include <dlib/opencv.h>
-#include <dlib/data_io.h>
+#include <OpenImageIO/imagebufalgo.h>
 #include <glog/logging.h>
 #include <opencv2/img_hash.hpp>
 #include <opencv2/imgproc.hpp>
-#include <OpenImageIO/imagebufalgo.h>
 
 #include "album/face_classifier.h"
 
@@ -123,31 +119,6 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   }
 
   return faces;
-}
-auto Photo::get_faces_dnn() -> std::vector<cv::Rect2f> {
-  // Get detector
-  auto detector = FaceClassifier::get_dlib_face_detector();
-
-  // Convert image to dlib
-  load_opencv();
-
-  auto image_wrapper = dlib::cv_image<dlib::bgr_pixel>(m_image_cv);
-  auto target_image = dlib::matrix<dlib::rgb_pixel> {};
-  dlib::assign_image(target_image, image_wrapper);
-
-  // Find the faces with the detector and convert to OpenCV
-  auto found_faces = (*detector)(target_image);
-  auto result = std::vector<cv::Rect2f> {};
-
-  for (const auto& face : found_faces) {
-    const auto rect = face.rect;
-    result.emplace_back(static_cast<float>(rect.left()),
-                        static_cast<float>(rect.top()),
-                        static_cast<float>(rect.width()),
-                        static_cast<float>(rect.height()));
-  }
-
-  return result;
 }
 auto Photo::calculate_average_hash() -> Hash<cv::img_hash::AverageHash> {
   load_opencv();

@@ -10,7 +10,8 @@ TEST_CASE("Name is AlbumArchitect", "[library]") {
 }
 
 auto main(int argc, char* argv[]) -> int {
-  google::InitGoogleLogging(argv[0]); // NOLINT(*-pro-bounds-pointer-arithmetic)
+  google::InitGoogleLogging(
+      argv[0]);  // NOLINT(*-pro-bounds-pointer-arithmetic)
 
   auto result = Catch::Session().run(argc, argv);
 

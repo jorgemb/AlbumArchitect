@@ -110,8 +110,7 @@ TEST_CASE("Load sample photos", "[album][photo]") {
         auto test_hash = album_architect::Hash<cv::img_hash::AverageHash> {
             album_architect::from_hex_to_cv<uint8_t>(
                 test_element.average_hash.value())};
-        auto calculated_hash =
-            photo->calculate_average_hash();
+        auto calculated_hash = photo->calculate_average_hash();
         auto difference =
             album_architect::compare_hashes(test_hash, calculated_hash);
         REQUIRE(difference == Catch::Approx(0.0));
@@ -122,7 +121,8 @@ TEST_CASE("Load sample photos", "[album][photo]") {
             album_architect::from_hex_to_cv<uint8_t>(
                 test_element.p_hash.value())};
         auto calculated_hash = photo->calculate_phash();
-        auto difference = album_architect::compare_hashes(test_hash, calculated_hash);
+        auto difference =
+            album_architect::compare_hashes(test_hash, calculated_hash);
         REQUIRE(difference == Catch::Approx(0.0));
       }
     }
@@ -133,8 +133,9 @@ TEST_CASE("Load sample photos", "[album][photo]") {
   REQUIRE(loaded_photos == test_data.size());
 }
 
-TEST_CASE("Detect faces", "[album][photo]"){
-  const auto image_path = fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
+TEST_CASE("Detect faces", "[album][photo]") {
+  const auto image_path =
+      fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
   auto photo = Photo::load(image_path);
 
   const auto expected_faces = 6;

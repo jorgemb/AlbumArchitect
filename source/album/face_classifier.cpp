@@ -15,8 +15,8 @@ auto FaceClassifier::get_opencv_face_detector()
   const auto path = fs::path("data") / "face_detection_yunet_2023mar.onnx";
 
   // TODO: Get config input
-  return cv::FaceDetectorYN::create(path.string(), "", cv::Size(320, 320),
-                                    0.8F);
+  return cv::FaceDetectorYN::create(
+      path.string(), "", cv::Size(320, 320), 0.8F);
 }
 auto FaceClassifier::get_dlib_face_detector()
     -> std::shared_ptr<dlib_facenet_type> {

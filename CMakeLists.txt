@@ -19,6 +19,7 @@ add_library(
         AlbumArchitect_lib OBJECT
         source/lib.cpp
         source/album/photo.cpp
+        source/album/photo_dnn.cpp
         source/album/photo.h
         source/album/album_exception.h
         source/album/face_classifier.cpp
