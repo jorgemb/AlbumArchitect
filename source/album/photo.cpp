@@ -19,8 +19,11 @@ namespace album_architect {
 /// Calculates a hash of the given type
 /// \tparam T
 /// \return
+/* clang-format off */
+/* Concepts are still not supported by clang-format */
 template<class T>
   requires std::is_base_of_v<cv::img_hash::ImgHashBase, T>
+/* clang-format on */
 auto calculate_hash(cv::InputArray input) -> Hash<T> {
   // Create hash
   auto hasher = T::create();
@@ -68,8 +71,11 @@ Photo::Photo(std::filesystem::path path, OIIO::ImageBuf&& image)
 /// \param output
 /// \param input
 /// \return
+/* clang-format off */
+/* Concepts are still not supported by clang-format */
 template<class T>
   requires std::is_base_of_v<cv::img_hash::ImgHashBase, T>
+/* clang-format on */
 auto calculate_hash(cv::InputArray input, cv::OutputArray output) -> void {
   auto hasher = T::create();
   hasher->compute(input, output);
