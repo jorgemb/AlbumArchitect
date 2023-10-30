@@ -40,6 +40,13 @@ auto compare_hashes(const Hash<T>& lhs, const Hash<T>& rhs) -> double {
   return hasher->compare(lhs.hash, rhs.hash);
 }
 
+/// Represents a text element that was identified in photo OCR
+struct TextElement{
+  cv::Rect2f rect;
+  std::string text;
+  float confidence;
+};
+
 /// Represents a photo that can be loaded and processed.
 class Photo {
 public:
@@ -65,6 +72,11 @@ public:
   /// Tries to detect faces from within the photo using DNN
   /// \return List of rects
   auto get_faces_dnn() -> std::vector<cv::Rect2f>;
+
+  /// Tries to perform OCR on the text, and returns a list
+  /// of found elements.
+  /// \return
+  auto get_text_ocr() -> std::vector<TextElement>;
 
   /// Destructor
   virtual ~Photo() = default;

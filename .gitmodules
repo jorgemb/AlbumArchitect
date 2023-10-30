@@ -4,3 +4,6 @@
 [submodule "3rdparty/opencv_zoo"]
 	path = 3rdparty/opencv_zoo
 	url = https://github.com/opencv/opencv_zoo
+[submodule "3rdparty/tessdata_best"]
+	path = 3rdparty/tessdata_best
+	url = https://github.com/tesseract-ocr/tessdata_best

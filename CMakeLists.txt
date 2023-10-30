@@ -24,6 +24,10 @@ add_library(
         source/album/album_exception.h
         source/album/face_classifier.cpp
         source/album/face_classifier.h
+        source/album/text_classifier.cpp
+        source/album/text_classifier.h
+        source/album/util.cpp
+        source/album/util.h
 )
 
 target_include_directories(
@@ -44,8 +48,9 @@ find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
 find_package(OpenImageIO CONFIG REQUIRED)
 find_package(glog CONFIG REQUIRED)
+find_package(Tesseract CONFIG REQUIRED)
 
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb)
+target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
 target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
 
 # ---- Declare executable ----
