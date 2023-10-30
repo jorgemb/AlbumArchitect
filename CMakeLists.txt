@@ -24,6 +24,10 @@ add_library(
         source/album/album_exception.h
         source/album/face_classifier.cpp
         source/album/face_classifier.h
+        source/album/text_classifier.cpp
+        source/album/text_classifier.h
+        source/album/util.cpp
+        source/album/util.h
 )
 
 target_include_directories(

@@ -8,11 +8,11 @@
 #include "photo.h"
 
 #include <OpenImageIO/imagebufalgo.h>
+#include <album/face_classifier.h>
+#include <album/text_classifier.h>
 #include <glog/logging.h>
 #include <opencv2/img_hash.hpp>
 #include <opencv2/imgproc.hpp>
-
-#include "album/face_classifier.h"
 
 namespace album_architect {
 
@@ -137,6 +137,70 @@ auto Photo::calculate_marr_hildreth_hash()
     -> Hash<cv::img_hash::MarrHildrethHash> {
   load_opencv();
   return calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
+}
+auto Photo::get_text_ocr() -> std::vector<TextElement> {
+  load_opencv();
+
+  // Do photo conversion
+  auto copy = cv::Mat {};
+  if (m_image_cv.channels() == 4) {
+    cv::cvtColor(m_image_cv, copy, cv::COLOR_BGRA2RGB);
+  } else if (m_image_cv.channels() == 3) {
+    cv::cvtColor(m_image_cv, copy, cv::COLOR_BGR2RGB);
+  } else {
+    copy = m_image_cv;
+  }
+
+  // Perform OCR
+  auto classifier = TextClassifier::get_tesseract_classifier();
+  if (!classifier) {
+    return {};
+  }
+
+  const auto page_segmentation_mode = tesseract::PageSegMode::PSM_AUTO;
+  classifier->SetPageSegMode(page_segmentation_mode);
+
+  classifier->SetImage(copy.data,
+                       copy.cols,
+                       copy.rows,
+                       copy.channels(),
+                       static_cast<int>(copy.step));
+  auto full_text = std::unique_ptr<char[]>(
+      classifier->GetUTF8Text());  // NOLINT(*-avoid-c-arrays)
+  auto result = std::vector<TextElement>();
+
+  // ... iterate through each finding
+  auto* lines = classifier->GetIterator();
+  if (lines == nullptr) {
+    return {};
+  }
+
+  const auto iterator_level = tesseract::RIL_TEXTLINE;
+  auto keep_going = true;
+  while (keep_going) {
+    // Get bounding box, text and confidence
+    int bottom {};
+    int top {};
+    int right {};
+    int left {};
+    if (lines->BoundingBox(iterator_level, &left, &top, &right, &bottom)) {
+      auto rect = cv::Rect2f {static_cast<float>(left),
+                              static_cast<float>(top),
+                              static_cast<float>(right - left),
+                              static_cast<float>(bottom - top)};
+
+      auto raw_text = std::unique_ptr<char[]>(  // NOLINT(*-avoid-c-arrays)
+          lines->GetUTF8Text(iterator_level));
+      auto confidence = lines->Confidence(iterator_level);
+
+      result.emplace_back(rect, std::string(raw_text.get()), confidence);
+    }
+
+    // Get next element
+    keep_going = lines->Next(iterator_level);
+  }
+
+  return result;
 }
 
 }  // namespace album_architect

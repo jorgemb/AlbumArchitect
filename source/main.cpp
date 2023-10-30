@@ -3,14 +3,14 @@
 #include <string>
 
 #include <album/photo.h>
+#include <album/util.h>
 #include <glog/logging.h>
+#include <boost/algorithm/string/trim.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/text.hpp>
-#include <boost/range/combine.hpp>
 
-void detect_faces();
+void detect_elements();
 using namespace std::string_literals;
 namespace fs = std::filesystem;
 
@@ -42,45 +42,20 @@ auto select_random_photos(const fs::path& base_path, size_t amount)
   return result;
 }
 
+
 auto main(int argc, char* argv[]) -> int {
   google::InitGoogleLogging(argv[0]);
+  google::SetLogDestination(google::GLOG_INFO, "album_architect.log");
+  FLAGS_timestamp_in_logfile_name = false;
 
-//  detect_faces();
-  auto image = album_architect::Photo::load("test/sample-images/Samples/BMP/error/33A3F6D37FE162E4.bmp");
-//  auto image = album_architect::Photo::load("D:/OneDrive/Fotos/Freelance/2013-06-06 14.05.48.jpg");
-  if(!image){
-    return -1;
-  }
+  cv::redirectError(album_architect::util::handle_cv_log_messages);
 
-  // Try to detect text
-  auto detector = cv::text::OCRTesseract::create("3rdparty/tessdata_best", "eng");
-  auto cv_image = image->get_cv_mat();
-  auto copy = cv::Mat{};
-  cv::cvtColor(cv_image, copy, cv::COLOR_BGRA2BGR);
-
-  auto text_elements = std::vector<std::string>{};
-  auto rect_elements = std::vector<cv::Rect>{};
-  auto confidence_elements = std::vector<float>{};
-  auto text = std::string{};
-  detector->run(copy, text, &rect_elements, &text_elements, &confidence_elements);
-  std::cout << "Detected text: " << text << "\n";
-
-  // Draw rects
-  for(auto [rect, confidence, text_extract]: boost::combine(rect_elements, confidence_elements, text_elements)){
-    const auto conf_color = cv::Scalar(static_cast<int>(255.0F * confidence), 0, 0);
-    cv::rectangle(copy, rect, conf_color);
-
-    auto point = rect.tl();
-    point.y -= 9;
-    cv::putText(copy, text_extract, point, cv::FONT_HERSHEY_SIMPLEX, 0.3, conf_color);
-  }
-
-  cv::imshow("Image", copy);
+  detect_elements();
   cv::waitKey();
   return 0;
 }
 
-void detect_faces() {
+void detect_elements() {
   auto base_path = fs::path("D:") / "OneDrive" / "Fotos";
   auto selected_paths = select_random_photos(base_path, 10);
   for (auto const& path : selected_paths) {
@@ -99,6 +74,21 @@ void detect_faces() {
     const auto color = cv::Scalar(255, 0, 0);
     for (const auto& face : faces) {
       cv::rectangle(original, face, color, 6);
+    }
+
+    // Draw found text
+    const auto text_color = cv::Scalar(0, 255, 255);
+    auto text = photo->get_text_ocr();
+    for (auto&& text_element : text) {
+      // Check if there is text in the OCR
+      boost::trim(text_element.text);
+      if (text_element.text.empty()) {
+        continue;
+      }
+
+      cv::rectangle(original, text_element.rect, text_color, 3);
+      std::cout << "\tText: " << text_element.text
+                << " -- Confidence: " << text_element.confidence << "\n";
     }
 
     // Save

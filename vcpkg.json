@@ -28,10 +28,6 @@
       "name": "openimageio",
       "version>=": "2.4.14.0#2",
       "features": ["opencv", "libheif", "gif", "webp", "libraw", "openjpeg", "ffmpeg", "freetype"]
-    },
-    {
-      "name": "tesseract",
-      "version>=": "5.3.2"
     }
   ],
   "default-features": [],
@@ -46,5 +42,5 @@
       ]
     }
   },
-  "builtin-baseline": "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  "builtin-baseline": "7a6f366cefd27210f6a8309aed10c31104436509"
 }
