@@ -4,8 +4,8 @@
 
 #include <album/photo.h>
 #include <album/util.h>
-#include <glog/logging.h>
 #include <boost/algorithm/string/trim.hpp>
+#include <glog/logging.h>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -41,7 +41,6 @@ auto select_random_photos(const fs::path& base_path, size_t amount)
 
   return result;
 }
-
 
 auto main(int argc, char* argv[]) -> int {
   google::InitGoogleLogging(argv[0]);
