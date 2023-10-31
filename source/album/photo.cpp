@@ -10,6 +10,7 @@
 #include <OpenImageIO/imagebufalgo.h>
 #include <album/face_classifier.h>
 #include <album/text_classifier.h>
+#include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
 #include <opencv2/img_hash.hpp>
 #include <opencv2/imgproc.hpp>
@@ -49,8 +50,28 @@ auto Photo::load(const std::filesystem::path& path) -> std::unique_ptr<Photo> {
     return {};
   }
 
+  // Read the metadata
+  const auto& image_spec = image.spec();
+  auto keywords = std::vector<std::string> {};
+  auto raw_keywords = image_spec.extra_attribs.get_string("Keywords").str();
+  boost::algorithm::split(keywords, raw_keywords, boost::is_any_of(";"));
+
+  // ... remove empty
+  auto keywords_remove_iter =
+      std::remove_if(keywords.begin(),
+                     keywords.end(),
+                     [](const auto& str) { return str.empty(); });
+  keywords.erase(keywords_remove_iter, keywords.end());
+
+  auto metadata = PhotoMetadata {
+      image_spec.extra_attribs.get_string("Exif:DateTimeOriginal"),
+      image_spec.extra_attribs.get_string("DateTime"),
+      image_spec.extra_attribs.get_string("ImageDescription"),
+      std::move(keywords)};
+
   // Internal data
-  return std::unique_ptr<Photo>(new Photo(path, std::move(image)));
+  return std::unique_ptr<Photo>(
+      new Photo(path, std::move(image), std::move(metadata)));
 }
 
 auto Photo::get_path() const -> const std::filesystem::path& {
@@ -62,9 +83,12 @@ auto Photo::get_width() const -> int64_t {
 auto Photo::get_height() const -> int64_t {
   return m_image.spec().height;
 }
-Photo::Photo(std::filesystem::path path, OIIO::ImageBuf&& image)
+Photo::Photo(std::filesystem::path path,
+             OIIO::ImageBuf&& image,
+             PhotoMetadata&& metadata)
     : m_path(std::move(path))
-    , m_image(std::move(image)) {}
+    , m_image(std::move(image))
+    , m_metadata(std::move(metadata)) {}
 
 /// Helper function for calculating a specific hash
 /// \tparam T
@@ -208,5 +232,16 @@ auto Photo::get_text_ocr() -> std::vector<TextElement> {
 
   return result;
 }
+auto Photo::get_metadata() const -> const PhotoMetadata& {
+  return m_metadata;
+}
 
+auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
+    -> std::ostream& {
+  ostream << "creation_time: " << metadata.creation_time
+          << " date_time: " << metadata.date_time
+          << " description: " << metadata.description
+          << " keywords: " << boost::algorithm::join(metadata.keywords, ";");
+  return ostream;
+}
 }  // namespace album_architect
