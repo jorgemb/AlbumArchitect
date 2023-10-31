@@ -7,6 +7,7 @@
 
 #include <album/photo.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/range/combine.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include <glog/logging.h>
@@ -133,7 +134,7 @@ TEST_CASE("Load sample photos", "[album][photo]") {
   REQUIRE(loaded_photos == test_data.size());
 }
 
-TEST_CASE("Detect faces", "[album][photo]") {
+TEST_CASE("Detect faces", "[album][photo][high-load]") {
   const auto image_path =
       fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
   auto photo = Photo::load(image_path);
@@ -156,4 +157,46 @@ TEST_CASE("Convert from Hex to Mat", "[album][photo]") {
   auto equal = std::equal(
       val1.begin<uint8_t>(), val1.end<uint8_t>(), result1.begin<uint8_t>());
   REQUIRE(equal);
+}
+
+TEST_CASE("Retrieve image metadata", "[album][photo]") {
+  auto images = std::vector<std::string> {
+      "sample-images/Samples/HEIC/IMG_0378.HEIC"s,
+      "sample-images/Samples/BMP/error/33A3F6D37FE162E4.bmp"s,
+      "sample-images/Samples/PNG/gamma_error/error file.png"s,
+      "sample-images/Samples/JPG/earth_12k.jpg"s};
+
+  auto metadata = std::vector<album_architect::PhotoMetadata> {
+      album_architect::PhotoMetadata {
+          "2017:10:27 20:37:16", "2017:10:27 20:37:16", "", {}},
+      album_architect::PhotoMetadata {},
+      album_architect::PhotoMetadata {},
+      album_architect::PhotoMetadata {
+          ""s,
+          ""s,
+          R"(Satellite: Suomi NPP
+Sensor: VIIRS
+Date: 3 February 2012
+Description: Perspective view of North Atlantic< Europe, Africa
+Red channel: Band 5 (662-682 nm)
+Green channel: Band 4 (545-565 nm)
+Blue channel: Band 2 (436-454 nm)
+Projection: Near-sided perspective from
+            12742 kilometers above 45 North by 0 East
+Author: Norman Kuring
+Created: 2012-02-21T14:00:00Z
+)"
+      },
+  };
+
+  // Iterate through all the photos
+  for (auto const [image_path, expected_metadata] :
+       boost::combine(images, metadata))
+  {
+    INFO("Current image: " << image_path);
+    auto current_image = album_architect::Photo::load(image_path);
+    auto current_metadata = current_image->get_metadata();
+
+    REQUIRE(current_metadata == expected_metadata);
+  }
 }

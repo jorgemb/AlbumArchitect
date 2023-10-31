@@ -8,12 +8,13 @@
 #include <filesystem>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <ranges>
 
+#include <OpenImageIO/imagebuf.h>
 #include <boost/algorithm/hex.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
-#include <OpenImageIO//imagebuf.h>
 
 namespace album_architect {
 
@@ -41,10 +42,27 @@ auto compare_hashes(const Hash<T>& lhs, const Hash<T>& rhs) -> double {
 }
 
 /// Represents a text element that was identified in photo OCR
-struct TextElement{
+struct TextElement {
   cv::Rect2f rect;
   std::string text;
   float confidence;
+};
+
+/// Represents the basic metadata that should be shared for all images
+struct PhotoMetadata {
+  std::string creation_time;
+  std::string date_time;
+  std::string description;
+  std::vector<std::string> keywords;
+
+  auto operator<=>(const PhotoMetadata& other) const = default;
+
+  /// Stream Output operator for PhotoMetadata
+  /// \param os
+  /// \param metadata
+  /// \return
+  friend auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
+      -> std::ostream&;
 };
 
 /// Represents a photo that can be loaded and processed.
@@ -78,6 +96,10 @@ public:
   /// \return
   auto get_text_ocr() -> std::vector<TextElement>;
 
+  /// Returns a view of the metadata
+  /// \return
+  auto get_metadata() const -> const PhotoMetadata&;
+
   /// Destructor
   virtual ~Photo() = default;
 
@@ -101,8 +123,13 @@ private:
   OIIO::ImageBuf m_image;
   cv::Mat m_image_cv;
 
+  /// Standard metadata
+  PhotoMetadata m_metadata;
+
   /// Default constructor
-  Photo(std::filesystem::path path, OIIO::ImageBuf&& image);
+  Photo(std::filesystem::path path,
+        OIIO::ImageBuf&& image,
+        PhotoMetadata&& metadata);
 
   /// Loads OpenCV image on demand
   void load_opencv();
