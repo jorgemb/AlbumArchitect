@@ -171,10 +171,9 @@ TEST_CASE("Retrieve image metadata", "[album][photo]") {
           "2017:10:27 20:37:16", "2017:10:27 20:37:16", "", {}},
       album_architect::PhotoMetadata {},
       album_architect::PhotoMetadata {},
-      album_architect::PhotoMetadata {
-          ""s,
-          ""s,
-          R"(Satellite: Suomi NPP
+      album_architect::PhotoMetadata {""s,
+                                      ""s,
+                                      R"(Satellite: Suomi NPP
 Sensor: VIIRS
 Date: 3 February 2012
 Description: Perspective view of North Atlantic< Europe, Africa
@@ -185,8 +184,7 @@ Projection: Near-sided perspective from
             12742 kilometers above 45 North by 0 East
 Author: Norman Kuring
 Created: 2012-02-21T14:00:00Z
-)"
-      },
+)"},
   };
 
   // Iterate through all the photos
