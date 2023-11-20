@@ -11,7 +11,6 @@ on:
 
 env:
   VCPKG_COMMIT: "61f610845fb206298a69f708104a51d651872877"
-  DO_TESTS: "false"
 
 jobs:
   lint:
@@ -104,56 +103,55 @@ jobs:
         UBSAN_OPTIONS: print_stacktrace=1
       run: ctest --output-on-failure --no-tests=error -j 2
 
-  test:
-    needs: [lint]
-    if: env.DO_TESTS == "true"
-
-    strategy:
-      matrix:
-        os: [windows-2022]
-#        os: [macos-12, ubuntu-22.04, windows-2022]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Install static analyzers
-      if: matrix.os == 'ubuntu-22.04'
-      run: >-
-        sudo apt-get install clang-tidy-14 cppcheck -y -q
-
-        sudo update-alternatives --install
-        /usr/bin/clang-tidy clang-tidy
-        /usr/bin/clang-tidy-14 140
-
-    - name: Install pkg-config
-      if: matrix.os == 'macos-12'
-      run: brew install pkg-config
-
-    - name: Install vcpkg
-      uses: friendlyanon/setup-vcpkg@v1
-      with: { committish: "${{ env.VCPKG_COMMIT }}" }
-
-    - name: Setup MultiToolTask
-      if: matrix.os == 'windows-2022'
-      run: |
-        Add-Content "$env:GITHUB_ENV" 'UseMultiToolTask=true'
-        Add-Content "$env:GITHUB_ENV" 'EnforceProcessCountAcrossBuilds=true'
-
-    - name: Configure
-      shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
-
-    - name: Build
-      run: cmake --build build --config Release -j 2
-
-    - name: Install
-      run: cmake --install build --config Release --prefix prefix
-
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure --no-tests=error -C Release -j 2
+#  test:
+#    needs: [lint]
+#
+#    strategy:
+#      matrix:
+#        os: [windows-2022]
+##        os: [macos-12, ubuntu-22.04, windows-2022]
+#
+#    runs-on: ${{ matrix.os }}
+#
+#    steps:
+#    - uses: actions/checkout@v3
+#
+#    - name: Install static analyzers
+#      if: matrix.os == 'ubuntu-22.04'
+#      run: >-
+#        sudo apt-get install clang-tidy-14 cppcheck -y -q
+#
+#        sudo update-alternatives --install
+#        /usr/bin/clang-tidy clang-tidy
+#        /usr/bin/clang-tidy-14 140
+#
+#    - name: Install pkg-config
+#      if: matrix.os == 'macos-12'
+#      run: brew install pkg-config
+#
+#    - name: Install vcpkg
+#      uses: friendlyanon/setup-vcpkg@v1
+#      with: { committish: "${{ env.VCPKG_COMMIT }}" }
+#
+#    - name: Setup MultiToolTask
+#      if: matrix.os == 'windows-2022'
+#      run: |
+#        Add-Content "$env:GITHUB_ENV" 'UseMultiToolTask=true'
+#        Add-Content "$env:GITHUB_ENV" 'EnforceProcessCountAcrossBuilds=true'
+#
+#    - name: Configure
+#      shell: pwsh
+#      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
+#
+#    - name: Build
+#      run: cmake --build build --config Release -j 2
+#
+#    - name: Install
+#      run: cmake --install build --config Release --prefix prefix
+#
+#    - name: Test
+#      working-directory: build
+#      run: ctest --output-on-failure --no-tests=error -C Release -j 2
 
   docs:
     # Deploy docs only when builds succeed
