@@ -18,14 +18,4 @@ auto FaceClassifier::get_opencv_face_detector()
   return cv::FaceDetectorYN::create(
       path.string(), "", cv::Size(320, 320), 0.8F);
 }
-auto FaceClassifier::get_dlib_face_detector()
-    -> std::shared_ptr<dlib_facenet_type> {
-  const auto path = fs::path("data") / "mmod_human_face_detector.dat";
-
-  // TODO: Get config input
-  auto detector = std::make_shared<dlib_facenet_type>();
-  dlib::deserialize(path.string()) >> *detector;
-
-  return detector;
-}
 }  // namespace album_architect

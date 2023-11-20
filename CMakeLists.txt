@@ -14,12 +14,12 @@ include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
 # ---- Declare library ----
+add_custom_target(AlbumArchitect_RuntimeData)
 
 add_library(
         AlbumArchitect_lib OBJECT
         source/lib.cpp
         source/album/photo.cpp
-        source/album/photo_dnn.cpp
         source/album/photo.h
         source/album/album_exception.h
         source/album/face_classifier.cpp
@@ -44,7 +44,6 @@ find_package(fmt REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
 find_package(OpenCV 4 CONFIG REQUIRED)
-find_package(dlib CONFIG REQUIRED)
 
 find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
@@ -53,7 +52,8 @@ find_package(glog CONFIG REQUIRED)
 find_package(Tesseract CONFIG REQUIRED)
 
 target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
-target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
+target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core)
+add_dependencies(AlbumArchitect_lib AlbumArchitect_RuntimeData)
 
 # ---- Declare executable ----
 
@@ -74,19 +74,19 @@ list(APPEND OPENCV_MODEL_FILES
         ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar_int8.onnx
 )
 
-add_custom_command(TARGET AlbumArchitect_exe POST_BUILD
+add_custom_command(TARGET AlbumArchitect_RuntimeData
         COMMAND ${CMAKE_COMMAND} -E make_directory
         ${RUNTIME_MODELS}
         COMMAND ${CMAKE_COMMAND} -E copy
         ${OPENCV_MODEL_FILES} ${RUNTIME_MODELS})
 
 # .. dlib
-find_program(7ZIP "7z")
-if (7ZIP)
-    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
-    execute_process(
-            COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
-endif ()
+#find_program(7ZIP "7z")
+#if (7ZIP)
+#    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
+#    execute_process(
+#            COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
+#endif ()
 
 # ---- Install rules ----
 

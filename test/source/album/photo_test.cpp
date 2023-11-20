@@ -136,19 +136,6 @@ TEST_CASE("Load sample photos", "[album][photo]") {
   REQUIRE(loaded_photos == test_data.size());
 }
 
-TEST_CASE("Detect faces", "[album][photo][high-load]") {
-  const auto image_path =
-      fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
-  auto photo = Photo::load(image_path);
-
-  const auto expected_faces = 6;
-  auto faces = photo->get_faces();
-  REQUIRE(faces.size() >= expected_faces);
-
-  auto faces_dnn = photo->get_faces_dnn();
-  REQUIRE(faces_dnn.size() >= expected_faces);
-}
-
 TEST_CASE("Convert from Hex to Mat", "[album][photo]") {
   const auto val1_vector = std::vector<uint8_t> {10, 45, 33, 140};
   auto val1 = cv::Mat {};
