@@ -207,9 +207,9 @@ TEST_CASE("Load and retrieve Albums", "[album]") {
   // Loads test data
   const auto test_path = fs::path("sample-images") / "Samples"s;
 
-  // Loads a non-existant album
-  auto non_existant_album = Album::load_album("not/existant/path");
-  REQUIRE_FALSE(non_existant_album);
+  // Loads a non-existent album
+  auto non_existent_album = Album::load_album("not/existent/path");
+  REQUIRE_FALSE(non_existent_album);
 
   // Tries to load an album from the Path
   auto top_level_album = Album::load_album(test_path);
