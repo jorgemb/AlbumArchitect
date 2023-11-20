@@ -3,6 +3,8 @@
 //
 
 #include <ranges>
+#include <set>
+#include <glog/logging.h>
 
 #include "album.h"
 
@@ -16,6 +18,47 @@ namespace views = std::ranges::views;
 
 Album::Album(std::filesystem::path absolute_path)
     : m_absolute_path(std::move(absolute_path)) {}
+auto Album::update_album() -> void {
+  DLOG(INFO) << "Updating album at: " << m_absolute_path;
+
+  m_files.clear();
+
+  auto processed_albums = std::set<std::string_view>{};
+  auto processed_photos = std::set<std::string_view>{};
+
+  // Get all files under the directory
+  for(const auto &entry: fs::directory_iterator(m_absolute_path)) {
+    // Add current files to files cache
+    m_files.push_back(entry.path().filename().string());
+    auto &current_file = m_files.back();
+
+    // Check if it is a photo or album
+    if(entry.is_directory()) {
+      // .. add Album
+      processed_albums.insert(current_file);
+      if(!m_albums.contains(current_file)) {
+        // New Album found
+        DLOG(INFO) << "--Album found at " << current_file;
+        m_albums.insert(std::make_pair(current_file, Album::load_album(entry.path())));
+      }
+    } else {
+      // .. add File, probable Photo
+      if(!m_photos.contains(current_file)) {
+        // Try to load as Photo
+        if (auto photo = Photo::load(entry.path())) {
+          DLOG(INFO) << "--Photo found at " << current_file;
+          processed_photos.insert(current_file);
+          m_photos.insert(std::make_pair(current_file, photo));
+        }
+      } else {
+        processed_photos.insert(current_file);
+      }
+    }
+  }
+
+  // Check if there are photos / albums that are not in the list
+  // TODO:
+}
 auto Album::get_files() const -> std::vector<std::filesystem::path> {
   auto result = std::vector<std::filesystem::path> {};
   ranges::copy_if(

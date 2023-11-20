@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace album_architect {
 
@@ -21,6 +22,11 @@ class Album {
   /// \brief Private default constructor
   explicit Album(std::filesystem::path absolute_path);
 
+  /// Cache for photos and albums
+  std::map<std::string, std::shared_ptr<Album>> m_albums;
+  std::map<std::string, std::shared_ptr<Photo>> m_photos;
+  std::vector<std::string> m_files;
+
 public:
   /// \brief Returns the absolute path associated to the Album
   /// \return
@@ -33,6 +39,9 @@ public:
   [[nodiscard]] auto name() const -> std::string {
     return m_absolute_path.filename().string();
   }
+
+  /// \brief Updates the internal cache of Photos and Albums
+  auto update_album() -> void;
 
   /// \brief Returns all the files that are under the album, regardless of type.
   /// Does not include other folders / Albums
