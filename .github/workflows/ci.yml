@@ -105,7 +105,7 @@ jobs:
       run: ctest --output-on-failure --no-tests=error -j 2
 
   test:
-    if: do_tests == true
+    if: ${{ do_tests == true }}
     needs: [lint]
 
     strategy:
