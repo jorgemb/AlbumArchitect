@@ -55,6 +55,9 @@ find_package(Tesseract CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
 target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
 
+add_custom_target(AlbumArchitect_data)
+add_dependencies(AlbumArchitect_lib AlbumArchitect_data)
+
 # ---- Declare executable ----
 
 add_executable(AlbumArchitect_exe source/main.cpp)
@@ -74,7 +77,7 @@ list(APPEND OPENCV_MODEL_FILES
         ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar_int8.onnx
 )
 
-add_custom_command(TARGET AlbumArchitect_exe POST_BUILD
+add_custom_command(TARGET AlbumArchitect_data
         COMMAND ${CMAKE_COMMAND} -E make_directory
         ${RUNTIME_MODELS}
         COMMAND ${CMAKE_COMMAND} -E copy
