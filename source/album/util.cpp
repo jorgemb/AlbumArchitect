@@ -54,7 +54,7 @@ auto AutoTempDirectory::generate_random_name(size_t size) -> std::string {
       "1234567890"
       "_");
 
-  // Create random defice and generator
+  // Create random device and generator
   auto generator = std::default_random_engine {std::random_device {}()};
   auto distribution =
       std::uniform_int_distribution<size_t>(0, chars.size() - 1);
