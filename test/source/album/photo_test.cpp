@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <album/album.h>
 #include <album/photo.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/combine.hpp>
@@ -12,9 +13,12 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <glog/logging.h>
 
+#include "album/util.h"
+
 using album_architect::Photo;
 using namespace std::string_literals;
 namespace views = std::ranges::views;
+namespace ranges = std::ranges;
 namespace fs = std::filesystem;
 
 /// Holds data about a test image
@@ -196,5 +200,86 @@ Created: 2012-02-21T14:00:00Z
     auto current_metadata = current_image->get_metadata();
 
     REQUIRE(current_metadata == expected_metadata);
+  }
+}
+
+TEST_CASE("Load and retrieve Albums", "[album][albums]") {
+  using album_architect::Album;
+
+  // Loads test data
+  const auto test_path = fs::path("sample-images") / "Samples"s;
+
+  // Loads a non-existent album
+  auto non_existent_album = Album::load_album("not/existent/path");
+  REQUIRE_FALSE(non_existent_album);
+
+  // Tries to load an album from the Path
+  auto top_level_album = Album::load_album(test_path);
+  REQUIRE(top_level_album);
+  REQUIRE(top_level_album->get_absolute_path()
+          == fs::current_path() / test_path);
+
+  // There should be no images and no files at the top level
+  auto top_photos = top_level_album->get_photos();
+  REQUIRE(top_photos.empty());
+  auto top_files = top_level_album->get_files();
+  REQUIRE(top_files.empty());
+
+  // There should be an album per folder
+  auto top_albums = top_level_album->get_albums();
+  constexpr auto expected_top_albums = 27;
+  REQUIRE(top_albums.size() == expected_top_albums);
+
+  // Get one of the albums
+  auto jpeg_album_iter = ranges::find_if(
+      top_albums, [](const auto& album) { return album->name() == "JPG"s; });
+  REQUIRE(jpeg_album_iter != top_albums.end());
+
+  auto jpeg_album = *jpeg_album_iter;
+  auto jpeg_photos = jpeg_album->get_photos();
+  constexpr auto expected_jpeg_photos = 4;
+  REQUIRE(jpeg_photos.size() == expected_jpeg_photos);
+
+  auto jpeg_files = jpeg_album->get_files();
+  constexpr auto expected_jpeg_files = 4;
+  REQUIRE(jpeg_files.size() == expected_jpeg_files);
+}
+
+TEST_CASE("Update albums", "[album][albums]") {
+  // Create a temporary directory
+  const auto temp_dir = album_architect::util::AutoTempDirectory {};
+  fs::create_directory(temp_dir.path() / "album_1");
+  fs::create_directory(temp_dir.path() / "album_2");
+
+  SECTION("Test album updating") {
+    // Create album with current information
+    auto album = album_architect::Album::load_album(temp_dir.path());
+    const auto expected_albums = 2;
+    REQUIRE(album->get_albums().size() == expected_albums);
+
+    // .. create new album should keep the cache
+    fs::create_directory(temp_dir.path() / "album_3");
+    REQUIRE(album->get_albums().size() == expected_albums);
+
+    // .. updating cache should discover new album
+    album->update_album();
+    REQUIRE(album->get_albums().size() == expected_albums + 1);
+  }
+
+  // Create photos
+  SECTION("Test photo updating") {
+    const auto& path = temp_dir.path();
+    album_architect::util::create_test_image(path / "image1.png", 128, 128);
+    album_architect::util::create_test_image(path / "image2.jpg", 128, 64);
+
+    auto album = album_architect::Album::load_album(path);
+    constexpr auto expected_images = 2;
+    REQUIRE(album->get_photos().size() == expected_images);
+
+    album_architect::util::create_test_image(path / "image3.bmp", 64, 128);
+    REQUIRE(album->get_photos().size() == expected_images);
+
+    album->update_album();
+    REQUIRE(album->get_photos().size() == expected_images + 1);
   }
 }
