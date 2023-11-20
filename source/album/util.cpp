@@ -6,6 +6,8 @@
 
 #include "util.h"
 
+#include <OpenImageIO/imagebuf.h>
+#include <OpenImageIO/imagebufalgo.h>
 #include <glog/logging.h>
 #include <opencv2/core/utils/logger.defines.hpp>
 
@@ -86,5 +88,17 @@ AutoTempDirectory::AutoTempDirectory() {
 AutoTempDirectory::~AutoTempDirectory() {
   // Try removing all subdirectories of the path
   fs::remove_all(m_path);
+}
+auto create_test_image(const std::filesystem::path& path, int width, int height)
+    -> bool {
+  // Fill buffer with data
+  OIIO::ImageSpec spec(width, height, 3, OIIO::TypeDesc::FLOAT);
+  OIIO::ImageBuf buffer(spec);
+  constexpr auto dark = std::array<float, 3> {0.1, 0.1, 0.1};
+  constexpr auto light = std::array<float, 3> {0.8, 0.8, 0.8};
+  constexpr auto square_size = 64;
+  OIIO::ImageBufAlgo::checker(buffer, square_size, square_size, 1, dark, light);
+
+  return buffer.write(path.string());
 }
 }  // namespace album_architect::util

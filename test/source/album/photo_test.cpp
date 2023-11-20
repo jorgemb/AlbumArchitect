@@ -13,6 +13,8 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <glog/logging.h>
 
+#include "album/util.h"
+
 using album_architect::Photo;
 using namespace std::string_literals;
 namespace views = std::ranges::views;
@@ -201,7 +203,7 @@ Created: 2012-02-21T14:00:00Z
   }
 }
 
-TEST_CASE("Load and retrieve Albums", "[album]") {
+TEST_CASE("Load and retrieve Albums", "[album][albums]") {
   using album_architect::Album;
 
   // Loads test data
@@ -241,4 +243,43 @@ TEST_CASE("Load and retrieve Albums", "[album]") {
   auto jpeg_files = jpeg_album->get_files();
   constexpr auto expected_jpeg_files = 4;
   REQUIRE(jpeg_files.size() == expected_jpeg_files);
+}
+
+TEST_CASE("Update albums", "[album][albums]") {
+  // Create a temporary directory
+  const auto temp_dir = album_architect::util::AutoTempDirectory {};
+  fs::create_directory(temp_dir.path() / "album_1");
+  fs::create_directory(temp_dir.path() / "album_2");
+
+  SECTION("Test album updating") {
+    // Create album with current information
+    auto album = album_architect::Album::load_album(temp_dir.path());
+    const auto expected_albums = 2;
+    REQUIRE(album->get_albums().size() == expected_albums);
+
+    // .. create new album should keep the cache
+    fs::create_directory(temp_dir.path() / "album_3");
+    REQUIRE(album->get_albums().size() == expected_albums);
+
+    // .. updating cache should discover new album
+    album->update_album();
+    REQUIRE(album->get_albums().size() == expected_albums + 1);
+  }
+
+  // Create photos
+  SECTION("Test photo updating") {
+    const auto& path = temp_dir.path();
+    album_architect::util::create_test_image(path / "image1.png", 128, 128);
+    album_architect::util::create_test_image(path / "image2.jpg", 128, 64);
+
+    auto album = album_architect::Album::load_album(path);
+    constexpr auto expected_images = 2;
+    REQUIRE(album->get_photos().size() == expected_images);
+
+    album_architect::util::create_test_image(path / "image3.bmp", 64, 128);
+    REQUIRE(album->get_photos().size() == expected_images);
+
+    album->update_album();
+    REQUIRE(album->get_photos().size() == expected_images+1);
+  }
 }

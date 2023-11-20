@@ -23,7 +23,7 @@ class Album {
   explicit Album(std::filesystem::path absolute_path);
 
   /// Cache for photos and albums
-  std::map<std::string, std::shared_ptr<Album>> m_albums;
+  mutable std::map<std::string, std::shared_ptr<Album>> m_albums;
   std::map<std::string, std::shared_ptr<Photo>> m_photos;
   std::vector<std::string> m_files;
 

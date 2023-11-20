@@ -33,7 +33,8 @@ class AutoTempDirectory {
 
   /// \brief Generates a random name valid for the filesystem
   /// \return
-  static auto generate_random_name(size_t size=16)-> std::string;
+  static auto generate_random_name(size_t size = 16) -> std::string;
+
 public:
   /* Operators: Copy deleted, move default */
   AutoTempDirectory(const AutoTempDirectory& other) = delete;
@@ -60,6 +61,14 @@ public:
   /// \brief Deletes the temporary directory and all the contents
   ~AutoTempDirectory();
 };
+
+/// \brief Creates a test image with a checker pattern at the specified path
+/// \param path
+/// \param width
+/// \param height
+/// \return
+auto create_test_image(const std::filesystem::path& path, int width, int height)
+    -> bool;
 
 }  // namespace album_architect::util
 
