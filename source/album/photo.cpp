@@ -16,7 +16,6 @@
 #include <opencv2/imgproc.hpp>
 
 namespace album_architect {
-
 /// Calculates a hash of the given type
 /// \tparam T
 /// \return

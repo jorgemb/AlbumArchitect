@@ -28,6 +28,8 @@ add_library(
         source/album/text_classifier.h
         source/album/util.cpp
         source/album/util.h
+        source/album/album.cpp
+        source/album/album.h
 )
 
 target_include_directories(

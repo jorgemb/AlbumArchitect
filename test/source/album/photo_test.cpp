@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <album/album.h>
 #include <album/photo.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/combine.hpp>
@@ -15,6 +16,7 @@
 using album_architect::Photo;
 using namespace std::string_literals;
 namespace views = std::ranges::views;
+namespace ranges = std::ranges;
 namespace fs = std::filesystem;
 
 /// Holds data about a test image
@@ -197,4 +199,46 @@ Created: 2012-02-21T14:00:00Z
 
     REQUIRE(current_metadata == expected_metadata);
   }
+}
+
+TEST_CASE("Load and retrieve Albums", "[album]") {
+  using album_architect::Album;
+
+  // Loads test data
+  const auto test_path = fs::path("sample-images") / "Samples"s;
+
+  // Loads a non-existant album
+  auto non_existant_album = Album::load_album("not/existant/path");
+  REQUIRE_FALSE(non_existant_album);
+
+  // Tries to load an album from the Path
+  auto top_level_album = Album::load_album(test_path);
+  REQUIRE(top_level_album);
+  REQUIRE(top_level_album->get_absolute_path()
+          == fs::current_path() / test_path);
+
+  // There should be no images and no files at the top level
+  auto top_photos = top_level_album->get_photos();
+  REQUIRE(top_photos.empty());
+  auto top_files = top_level_album->get_files();
+  REQUIRE(top_files.empty());
+
+  // There should be an album per folder
+  auto top_albums = top_level_album->get_albums();
+  constexpr auto expected_top_albums = 27;
+  REQUIRE(top_albums.size() == expected_top_albums);
+
+  // Get one of the albums
+  auto jpeg_album_iter = ranges::find_if(
+      top_albums, [](const auto& album) { return album->name() == "JPG"s; });
+  REQUIRE(jpeg_album_iter != top_albums.end());
+
+  auto jpeg_album = *jpeg_album_iter;
+  auto jpeg_photos = jpeg_album->get_photos();
+  constexpr auto expected_jpeg_photos = 4;
+  REQUIRE(jpeg_photos.size() == expected_jpeg_photos);
+
+  auto jpeg_files = jpeg_album->get_files();
+  constexpr auto expected_jpeg_files = 4;
+  REQUIRE(jpeg_files.size() == expected_jpeg_files);
 }

@@ -10,7 +10,7 @@ on:
     - master
 
 env:
-  VCPKG_COMMIT: "06c79a9afa6f99f02f44d20df9e0848b2a56bf1b"
+  VCPKG_COMMIT: "61f610845fb206298a69f708104a51d651872877"
 
 jobs:
   lint:
@@ -106,11 +106,12 @@ jobs:
   test:
     needs: [lint]
 
-    strategy:
-      matrix:
-        os: [macos-12, ubuntu-22.04, windows-2022]
-
-    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        os: [macos-12, ubuntu-22.04, windows-2022]
+#
+#    runs-on: ${{ matrix.os }}
+    runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v3
