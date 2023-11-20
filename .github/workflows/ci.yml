@@ -106,12 +106,12 @@ jobs:
   test:
     needs: [lint]
 
-#    strategy:
-#      matrix:
+    strategy:
+      matrix:
+        os: [windows-2022]
 #        os: [macos-12, ubuntu-22.04, windows-2022]
-#
-#    runs-on: ${{ matrix.os }}
-    runs-on: windows-2022
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
