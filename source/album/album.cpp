@@ -39,7 +39,7 @@ auto Album::update_album() -> void {
       if(!m_albums.contains(current_file)) {
         // New Album found
         DLOG(INFO) << "--Album found at " << current_file;
-        m_albums.insert(std::make_pair(current_file, Album::load_album(entry.path())));
+        m_albums[current_file] = std::move(Album::load_album(entry.path()));
       }
     } else {
       // .. add File, probable Photo
@@ -48,7 +48,7 @@ auto Album::update_album() -> void {
         if (auto photo = Photo::load(entry.path())) {
           DLOG(INFO) << "--Photo found at " << current_file;
           processed_photos.insert(current_file);
-          m_photos.insert(std::make_pair(current_file, photo));
+          m_photos[current_file] = std::move(photo);
         }
       } else {
         processed_photos.insert(current_file);
@@ -57,7 +57,25 @@ auto Album::update_album() -> void {
   }
 
   // Check if there are photos / albums that are not in the list
-  // TODO:
+  for(auto current_album = m_albums.begin(); current_album != m_albums.end(); /* no increment */) {
+    if(!processed_albums.contains(current_album->first)) {
+      // Delete album
+      DLOG(INFO) << "--Removed album at " << current_album->first;
+      current_album = m_albums.erase(current_album);
+    } else {
+      ++current_album;
+    }
+  }
+
+  for(auto current_photo = m_photos.begin(); current_photo != m_photos.end(); /* no increment */) {
+    if(!processed_photos.contains(current_photo->first)) {
+      // Delete photo
+      DLOG(INFO) << "--Removed photo at " << current_photo->first;
+      current_photo = m_photos.erase(current_photo);
+    } else {
+      ++current_photo;
+    }
+  }
 }
 auto Album::get_files() const -> std::vector<std::filesystem::path> {
   auto result = std::vector<std::filesystem::path> {};
