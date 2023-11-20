@@ -280,6 +280,6 @@ TEST_CASE("Update albums", "[album][albums]") {
     REQUIRE(album->get_photos().size() == expected_images);
 
     album->update_album();
-    REQUIRE(album->get_photos().size() == expected_images+1);
+    REQUIRE(album->get_photos().size() == expected_images + 1);
   }
 }

@@ -15,9 +15,9 @@ TEST_CASE("Name is AlbumArchitect", "[library]") {
 }
 
 TEST_CASE("Temporary directory creation", "[utility]") {
-  auto temp_path = std::filesystem::path{};
+  auto temp_path = std::filesystem::path {};
   {
-    const auto temp_directory = album_architect::util::AutoTempDirectory{};
+    const auto temp_directory = album_architect::util::AutoTempDirectory {};
     temp_path = temp_directory.path();
 
     REQUIRE(fs::exists(temp_path));
