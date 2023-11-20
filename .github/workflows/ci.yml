@@ -11,7 +11,7 @@ on:
 
 env:
   VCPKG_COMMIT: "61f610845fb206298a69f708104a51d651872877"
-  DOT_TESTS: "false"
+  DO_TESTS: "false"
 
 jobs:
   lint:
@@ -105,8 +105,8 @@ jobs:
       run: ctest --output-on-failure --no-tests=error -j 2
 
   test:
-    if: env.DO_TESTS == "true"
     needs: [lint]
+    if: env.DO_TESTS == "true"
 
     strategy:
       matrix:
