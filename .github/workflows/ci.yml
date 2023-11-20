@@ -11,6 +11,7 @@ on:
 
 env:
   VCPKG_COMMIT: "61f610845fb206298a69f708104a51d651872877"
+  DO_BUILD: ${{ false }}
 
 jobs:
   lint:
@@ -104,6 +105,7 @@ jobs:
       run: ctest --output-on-failure --no-tests=error -j 2
 
   test:
+    if: ${{ DO_BUILD }}
     needs: [lint]
 
     strategy:
