@@ -40,7 +40,6 @@ target_include_directories(
 
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 
-find_package(fmt REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
 find_package(OpenCV 4 CONFIG REQUIRED)
@@ -52,7 +51,7 @@ find_package(OpenImageIO CONFIG REQUIRED)
 find_package(glog CONFIG REQUIRED)
 find_package(Tesseract CONFIG REQUIRED)
 
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
+target_link_libraries(AlbumArchitect_lib PRIVATE Boost::filesystem Boost::thread Boost::headers OpenEXR::OpenEXR TBB::tbb Tesseract::libtesseract)
 target_link_libraries(AlbumArchitect_lib PUBLIC OpenImageIO::OpenImageIO glog::glog opencv_core dlib::dlib)
 
 add_custom_target(AlbumArchitect_data)
