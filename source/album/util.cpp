@@ -95,7 +95,8 @@ AutoTempDirectory::~AutoTempDirectory() {
   }
 }
 AutoSetWorkingDirectory::AutoSetWorkingDirectory(
-    const std::filesystem::path& path): m_previous_path(fs::current_path()) {
+    const std::filesystem::path& path)
+    : m_previous_path(fs::current_path()) {
   fs::current_path(path);
 }
 AutoSetWorkingDirectory::~AutoSetWorkingDirectory() {
