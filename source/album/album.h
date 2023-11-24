@@ -10,10 +10,19 @@
 #include <string>
 #include <vector>
 
+#include <cereal/types/map.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/string.hpp>
+
 namespace album_architect {
 
 // Forward declaration
 class Photo;
+
+/// \brief Contains all the metadata of the album
+struct AlbumMetadata {
+  std::map<std::string, std::shared_ptr<Photo>> photos;
+};
 
 /// Represents a folder with Photos, Videos and other Albums
 class Album {
@@ -24,7 +33,7 @@ class Album {
 
   /// Cache for photos and albums
   mutable std::map<std::string, std::shared_ptr<Album>> m_albums;
-  std::map<std::string, std::shared_ptr<Photo>> m_photos;
+  AlbumMetadata m_metadata;
   std::vector<std::string> m_files;
 
 public:

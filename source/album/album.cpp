@@ -46,13 +46,13 @@ auto Album::update_album() -> void {
     } else {
       m_files.push_back(current_file);
       // .. add File, probable Photo
-      if (!m_photos.contains(current_file)) {
+      if (!m_metadata.photos.contains(current_file)) {
         // Try to load as Photo
         auto photo = std::make_unique<Photo>(entry.path());
         if (photo->is_ok()) {
           DLOG(INFO) << "--Photo found at " << current_file;
           processed_photos.insert(current_file);
-          m_photos[current_file] = std::move(photo);
+          m_metadata.photos[current_file] = std::move(photo);
         }
       } else {
         processed_photos.insert(current_file);
@@ -73,13 +73,14 @@ auto Album::update_album() -> void {
     }
   }
 
-  for (auto current_photo = m_photos.begin(); current_photo != m_photos.end();
+  for (auto current_photo = m_metadata.photos.begin();
+       current_photo != m_metadata.photos.end();
        /* no increment */)
   {
     if (!processed_photos.contains(current_photo->first)) {
       // Delete photo
       DLOG(INFO) << "--Removed photo at " << current_photo->first;
-      current_photo = m_photos.erase(current_photo);
+      current_photo = m_metadata.photos.erase(current_photo);
     } else {
       ++current_photo;
     }
@@ -98,7 +99,7 @@ auto Album::get_photos() const -> std::vector<std::shared_ptr<Photo>> {
   auto result = std::vector<std::shared_ptr<Photo>> {};
   result.reserve(m_files.size());
 
-  ranges::transform(m_photos,
+  ranges::transform(m_metadata.photos,
                     std::back_inserter(result),
                     [](const auto& photo_element)
                     { return photo_element.second; });

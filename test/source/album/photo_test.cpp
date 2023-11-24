@@ -285,26 +285,26 @@ TEST_CASE("Update albums", "[album][albums]") {
   }
 }
 
-TEST_CASE("Serialization of metadata", "[album][serialization][metadata]") {
-  auto metadata = album_architect::PhotoMetadata {
-      "creation_time", "date_time", "description", {"key1", "value1"}};
-
-  auto stream = std::stringstream {};
-  {
-    auto output = cereal::BinaryOutputArchive(stream);
-    output(metadata);
-  }
-
-  auto loaded_metadata = album_architect::PhotoMetadata {};
-  {
-    auto input = cereal::BinaryInputArchive(stream);
-    input(loaded_metadata);
-  }
-
-  REQUIRE(metadata == loaded_metadata);
-}
-
 TEST_CASE("Serialization of data", "[album][serialization]") {
+  SECTION("Test Metadata serialization") {
+    auto metadata = album_architect::PhotoMetadata {
+        "creation_time", "date_time", "description", {"key1", "value1"}};
+
+    auto stream = std::stringstream {};
+    {
+      auto output = cereal::BinaryOutputArchive(stream);
+      output(metadata);
+    }
+
+    auto loaded_metadata = album_architect::PhotoMetadata {};
+    {
+      auto input = cereal::BinaryInputArchive(stream);
+      input(loaded_metadata);
+    }
+
+    REQUIRE(metadata == loaded_metadata);
+  }
+
   // Test Photo serialization
   const auto temp_dir = album_architect::util::AutoTempDirectory();
   const auto& path = temp_dir.path();
@@ -337,5 +337,4 @@ TEST_CASE("Serialization of data", "[album][serialization]") {
     REQUIRE(album_architect::compare_hashes(average_hash, average_hash_loaded)
             == Catch::Approx(0.0));
   }
-
 }

@@ -175,7 +175,7 @@ private:
     m_path = path;
 
     // Load the image buffer
-    m_image = OIIO::ImageBuf(m_path.string());
+    m_image = OIIO::ImageBuf(path);
   }
 };
 
