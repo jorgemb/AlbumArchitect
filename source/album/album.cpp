@@ -2,14 +2,19 @@
 // Created by jorge on 03/11/2023.
 //
 
+#include <fstream>
 #include <ranges>
 #include <set>
 
 #include "album.h"
 
+#include <album/photo.h>
+#include <cereal/archives/binary.hpp>
 #include <glog/logging.h>
+#include <cereal/types/map.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/string.hpp>
 
-#include "photo.h"
 
 namespace album_architect {
 
@@ -19,8 +24,28 @@ namespace views = std::ranges::views;
 
 Album::Album(std::filesystem::path absolute_path)
     : m_absolute_path(std::move(absolute_path)) {
-  // Call update album
+  load_metadata();
   update_album();
+}
+void Album::load_metadata() {
+  const auto metadata_path = m_absolute_path / default_metadata_filename;
+  auto metadata_file = std::ifstream(metadata_path, std::ios::binary);
+  if (metadata_file.is_open()) {
+    // Try loading the metadata
+    auto archive = cereal::BinaryInputArchive(metadata_file);
+    archive(m_metadata);
+  }
+}
+void Album::save_metadata() {
+  const auto metadata_path = m_absolute_path / default_metadata_filename;
+  auto metadata_file = std::ofstream(metadata_path, std::ios::binary);
+  if (metadata_file.is_open()) {
+    // Try saving the metadata
+    auto archive = cereal::BinaryOutputArchive(metadata_file);
+    archive(m_metadata);
+  } else {
+    LOG(ERROR) << "Couldn't save metadata for album at " << m_absolute_path;
+  }
 }
 auto Album::update_album() -> void {
   DLOG(INFO) << "Updating album at: " << m_absolute_path;
@@ -85,6 +110,8 @@ auto Album::update_album() -> void {
       ++current_photo;
     }
   }
+
+  save_metadata();
 }
 auto Album::get_files() const -> std::vector<std::filesystem::path> {
   auto result = std::vector<std::filesystem::path> {};

@@ -10,9 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <cereal/types/map.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/types/string.hpp>
+#include <cereal/cereal.hpp>
 
 namespace album_architect {
 
@@ -22,6 +20,14 @@ class Photo;
 /// \brief Contains all the metadata of the album
 struct AlbumMetadata {
   std::map<std::string, std::shared_ptr<Photo>> photos;
+
+  /// \brief Serialization for metadata
+  /// \tparam Archive
+  /// \param archive
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(CEREAL_NVP(photos));
+  }
 };
 
 /// Represents a folder with Photos, Videos and other Albums
@@ -36,7 +42,16 @@ class Album {
   AlbumMetadata m_metadata;
   std::vector<std::string> m_files;
 
+  /// \brief Loads the metadata file
+  void load_metadata();
+
+  /// \brief Saves the metadata file
+  void save_metadata();
+
 public:
+  /// Name of metadata file
+  static inline const char* default_metadata_filename = ".albumarchitect";
+
   /// \brief Returns the absolute path associated to the Album
   /// \return
   [[nodiscard]] auto get_absolute_path() const -> const std::filesystem::path& {

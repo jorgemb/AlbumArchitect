@@ -246,11 +246,15 @@ TEST_CASE("Load and retrieve Albums", "[album][albums]") {
   REQUIRE(jpeg_files.size() == expected_jpeg_files);
 }
 
-TEST_CASE("Update albums", "[album][albums]") {
+TEST_CASE("Update albums", "[album][albums][metadata]") {
   // Create a temporary directory
   const auto temp_dir = album_architect::util::AutoTempDirectory {};
   fs::create_directory(temp_dir.path() / "album_1");
   fs::create_directory(temp_dir.path() / "album_2");
+
+  // Check that metadata file does not exist
+  REQUIRE_FALSE(fs::exists(
+      temp_dir.path() / album_architect::Album::default_metadata_filename));
 
   SECTION("Test album updating") {
     // Create album with current information
@@ -265,6 +269,10 @@ TEST_CASE("Update albums", "[album][albums]") {
     // .. updating cache should discover new album
     album->update_album();
     REQUIRE(album->get_albums().size() == expected_albums + 1);
+
+    // .. album updating should create the metadata file
+    REQUIRE(fs::exists(temp_dir.path()
+                       / album_architect::Album::default_metadata_filename));
   }
 
   // Create photos
