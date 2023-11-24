@@ -45,7 +45,7 @@ class Album {
   std::vector<std::string> m_files;
 
   /// \brief Loads the metadata file
-  void load_metadata();
+  bool load_metadata();
 
   /// \brief Saves the metadata file
   void save_metadata();

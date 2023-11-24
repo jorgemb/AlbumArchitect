@@ -10,6 +10,7 @@
 
 #include <album/photo.h>
 #include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/string.hpp>
@@ -24,17 +25,35 @@ namespace views = std::ranges::views;
 Album::Album(std::filesystem::path absolute_path, bool save_metadata)
     : m_absolute_path(std::move(absolute_path))
     , m_save_metadata(save_metadata) {
-  load_metadata();
-  update_album();
+  if (!load_metadata()) {
+    update_album();
+  }
 }
-void Album::load_metadata() {
+bool Album::load_metadata() {
   const auto metadata_path = m_absolute_path / default_metadata_filename;
   auto metadata_file = std::ifstream(metadata_path, std::ios::binary);
-  if (metadata_file.is_open()) {
-    // Try loading the metadata
-    auto archive = cereal::BinaryInputArchive(metadata_file);
-    archive(m_metadata);
+  if (!metadata_file.is_open()) {
+    return false;
   }
+
+  // Try loading the metadata
+  auto archive = cereal::JSONInputArchive(metadata_file);
+  archive(m_metadata);
+
+  // Remove all images that don't exist anymore
+  for (auto photo_iter = m_metadata.photos.begin();
+       photo_iter != m_metadata.photos.end();
+       /* no update */)
+  {
+    if (photo_iter->second->is_ok()) {
+      ++photo_iter;
+    } else {
+      // Remove the invalid photo
+      photo_iter = m_metadata.photos.erase(photo_iter);
+    }
+  }
+
+  return true;
 }
 void Album::save_metadata() {
   // Check if allowed to save metadata
@@ -45,7 +64,7 @@ void Album::save_metadata() {
   auto metadata_file = std::ofstream(metadata_path, std::ios::binary);
   if (metadata_file.is_open()) {
     // Try saving the metadata
-    auto archive = cereal::BinaryOutputArchive(metadata_file);
+    auto archive = cereal::JSONOutputArchive(metadata_file);
     archive(m_metadata);
   } else {
     LOG(ERROR) << "Couldn't save metadata for album at " << m_absolute_path;
@@ -148,7 +167,8 @@ auto Album::get_albums() const -> std::vector<std::shared_ptr<Album>> {
                     {
                       if (!album_element.second) {
                         album_element.second = Album::load_album(
-                            m_absolute_path / album_element.first, m_save_metadata);
+                            m_absolute_path / album_element.first,
+                            m_save_metadata);
                       }
 
                       return album_element.second;
