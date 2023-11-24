@@ -86,8 +86,8 @@ void detect_elements() {
       }
 
       cv::rectangle(original, rect, text_color, 3);
-      std::cout << "\tText: " << text
-                << " -- Confidence: " << confidence << "\n";
+      std::cout << "\tText: " << text << " -- Confidence: " << confidence
+                << "\n";
     }
 
     // Save
