@@ -6,13 +6,14 @@
 #define ALBUMARCHITECT_PHOTO_H
 
 #include <filesystem>
-#include <limits>
-#include <optional>
 #include <ostream>
 #include <ranges>
 
 #include <OpenImageIO/imagebuf.h>
 #include <boost/algorithm/hex.hpp>
+#include <cereal/access.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
 
@@ -63,16 +64,20 @@ struct PhotoMetadata {
   /// \return
   friend auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
       -> std::ostream&;
+
+  /* Serialization */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(CEREAL_NVP(creation_time),
+            CEREAL_NVP(date_time),
+            CEREAL_NVP(description),
+            CEREAL_NVP(keywords));
+  }
 };
 
 /// Represents a photo that can be loaded and processed.
-class Photo {
+class Photo final {
 public:
-  /// Tries to create a new photo from the given path. Returns
-  /// \param path
-  /// \return
-  static auto load(const std::filesystem::path& path) -> std::unique_ptr<Photo>;
-
   auto get_path() const -> const std::filesystem::path&;
   auto get_width() const -> int64_t;
   auto get_height() const -> int64_t;
@@ -100,6 +105,17 @@ public:
   /// \return
   auto get_metadata() const -> const PhotoMetadata&;
 
+  /// \brief Returns true if the Photo is loaded and working
+  /// \return
+  auto is_ok() const -> bool;
+
+  /// \brief Default constructor
+  Photo() = default;
+
+  /// \brief Constructor with path
+  /// \param path
+  explicit Photo(const std::filesystem::path& path);
+
   /// Destructor
   virtual ~Photo() = default;
 
@@ -116,6 +132,9 @@ public:
   auto operator=(Photo&& other) noexcept -> Photo& = default;
 
 private:
+  /// \brief Loads the metadata from the photo file
+  auto load_metadata() -> bool;
+
   /// Path of the photo
   std::filesystem::path m_path;
 
@@ -133,6 +152,31 @@ private:
 
   /// Loads OpenCV image on demand
   void load_opencv();
+
+  /* SERIALIZATION */
+  friend class cereal::access;
+
+  /// \brief Save function for serialization
+  /// \tparam Archive
+  /// \param ar
+  template<class Archive>
+  void save(Archive& ar) const {
+    ar(m_path.string(), m_metadata);
+  }
+
+  /// \brief Load function for serialization
+  /// \tparam Archive
+  /// \param ar
+  template<class Archive>
+  void load(Archive& ar) {
+    // Load values
+    auto path = std::string {};
+    ar(path, m_metadata);
+    m_path = path;
+
+    // Load the image buffer
+    m_image = OIIO::ImageBuf(path);
+  }
 };
 
 /// Tries to convert a hexadecimal value to cv::Mat

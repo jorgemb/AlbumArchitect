@@ -2,18 +2,19 @@
 #include <iostream>
 #include <optional>
 #include <ranges>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include <album/album.h>
 #include <album/photo.h>
+#include <album/util.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/combine.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
+#include <cereal/archives/binary.hpp>
 #include <glog/logging.h>
-
-#include "album/util.h"
 
 using album_architect::Photo;
 using namespace std::string_literals;
@@ -89,8 +90,8 @@ auto load_test_data() -> std::vector<TestImageData> {
 
 TEST_CASE("Invalid photo", "[album][photo]") {
   // Test invalid photo
-  auto invalid_photo = Photo::load("not_a_path.jpeg");
-  REQUIRE_FALSE(invalid_photo);
+  auto invalid_photo = Photo("not_a_path.jpeg");
+  REQUIRE_FALSE(invalid_photo.is_ok());
 
   std::cout << fs::current_path() << '\n';
 }
@@ -104,10 +105,10 @@ TEST_CASE("Load sample photos", "[album][photo]") {
   auto loaded_photos = size_t {};
   for (const auto& test_element : test_data) {
     INFO("Trying file: " << test_element.path);
-    auto photo = Photo::load(test_element.path);
-    CHECK_FALSE(photo == nullptr);
+    auto photo = Photo(test_element.path);
+    CHECK(photo.is_ok());
 
-    if (photo) {
+    if (photo.is_ok()) {
       loaded_photos++;
 
       // Check each of the hashes
@@ -115,7 +116,7 @@ TEST_CASE("Load sample photos", "[album][photo]") {
         auto test_hash = album_architect::Hash<cv::img_hash::AverageHash> {
             album_architect::from_hex_to_cv<uint8_t>(
                 test_element.average_hash.value())};
-        auto calculated_hash = photo->calculate_average_hash();
+        auto calculated_hash = photo.calculate_average_hash();
         auto difference =
             album_architect::compare_hashes(test_hash, calculated_hash);
         REQUIRE(difference == Catch::Approx(0.0));
@@ -125,7 +126,7 @@ TEST_CASE("Load sample photos", "[album][photo]") {
         auto test_hash = album_architect::Hash<cv::img_hash::PHash> {
             album_architect::from_hex_to_cv<uint8_t>(
                 test_element.p_hash.value())};
-        auto calculated_hash = photo->calculate_phash();
+        auto calculated_hash = photo.calculate_phash();
         auto difference =
             album_architect::compare_hashes(test_hash, calculated_hash);
         REQUIRE(difference == Catch::Approx(0.0));
@@ -141,13 +142,13 @@ TEST_CASE("Load sample photos", "[album][photo]") {
 TEST_CASE("Detect faces", "[album][photo][high-load]") {
   const auto image_path =
       fs::path("sample-images") / "Samples" / "HEIC" / "IMG_0378.HEIC";
-  auto photo = Photo::load(image_path);
+  auto photo = Photo(image_path);
 
   const auto expected_faces = 6;
-  auto faces = photo->get_faces();
+  auto faces = photo.get_faces();
   REQUIRE(faces.size() >= expected_faces);
 
-  auto faces_dnn = photo->get_faces_dnn();
+  auto faces_dnn = photo.get_faces_dnn();
   REQUIRE(faces_dnn.size() >= expected_faces);
 }
 
@@ -163,7 +164,7 @@ TEST_CASE("Convert from Hex to Mat", "[album][photo]") {
   REQUIRE(equal);
 }
 
-TEST_CASE("Retrieve image metadata", "[album][photo]") {
+TEST_CASE("Retrieve image metadata", "[album][photo][metadata]") {
   auto images = std::vector<std::string> {
       "sample-images/Samples/HEIC/IMG_0378.HEIC"s,
       "sample-images/Samples/BMP/error/33A3F6D37FE162E4.bmp"s,
@@ -196,8 +197,8 @@ Created: 2012-02-21T14:00:00Z
        boost::combine(images, metadata))
   {
     INFO("Current image: " << image_path);
-    auto current_image = album_architect::Photo::load(image_path);
-    auto current_metadata = current_image->get_metadata();
+    auto current_image = album_architect::Photo(image_path);
+    auto current_metadata = current_image.get_metadata();
 
     REQUIRE(current_metadata == expected_metadata);
   }
@@ -214,7 +215,7 @@ TEST_CASE("Load and retrieve Albums", "[album][albums]") {
   REQUIRE_FALSE(non_existent_album);
 
   // Tries to load an album from the Path
-  auto top_level_album = Album::load_album(test_path);
+  auto top_level_album = Album::load_album(test_path, /*save_metadata=*/false);
   REQUIRE(top_level_album);
   REQUIRE(top_level_album->get_absolute_path()
           == fs::current_path() / test_path);
@@ -245,11 +246,21 @@ TEST_CASE("Load and retrieve Albums", "[album][albums]") {
   REQUIRE(jpeg_files.size() == expected_jpeg_files);
 }
 
-TEST_CASE("Update albums", "[album][albums]") {
+TEST_CASE("Update albums", "[album][albums][metadata]") {
   // Create a temporary directory
   const auto temp_dir = album_architect::util::AutoTempDirectory {};
   fs::create_directory(temp_dir.path() / "album_1");
   fs::create_directory(temp_dir.path() / "album_2");
+
+  // Check that metadata file does not exist
+  const auto metadata_path =
+      temp_dir.path() / album_architect::Album::default_metadata_filename;
+  REQUIRE_FALSE(fs::exists(metadata_path));
+
+  SECTION("Test album metadata override") {
+    auto album = album_architect::Album::load_album(temp_dir.path(), false);
+    REQUIRE_FALSE(fs::exists(metadata_path));
+  }
 
   SECTION("Test album updating") {
     // Create album with current information
@@ -264,6 +275,10 @@ TEST_CASE("Update albums", "[album][albums]") {
     // .. updating cache should discover new album
     album->update_album();
     REQUIRE(album->get_albums().size() == expected_albums + 1);
+
+    // .. album updating should create the metadata file
+    REQUIRE(fs::exists(temp_dir.path()
+                       / album_architect::Album::default_metadata_filename));
   }
 
   // Create photos
@@ -274,12 +289,74 @@ TEST_CASE("Update albums", "[album][albums]") {
 
     auto album = album_architect::Album::load_album(path);
     constexpr auto expected_images = 2;
-    REQUIRE(album->get_photos().size() == expected_images);
+    auto album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
 
     album_architect::util::create_test_image(path / "image3.bmp", 64, 128);
-    REQUIRE(album->get_photos().size() == expected_images);
+    album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
+
+    // Check that reloading the album uses the metadata file instead
+    album.reset();
+    album = album_architect::Album::load_album(path);
+    album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
 
     album->update_album();
     REQUIRE(album->get_photos().size() == expected_images + 1);
+  }
+}
+
+TEST_CASE("Serialization of data", "[album][serialization]") {
+  SECTION("Test Metadata serialization") {
+    auto metadata = album_architect::PhotoMetadata {
+        "creation_time", "date_time", "description", {"key1", "value1"}};
+
+    auto stream = std::stringstream {};
+    {
+      auto output = cereal::BinaryOutputArchive(stream);
+      output(metadata);
+    }
+
+    auto loaded_metadata = album_architect::PhotoMetadata {};
+    {
+      auto input = cereal::BinaryInputArchive(stream);
+      input(loaded_metadata);
+    }
+
+    REQUIRE(metadata == loaded_metadata);
+  }
+
+  // Test Photo serialization
+  const auto temp_dir = album_architect::util::AutoTempDirectory();
+  const auto& path = temp_dir.path();
+  album_architect::util::create_test_image(path / "image1.png", 128, 128);
+
+  SECTION("Test Photo serialization") {
+    auto average_hash = album_architect::Hash<cv::img_hash::AverageHash> {};
+    auto average_hash_loaded =
+        album_architect::Hash<cv::img_hash::AverageHash> {};
+    auto stream = std::stringstream {};
+
+    // .. try saving
+    {
+      auto image = Photo(path / "image1.png");
+      average_hash = image.calculate_average_hash();
+
+      auto output = cereal::BinaryOutputArchive(stream);
+      output(image);
+    }
+
+    // .. try loading
+    {
+      auto image = Photo {};
+      auto input = cereal::BinaryInputArchive(stream);
+      input(image);
+      average_hash_loaded = image.calculate_average_hash();
+    }
+
+    // .. compare hashes
+    REQUIRE(album_architect::compare_hashes(average_hash, average_hash_loaded)
+            == Catch::Approx(0.0));
   }
 }

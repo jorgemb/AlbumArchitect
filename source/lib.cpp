@@ -1,6 +1,6 @@
+#include <format>
+
 #include "lib.hpp"
 
-#include <fmt/core.h>
-
 library::library()
-    : name {fmt::format("{}", "AlbumArchitect")} {}
+    : name {std::format("{}", "AlbumArchitect")} {}

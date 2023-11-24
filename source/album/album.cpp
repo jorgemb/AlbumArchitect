@@ -2,14 +2,21 @@
 // Created by jorge on 03/11/2023.
 //
 
+#include <fstream>
 #include <ranges>
 #include <set>
 
 #include "album.h"
 
+#include <album/photo.h>
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/string.hpp>
 #include <glog/logging.h>
 
-#include "photo.h"
+#include "util.h"
 
 namespace album_architect {
 
@@ -17,12 +24,59 @@ namespace fs = std::filesystem;
 namespace ranges = std::ranges;
 namespace views = std::ranges::views;
 
-Album::Album(std::filesystem::path absolute_path)
-    : m_absolute_path(std::move(absolute_path)) {
-  // Call update album
-  update_album();
+Album::Album(std::filesystem::path absolute_path, bool save_metadata)
+    : m_absolute_path(std::move(absolute_path))
+    , m_save_metadata(save_metadata) {
+  if (!load_metadata()) {
+    update_album();
+  }
+}
+bool Album::load_metadata() {
+  const auto metadata_path = m_absolute_path / default_metadata_filename;
+  auto metadata_file = std::ifstream(metadata_path, std::ios::binary);
+  if (!metadata_file.is_open()) {
+    return false;
+  }
+
+  // Try loading the metadata
+  {
+    auto set_working_directory = util::AutoSetWorkingDirectory(m_absolute_path);
+    auto archive = cereal::JSONInputArchive(metadata_file);
+    archive(m_metadata);
+  }
+
+  // Remove all images that don't exist anymore
+  for (auto photo_iter = m_metadata.photos.begin();
+       photo_iter != m_metadata.photos.end();
+       /* no update */)
+  {
+    if (photo_iter->second->is_ok()) {
+      ++photo_iter;
+    } else {
+      // Remove the invalid photo
+      photo_iter = m_metadata.photos.erase(photo_iter);
+    }
+  }
+
+  return true;
+}
+void Album::save_metadata() {
+  // Check if allowed to save metadata
+  if (!m_save_metadata)
+    return;
+
+  const auto metadata_path = m_absolute_path / default_metadata_filename;
+  auto metadata_file = std::ofstream(metadata_path, std::ios::binary);
+  if (metadata_file.is_open()) {
+    // Try saving the metadata
+    auto archive = cereal::JSONOutputArchive(metadata_file);
+    archive(m_metadata);
+  } else {
+    LOG(ERROR) << "Couldn't save metadata for album at " << m_absolute_path;
+  }
 }
 auto Album::update_album() -> void {
+  auto set_working_directory = util::AutoSetWorkingDirectory(m_absolute_path);
   DLOG(INFO) << "Updating album at: " << m_absolute_path;
 
   m_files.clear();
@@ -46,12 +100,13 @@ auto Album::update_album() -> void {
     } else {
       m_files.push_back(current_file);
       // .. add File, probable Photo
-      if (!m_photos.contains(current_file)) {
+      if (!m_metadata.photos.contains(current_file)) {
         // Try to load as Photo
-        if (auto photo = Photo::load(entry.path())) {
+        auto photo = std::make_unique<Photo>(current_file);
+        if (photo->is_ok()) {
           DLOG(INFO) << "--Photo found at " << current_file;
           processed_photos.insert(current_file);
-          m_photos[current_file] = std::move(photo);
+          m_metadata.photos[current_file] = std::move(photo);
         }
       } else {
         processed_photos.insert(current_file);
@@ -72,17 +127,20 @@ auto Album::update_album() -> void {
     }
   }
 
-  for (auto current_photo = m_photos.begin(); current_photo != m_photos.end();
+  for (auto current_photo = m_metadata.photos.begin();
+       current_photo != m_metadata.photos.end();
        /* no increment */)
   {
     if (!processed_photos.contains(current_photo->first)) {
       // Delete photo
       DLOG(INFO) << "--Removed photo at " << current_photo->first;
-      current_photo = m_photos.erase(current_photo);
+      current_photo = m_metadata.photos.erase(current_photo);
     } else {
       ++current_photo;
     }
   }
+
+  save_metadata();
 }
 auto Album::get_files() const -> std::vector<std::filesystem::path> {
   auto result = std::vector<std::filesystem::path> {};
@@ -97,7 +155,7 @@ auto Album::get_photos() const -> std::vector<std::shared_ptr<Photo>> {
   auto result = std::vector<std::shared_ptr<Photo>> {};
   result.reserve(m_files.size());
 
-  ranges::transform(m_photos,
+  ranges::transform(m_metadata.photos,
                     std::back_inserter(result),
                     [](const auto& photo_element)
                     { return photo_element.second; });
@@ -115,7 +173,8 @@ auto Album::get_albums() const -> std::vector<std::shared_ptr<Album>> {
                     {
                       if (!album_element.second) {
                         album_element.second = Album::load_album(
-                            m_absolute_path / album_element.first);
+                            m_absolute_path / album_element.first,
+                            m_save_metadata);
                       }
 
                       return album_element.second;
@@ -124,8 +183,8 @@ auto Album::get_albums() const -> std::vector<std::shared_ptr<Album>> {
   return result;
 }
 
-auto Album::load_album(const std::filesystem::path& album_path)
-    -> std::unique_ptr<Album> {
+auto Album::load_album(const std::filesystem::path& album_path,
+                       bool save_metadata) -> std::unique_ptr<Album> {
   // Check that the path refers to a directory
   if (!fs::is_directory(album_path)) {
     return {};
@@ -133,6 +192,7 @@ auto Album::load_album(const std::filesystem::path& album_path)
 
   // Check if the path is absolute
   auto absolute_path = fs::absolute(album_path);
-  return std::unique_ptr<Album>(new Album {std::move(absolute_path)});
+  return std::unique_ptr<Album>(
+      new Album {std::move(absolute_path), save_metadata});
 }
 }  // namespace album_architect

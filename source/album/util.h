@@ -62,6 +62,20 @@ public:
   ~AutoTempDirectory();
 };
 
+/// \brief Class that helps setting the working directory temporarily
+/// with RAII lifeline
+class AutoSetWorkingDirectory {
+  std::filesystem::path m_previous_path;
+
+public:
+  /// \brief Sets the working directory to the given path
+  /// \param path
+  explicit AutoSetWorkingDirectory(const std::filesystem::path& path);
+
+  /// \brief Restores the previous working directory
+  ~AutoSetWorkingDirectory();
+};
+
 /// \brief Creates a test image with a checker pattern at the specified path
 /// \param path
 /// \param width

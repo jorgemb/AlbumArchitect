@@ -59,16 +59,16 @@ void detect_elements() {
   auto selected_paths = select_random_photos(base_path, 10);
   for (auto const& path : selected_paths) {
     //  auto file = "test/sample-images/Samples/HEIC/IMG_0378.HEIC"s;
-    auto photo = album_architect::Photo::load(path);
-    if (!photo) {
+    auto photo = album_architect::Photo(path);
+    if (!photo.is_ok()) {
       LOG(ERROR) << "Couldn't load photo";
       continue;
     }
     LOG(INFO) << "Loaded photo: " << path;
 
     // Draw faces
-    auto faces = photo->get_faces();
-    auto original = photo->get_cv_mat();
+    auto faces = photo.get_faces();
+    auto original = photo.get_cv_mat();
 
     const auto color = cv::Scalar(255, 0, 0);
     for (const auto& face : faces) {
@@ -77,17 +77,17 @@ void detect_elements() {
 
     // Draw found text
     const auto text_color = cv::Scalar(0, 255, 255);
-    auto text = photo->get_text_ocr();
-    for (auto&& text_element : text) {
+    auto text = photo.get_text_ocr();
+    for (auto& [rect, text, confidence] : text) {
       // Check if there is text in the OCR
-      boost::trim(text_element.text);
-      if (text_element.text.empty()) {
+      boost::trim(text);
+      if (text.empty()) {
         continue;
       }
 
-      cv::rectangle(original, text_element.rect, text_color, 3);
-      std::cout << "\tText: " << text_element.text
-                << " -- Confidence: " << text_element.confidence << "\n";
+      cv::rectangle(original, rect, text_color, 3);
+      std::cout << "\tText: " << text << " -- Confidence: " << confidence
+                << "\n";
     }
 
     // Save

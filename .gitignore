@@ -11,3 +11,4 @@ CMakeUserPresets.json
 test/data/
 data/
 *.log
+.albumarchitect

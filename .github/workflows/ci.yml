@@ -10,7 +10,7 @@ on:
     - master
 
 env:
-  VCPKG_COMMIT: "61f610845fb206298a69f708104a51d651872877"
+  VCPKG_COMMIT: "23ceb9cbf9b6d32f485cf039547b70102a6ef9d8"
 
 jobs:
   lint:
@@ -102,16 +102,16 @@ jobs:
 #          detect_leaks=1"
 #        UBSAN_OPTIONS: print_stacktrace=1
 #      run: ctest --output-on-failure --no-tests=error -j 2
-
+#
 #  test:
 #    needs: [lint]
 #
-##    strategy:
-##      matrix:
+#    strategy:
+#      matrix:
 ##        os: [macos-12, ubuntu-22.04, windows-2022]
-##
-##    runs-on: ${{ matrix.os }}
-#    runs-on: windows-2022
+#        os: [windows-2022]
+#
+#    runs-on: ${{ matrix.os }}
 #
 #    steps:
 #    - uses: actions/checkout@v3
@@ -152,7 +152,7 @@ jobs:
 #    - name: Test
 #      working-directory: build
 #      run: ctest --output-on-failure --no-tests=error -C Release -j 2
-
+#
 #  docs:
 #    # Deploy docs only when builds succeed
 #    needs: [sanitize, test]
@@ -197,3 +197,4 @@ jobs:
 #      with:
 #        github_token: ${{ secrets.GITHUB_TOKEN }}
 #        publish_dir: build/docs/html
+#

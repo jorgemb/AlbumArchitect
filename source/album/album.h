@@ -6,28 +6,54 @@
 #define ALBUMARCHITECT_ALBUM_H
 
 #include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include <cereal/cereal.hpp>
 
 namespace album_architect {
 
 // Forward declaration
 class Photo;
 
+/// \brief Contains all the metadata of the album
+struct AlbumMetadata {
+  std::map<std::string, std::shared_ptr<Photo>> photos;
+
+  /// \brief Serialization for metadata
+  /// \tparam Archive
+  /// \param archive
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(CEREAL_NVP(photos));
+  }
+};
+
 /// Represents a folder with Photos, Videos and other Albums
 class Album {
   std::filesystem::path m_absolute_path;
+  bool m_save_metadata;
 
   /// \brief Private default constructor
-  explicit Album(std::filesystem::path absolute_path);
+  explicit Album(std::filesystem::path absolute_path,
+                 bool save_metadata = true);
 
   /// Cache for photos and albums
   mutable std::map<std::string, std::shared_ptr<Album>> m_albums;
-  std::map<std::string, std::shared_ptr<Photo>> m_photos;
+  AlbumMetadata m_metadata;
   std::vector<std::string> m_files;
 
+  /// \brief Loads the metadata file
+  bool load_metadata();
+
+  /// \brief Saves the metadata file
+  void save_metadata();
+
 public:
+  /// Name of metadata file
+  static inline const char* default_metadata_filename = ".albumarchitect";
+
   /// \brief Returns the absolute path associated to the Album
   /// \return
   [[nodiscard]] auto get_absolute_path() const -> const std::filesystem::path& {
@@ -58,7 +84,8 @@ public:
 
   /// \brief Loads an Album at the specified path
   /// \return
-  auto static load_album(const std::filesystem::path& album_path) -> std::unique_ptr<Album>;
+  auto static load_album(const std::filesystem::path& album_path,
+                         bool save_metadata = true) -> std::unique_ptr<Album>;
 };
 
 }  // namespace album_architect

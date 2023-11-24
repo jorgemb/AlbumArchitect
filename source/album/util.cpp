@@ -87,7 +87,20 @@ AutoTempDirectory::AutoTempDirectory() {
 }
 AutoTempDirectory::~AutoTempDirectory() {
   // Try removing all subdirectories of the path
-  fs::remove_all(m_path);
+  try {
+    fs::remove_all(m_path);
+  } catch (const fs::filesystem_error& ex) {
+    LOG(ERROR) << "Couldn't delete directory: " << m_path
+               << ". Error: " << ex.code();
+  }
+}
+AutoSetWorkingDirectory::AutoSetWorkingDirectory(
+    const std::filesystem::path& path)
+    : m_previous_path(fs::current_path()) {
+  fs::current_path(path);
+}
+AutoSetWorkingDirectory::~AutoSetWorkingDirectory() {
+  fs::current_path(m_previous_path);
 }
 auto create_test_image(const std::filesystem::path& path, int width, int height)
     -> bool {
