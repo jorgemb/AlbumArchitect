@@ -215,7 +215,7 @@ TEST_CASE("Load and retrieve Albums", "[album][albums]") {
   REQUIRE_FALSE(non_existent_album);
 
   // Tries to load an album from the Path
-  auto top_level_album = Album::load_album(test_path);
+  auto top_level_album = Album::load_album(test_path, /*save_metadata=*/false);
   REQUIRE(top_level_album);
   REQUIRE(top_level_album->get_absolute_path()
           == fs::current_path() / test_path);
@@ -253,8 +253,14 @@ TEST_CASE("Update albums", "[album][albums][metadata]") {
   fs::create_directory(temp_dir.path() / "album_2");
 
   // Check that metadata file does not exist
-  REQUIRE_FALSE(fs::exists(
-      temp_dir.path() / album_architect::Album::default_metadata_filename));
+  const auto metadata_path =
+      temp_dir.path() / album_architect::Album::default_metadata_filename;
+  REQUIRE_FALSE(fs::exists(metadata_path));
+
+  SECTION("Test album metadata override") {
+    auto album = album_architect::Album::load_album(temp_dir.path(), false);
+    REQUIRE_FALSE(fs::exists(metadata_path));
+  }
 
   SECTION("Test album updating") {
     // Create album with current information

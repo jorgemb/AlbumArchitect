@@ -33,9 +33,11 @@ struct AlbumMetadata {
 /// Represents a folder with Photos, Videos and other Albums
 class Album {
   std::filesystem::path m_absolute_path;
+  bool m_save_metadata;
 
   /// \brief Private default constructor
-  explicit Album(std::filesystem::path absolute_path);
+  explicit Album(std::filesystem::path absolute_path,
+                 bool save_metadata = true);
 
   /// Cache for photos and albums
   mutable std::map<std::string, std::shared_ptr<Album>> m_albums;
@@ -82,8 +84,8 @@ public:
 
   /// \brief Loads an Album at the specified path
   /// \return
-  auto static load_album(const std::filesystem::path& album_path)
-      -> std::unique_ptr<Album>;
+  auto static load_album(const std::filesystem::path& album_path,
+                         bool save_metadata = true) -> std::unique_ptr<Album>;
 };
 
 }  // namespace album_architect

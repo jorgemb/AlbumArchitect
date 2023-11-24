@@ -10,11 +10,10 @@
 
 #include <album/photo.h>
 #include <cereal/archives/binary.hpp>
-#include <glog/logging.h>
 #include <cereal/types/map.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/string.hpp>
-
+#include <glog/logging.h>
 
 namespace album_architect {
 
@@ -22,8 +21,9 @@ namespace fs = std::filesystem;
 namespace ranges = std::ranges;
 namespace views = std::ranges::views;
 
-Album::Album(std::filesystem::path absolute_path)
-    : m_absolute_path(std::move(absolute_path)) {
+Album::Album(std::filesystem::path absolute_path, bool save_metadata)
+    : m_absolute_path(std::move(absolute_path))
+    , m_save_metadata(save_metadata) {
   load_metadata();
   update_album();
 }
@@ -37,6 +37,10 @@ void Album::load_metadata() {
   }
 }
 void Album::save_metadata() {
+  // Check if allowed to save metadata
+  if (!m_save_metadata)
+    return;
+
   const auto metadata_path = m_absolute_path / default_metadata_filename;
   auto metadata_file = std::ofstream(metadata_path, std::ios::binary);
   if (metadata_file.is_open()) {
@@ -144,7 +148,7 @@ auto Album::get_albums() const -> std::vector<std::shared_ptr<Album>> {
                     {
                       if (!album_element.second) {
                         album_element.second = Album::load_album(
-                            m_absolute_path / album_element.first);
+                            m_absolute_path / album_element.first, m_save_metadata);
                       }
 
                       return album_element.second;
@@ -153,8 +157,8 @@ auto Album::get_albums() const -> std::vector<std::shared_ptr<Album>> {
   return result;
 }
 
-auto Album::load_album(const std::filesystem::path& album_path)
-    -> std::unique_ptr<Album> {
+auto Album::load_album(const std::filesystem::path& album_path,
+                       bool save_metadata) -> std::unique_ptr<Album> {
   // Check that the path refers to a directory
   if (!fs::is_directory(album_path)) {
     return {};
@@ -162,6 +166,7 @@ auto Album::load_album(const std::filesystem::path& album_path)
 
   // Check if the path is absolute
   auto absolute_path = fs::absolute(album_path);
-  return std::unique_ptr<Album>(new Album {std::move(absolute_path)});
+  return std::unique_ptr<Album>(
+      new Album {std::move(absolute_path), save_metadata});
 }
 }  // namespace album_architect
