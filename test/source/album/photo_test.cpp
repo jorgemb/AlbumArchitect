@@ -2,6 +2,7 @@
 #include <iostream>
 #include <optional>
 #include <ranges>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,7 @@
 #include <boost/range/combine.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
+#include <cereal/archives/binary.hpp>
 #include <glog/logging.h>
 
 #include "album/util.h"
@@ -281,5 +283,35 @@ TEST_CASE("Update albums", "[album][albums]") {
 
     album->update_album();
     REQUIRE(album->get_photos().size() == expected_images + 1);
+  }
+}
+
+TEST_CASE("Serialization of data", "[album][serialization]") {
+  // Test Photo serialization
+  const auto& temp_dir = album_architect::util::AutoTempDirectory();
+  const auto path = temp_dir.path();
+  album_architect::util::create_test_image(path / "image1.png", 128, 128);
+
+  SECTION("Test Photo serialization") {
+    auto image = Photo::load(path / "image1.png");
+    auto average_hash = image->calculate_average_hash();
+
+    // .. try saving
+    auto stream = std::stringstream{};
+    {
+      auto output = cereal::BinaryOutputArchive(stream);
+      output(image);
+    }
+    image.reset();
+
+    // .. try loading
+    {
+      auto input = cereal::BinaryInputArchive(stream);
+      input(image);
+    }
+
+    // .. compare hashes
+    auto average_hash_new = image->calculate_average_hash();
+    REQUIRE(album_architect::compare_hashes(average_hash, average_hash_new) == Catch::Approx(0.0));
   }
 }

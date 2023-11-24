@@ -33,46 +33,6 @@ auto calculate_hash(cv::InputArray input) -> Hash<T> {
   return Hash<T> {result};
 }
 
-auto Photo::load(const std::filesystem::path& path) -> std::unique_ptr<Photo> {
-  // Check if path exists
-  if (!exists(path)) {
-    LOG(ERROR) << "Path doesn't exist: " << path;
-    return {};
-  }
-
-  // Load the photo
-  auto image = OIIO::ImageBuf(path.string());
-  if (!image.initialized()) {
-    // Error while reading image
-    LOG(ERROR) << "Couldn't get image information for: " << path
-               << ". Error: " << image.geterror();
-    return {};
-  }
-
-  // Read the metadata
-  const auto& image_spec = image.spec();
-  auto keywords = std::vector<std::string> {};
-  auto raw_keywords = image_spec.extra_attribs.get_string("Keywords").str();
-  boost::algorithm::split(keywords, raw_keywords, boost::is_any_of(";"));
-
-  // ... remove empty
-  auto keywords_remove_iter =
-      std::remove_if(keywords.begin(),
-                     keywords.end(),
-                     [](const auto& str) { return str.empty(); });
-  keywords.erase(keywords_remove_iter, keywords.end());
-
-  auto metadata = PhotoMetadata {
-      image_spec.extra_attribs.get_string("Exif:DateTimeOriginal"),
-      image_spec.extra_attribs.get_string("DateTime"),
-      image_spec.extra_attribs.get_string("ImageDescription"),
-      std::move(keywords)};
-
-  // Internal data
-  return std::unique_ptr<Photo>(
-      new Photo(path, std::move(image), std::move(metadata)));
-}
-
 auto Photo::get_path() const -> const std::filesystem::path& {
   return m_path;
 }
@@ -117,6 +77,31 @@ void Photo::load_opencv() {
 auto Photo::get_cv_mat() -> const cv::Mat& {
   load_opencv();
   return m_image_cv;
+}
+auto Photo::load_metadata() -> bool {
+  if (!is_ok()) {
+    return false;
+  }
+
+  const auto& image_spec = m_image.spec();
+  auto keywords = std::vector<std::string> {};
+  auto raw_keywords = image_spec.extra_attribs.get_string("Keywords").str();
+  boost::algorithm::split(keywords, raw_keywords, boost::is_any_of(";"));
+
+  // ... remove empty
+  auto keywords_remove_iter =
+      std::remove_if(keywords.begin(),
+                     keywords.end(),
+                     [](const auto& str) { return str.empty(); });
+  keywords.erase(keywords_remove_iter, keywords.end());
+
+  m_metadata = PhotoMetadata {
+      image_spec.extra_attribs.get_string("Exif:DateTimeOriginal"),
+      image_spec.extra_attribs.get_string("DateTime"),
+      image_spec.extra_attribs.get_string("ImageDescription"),
+      std::move(keywords)};
+
+  return true;
 }
 auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   auto face_detector = FaceClassifier::get_opencv_face_detector();
@@ -233,6 +218,18 @@ auto Photo::get_text_ocr() -> std::vector<TextElement> {
 }
 auto Photo::get_metadata() const -> const PhotoMetadata& {
   return m_metadata;
+}
+auto Photo::is_ok() const -> bool {
+  return m_image.initialized();
+}
+Photo::Photo(const std::filesystem::path& path)
+    : m_path(path)
+    , m_image(path.string()) {
+  // Log the error in case of issues
+  if (!m_image.initialized()) {
+    LOG(ERROR) << "Couldn't load image " << path
+               << ". Error: " << m_image.geterror();
+  }
 }
 
 auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
