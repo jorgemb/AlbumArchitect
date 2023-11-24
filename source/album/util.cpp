@@ -94,6 +94,13 @@ AutoTempDirectory::~AutoTempDirectory() {
                << ". Error: " << ex.code();
   }
 }
+AutoSetWorkingDirectory::AutoSetWorkingDirectory(
+    const std::filesystem::path& path): m_previous_path(fs::current_path()) {
+  fs::current_path(path);
+}
+AutoSetWorkingDirectory::~AutoSetWorkingDirectory() {
+  fs::current_path(m_previous_path);
+}
 auto create_test_image(const std::filesystem::path& path, int width, int height)
     -> bool {
   // Fill buffer with data

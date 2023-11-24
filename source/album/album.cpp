@@ -16,6 +16,8 @@
 #include <cereal/types/string.hpp>
 #include <glog/logging.h>
 
+#include "util.h"
+
 namespace album_architect {
 
 namespace fs = std::filesystem;
@@ -37,8 +39,11 @@ bool Album::load_metadata() {
   }
 
   // Try loading the metadata
-  auto archive = cereal::JSONInputArchive(metadata_file);
-  archive(m_metadata);
+  {
+    auto set_working_directory = util::AutoSetWorkingDirectory(m_absolute_path);
+    auto archive = cereal::JSONInputArchive(metadata_file);
+    archive(m_metadata);
+  }
 
   // Remove all images that don't exist anymore
   for (auto photo_iter = m_metadata.photos.begin();
@@ -71,6 +76,7 @@ void Album::save_metadata() {
   }
 }
 auto Album::update_album() -> void {
+  auto set_working_directory = util::AutoSetWorkingDirectory(m_absolute_path);
   DLOG(INFO) << "Updating album at: " << m_absolute_path;
 
   m_files.clear();
@@ -96,7 +102,7 @@ auto Album::update_album() -> void {
       // .. add File, probable Photo
       if (!m_metadata.photos.contains(current_file)) {
         // Try to load as Photo
-        auto photo = std::make_unique<Photo>(entry.path());
+        auto photo = std::make_unique<Photo>(current_file);
         if (photo->is_ok()) {
           DLOG(INFO) << "--Photo found at " << current_file;
           processed_photos.insert(current_file);
