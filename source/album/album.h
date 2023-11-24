@@ -6,9 +6,9 @@
 #define ALBUMARCHITECT_ALBUM_H
 
 #include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace album_architect {
 
@@ -58,7 +58,8 @@ public:
 
   /// \brief Loads an Album at the specified path
   /// \return
-  auto static load_album(const std::filesystem::path& album_path) -> std::unique_ptr<Album>;
+  auto static load_album(const std::filesystem::path& album_path)
+      -> std::unique_ptr<Album>;
 };
 
 }  // namespace album_architect

@@ -229,6 +229,8 @@ Photo::Photo(const std::filesystem::path& path)
   if (!m_image.initialized()) {
     LOG(ERROR) << "Couldn't load image " << path
                << ". Error: " << m_image.geterror();
+  } else {
+    load_metadata();
   }
 }
 

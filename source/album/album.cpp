@@ -48,7 +48,8 @@ auto Album::update_album() -> void {
       // .. add File, probable Photo
       if (!m_photos.contains(current_file)) {
         // Try to load as Photo
-        if (auto photo = Photo::load(entry.path())) {
+        auto photo = std::make_unique<Photo>(entry.path());
+        if (photo->is_ok()) {
           DLOG(INFO) << "--Photo found at " << current_file;
           processed_photos.insert(current_file);
           m_photos[current_file] = std::move(photo);

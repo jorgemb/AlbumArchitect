@@ -12,6 +12,8 @@
 #include <OpenImageIO/imagebuf.h>
 #include <boost/algorithm/hex.hpp>
 #include <cereal/access.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
 
@@ -65,8 +67,11 @@ struct PhotoMetadata {
 
   /* Serialization */
   template<class Archive>
-  void serialize(Archive& ar, std::uint32_t /* version */) {
-    ar(creation_time, date_time, description, keywords);
+  void serialize(Archive& archive) {
+    archive(CEREAL_NVP(creation_time),
+            CEREAL_NVP(date_time),
+            CEREAL_NVP(description),
+            CEREAL_NVP(keywords));
   }
 };
 
@@ -155,16 +160,19 @@ private:
   /// \tparam Archive
   /// \param ar
   template<class Archive>
-  void save(Archive& ar, std::uint32_t /*version*/) const {
-    ar(m_path, m_metadata);
+  void save(Archive& ar) const {
+    ar(m_path.string(), m_metadata);
   }
 
   /// \brief Load function for serialization
   /// \tparam Archive
   /// \param ar
   template<class Archive>
-  void load(Archive& ar, std::uint32_t /*version*/) {
-    ar(m_path, m_metadata);
+  void load(Archive& ar) {
+    // Load values
+    auto path = std::string {};
+    ar(path, m_metadata);
+    m_path = path;
 
     // Load the image buffer
     m_image = OIIO::ImageBuf(m_path.string());
