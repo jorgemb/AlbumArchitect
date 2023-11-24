@@ -289,10 +289,18 @@ TEST_CASE("Update albums", "[album][albums][metadata]") {
 
     auto album = album_architect::Album::load_album(path);
     constexpr auto expected_images = 2;
-    REQUIRE(album->get_photos().size() == expected_images);
+    auto album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
 
     album_architect::util::create_test_image(path / "image3.bmp", 64, 128);
-    REQUIRE(album->get_photos().size() == expected_images);
+    album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
+
+    // Check that reloading the album uses the metadata file instead
+    album.reset();
+    album = album_architect::Album::load_album(path);
+    album_photos = album->get_photos().size();
+    REQUIRE(album_photos == expected_images);
 
     album->update_album();
     REQUIRE(album->get_photos().size() == expected_images + 1);

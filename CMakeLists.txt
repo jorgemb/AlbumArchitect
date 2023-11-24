@@ -13,6 +13,16 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+# ---- Other dependencies ----
+
+# Import dlib with FetchContent, as CUDA support cannot be conditionally enabled via vcpkg manifest mode
+include(FetchContent)
+FetchContent_Declare(dlib
+        GIT_REPOSITORY https://github.com/davisking/dlib.git
+        GIT_TAG v19.24
+)
+FetchContent_MakeAvailable(dlib)
+
 # ---- Declare library ----
 
 add_library(
@@ -43,14 +53,12 @@ target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
 find_package(OpenCV 4 CONFIG REQUIRED)
-find_package(dlib CONFIG REQUIRED)
-
 find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
-find_package(OpenImageIO CONFIG REQUIRED)
-find_package(glog CONFIG REQUIRED)
-find_package(Tesseract CONFIG REQUIRED)
-find_package(cereal CONFIG REQUIRED)
+find_package(OpenImageIO CONFIG REQUIRED) # Load any type of image format
+find_package(glog CONFIG REQUIRED) # Logging support
+find_package(Tesseract CONFIG REQUIRED) # OCR support
+find_package(cereal CONFIG REQUIRED) # Serialization library
 
 target_link_libraries(AlbumArchitect_lib PRIVATE
         Boost::filesystem
