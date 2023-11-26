@@ -6,7 +6,7 @@ Welcome to AlbumArchitect - your intelligent photo management solution. This too
 
 Use this list of features as a task list to guide the development and implementation of AlbumArchitect:
 
-- [ ] **Face Detection:** Implement advanced face detection technology to automatically identify and tag individuals in photos.
+- [x] **Face Detection:** Implement advanced face detection technology to automatically identify and tag individuals in photos.
 
 - [ ] **Duplicate Photo Detection:** Develop a feature that detects similar or duplicated images, making it easy to clean up your photo library.
 

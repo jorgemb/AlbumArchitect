@@ -12,7 +12,8 @@ include(Catch)
 # ---- Tests ----
 
 add_executable(AlbumArchitect_test source/AlbumArchitect_test.cpp
-        source/album/photo_test.cpp)
+        source/album/photo_test.cpp
+        source/config/config_test.cpp)
 target_link_libraries(
         AlbumArchitect_test PRIVATE
         AlbumArchitect_lib

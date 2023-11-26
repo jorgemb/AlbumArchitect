@@ -19,7 +19,7 @@ include(cmake/variables.cmake)
 include(FetchContent)
 FetchContent_Declare(dlib
         GIT_REPOSITORY https://github.com/davisking/dlib.git
-        GIT_TAG v19.24
+        GIT_TAG v19.24.2
 )
 FetchContent_MakeAvailable(dlib)
 
@@ -40,6 +40,8 @@ add_library(
         source/album/util.h
         source/album/album.cpp
         source/album/album.h
+        source/config/config.cpp
+        source/config/config.h
 )
 
 target_include_directories(
@@ -53,25 +55,25 @@ target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
 find_package(OpenCV 4 CONFIG REQUIRED)
-find_package(TBB REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
 find_package(OpenImageIO CONFIG REQUIRED) # Load any type of image format
 find_package(glog CONFIG REQUIRED) # Logging support
 find_package(Tesseract CONFIG REQUIRED) # OCR support
 find_package(cereal CONFIG REQUIRED) # Serialization library
+find_package(yaml-cpp CONFIG REQUIRED)
 
 target_link_libraries(AlbumArchitect_lib PRIVATE
-        Boost::filesystem
         Boost::thread
+        Boost::filesystem
         Boost::headers
         OpenEXR::OpenEXR
-        TBB::tbb
-        Tesseract::libtesseract)
+        dlib::dlib
+        Tesseract::libtesseract
+        yaml-cpp::yaml-cpp)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         OpenImageIO::OpenImageIO
         glog::glog
         opencv_core
-        dlib::dlib
         cereal::cereal)
 
 add_custom_target(AlbumArchitect_data)
