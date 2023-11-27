@@ -39,7 +39,7 @@ auto Config::get_value(std::string_view key) -> std::optional<std::string> {
   return stack.back().as<std::string>();
 }
 auto Config::load(const std::filesystem::path& path) -> bool {
-  // Creates an empty node if not existant
+  // Creates an empty node if not existent
   if (!config_data) {
     config_data = std::make_unique<YAML::Node>();
   }
