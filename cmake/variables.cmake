@@ -26,3 +26,10 @@ if(NOT PROJECT_IS_TOP_LEVEL)
     set(warning_guard SYSTEM)
   endif()
 endif()
+
+# ---- Additional configuration ----
+
+# Whether to use the local dlib with find_package or use Fetch to include
+set(DLIB_BUILD ON CACHE BOOL "Fetch and compile dlib")
+set(DLIB_DOWNLOAD_DATA ON CACHE BOOL "Download model data for dlib")
+
