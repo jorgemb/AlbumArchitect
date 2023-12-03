@@ -22,7 +22,7 @@ auto handle_cv_log_messages(int status,
                             int line,
                             void* /*unused*/) -> int {
   // Convert severity
-  auto severity = google::GLOG_0;
+  auto severity = google::LogSeverity {};
   switch (status) {
     case CV_LOG_LEVEL_DEBUG:
     case CV_LOG_LEVEL_INFO:

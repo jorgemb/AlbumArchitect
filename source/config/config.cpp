@@ -58,7 +58,7 @@ auto Config::load(const std::filesystem::path& path) -> bool {
   }
 }
 void Config::clear() {
-  config_data.release();
+  config_data.reset();
 }
 auto Config::get_cv_face_classifier_model() -> std::filesystem::path {
   return get_value("paths.cv_face_classifier")
