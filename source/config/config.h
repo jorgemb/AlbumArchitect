@@ -31,6 +31,10 @@ public:
   /// \param path
   /// \return
   static auto load(const std::filesystem::path& path = "config.yaml") -> bool;
+
+  /// \brief Clears all the loaded values, so default values are returned
+  static void clear();
+
   static auto get_cv_face_classifier_model() -> std::filesystem::path;
   static auto get_dlib_face_classifier_model() -> std::filesystem::path;
   static auto get_tesseract_ocr_model_directory() -> std::filesystem::path;

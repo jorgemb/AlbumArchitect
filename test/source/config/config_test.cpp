@@ -41,6 +41,7 @@ paths:
     REQUIRE_FALSE(Config::get_value("path.does.not.exist"));
 
     // Getting the same path twice should give the same result
+    Config::clear();
     REQUIRE(Config::get_value("paths.cv_face_classifier").value()
             == cv_classifier);
     {
@@ -75,4 +76,7 @@ paths:
     REQUIRE(Config::get_tesseract_ocr_model_directory()
             == fs::path("3rdparty") / "tessdata_best");
   }
+
+  // Return everything to default
+  Config::load("config.test.yaml");
 }

@@ -16,12 +16,17 @@ include(cmake/variables.cmake)
 # ---- Other dependencies ----
 
 # Import dlib with FetchContent, as CUDA support cannot be conditionally enabled via vcpkg manifest mode
-include(FetchContent)
-FetchContent_Declare(dlib
-        GIT_REPOSITORY https://github.com/davisking/dlib.git
-        GIT_TAG v19.24.2
-)
-FetchContent_MakeAvailable(dlib)
+if (DLIB_BUILD)
+    message("Fetching and building dlib")
+    include(FetchContent)
+    FetchContent_Declare(dlib
+            GIT_REPOSITORY https://github.com/davisking/dlib.git
+            GIT_TAG v19.24.2
+    )
+    FetchContent_MakeAvailable(dlib)
+else (DLIB_BUILD)
+    find_package(dlib CONFIG REQUIRED)
+endif (DLIB_BUILD)
 
 # ---- Declare library ----
 
@@ -54,8 +59,9 @@ target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
 
-find_package(OpenCV 4 CONFIG REQUIRED)
+find_package(OpenCV 4.8.0 CONFIG REQUIRED)
 find_package(lcms2 CONFIG REQUIRED) # Required for OpenImageIO
+find_package(OpenEXR CONFIG REQUIRED) # Required for OpenImageIO
 find_package(OpenImageIO CONFIG REQUIRED) # Load any type of image format
 find_package(glog CONFIG REQUIRED) # Logging support
 find_package(Tesseract CONFIG REQUIRED) # OCR support
@@ -92,25 +98,30 @@ target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib opencv_highg
 
 # Copy runtime data
 set(RUNTIME_MODELS ${CMAKE_SOURCE_DIR}/data)
-set(OPENCV_MODELS ${CMAKE_SOURCE_DIR}/3rdparty/opencv_zoo/models)
-list(APPEND OPENCV_MODEL_FILES
-        ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar.onnx
-        ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar_int8.onnx
-)
+#set(OPENCV_MODELS ${CMAKE_SOURCE_DIR}/3rdparty/opencv_zoo/models)
+#list(APPEND OPENCV_MODEL_FILES
+#        ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar.onnx
+#        ${OPENCV_MODELS}/face_detection_yunet/face_detection_yunet_2023mar_int8.onnx
+#)
 
-add_custom_command(TARGET AlbumArchitect_data
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${RUNTIME_MODELS}
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${OPENCV_MODEL_FILES} ${RUNTIME_MODELS})
+#add_custom_command(TARGET AlbumArchitect_data
+#        COMMAND ${CMAKE_COMMAND} -E make_directory
+#        ${RUNTIME_MODELS}
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#        ${OPENCV_MODEL_FILES} ${RUNTIME_MODELS})
 
 # .. dlib
-find_program(7ZIP "7z")
-if (7ZIP)
-    file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
-    execute_process(
-            COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
-endif ()
+if (DLIB_DOWNLOAD_DATA)
+    add_custom_command(TARGET AlbumArchitect_data
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+            ${RUNTIME_MODELS})
+    find_program(7ZIP "7z")
+    if (7ZIP)
+        file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
+        execute_process(
+                COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
+    endif (7ZIP)
+endif (DLIB_DOWNLOAD_DATA)
 
 # ---- Install rules ----
 

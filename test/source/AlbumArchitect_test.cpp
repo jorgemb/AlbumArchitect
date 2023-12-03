@@ -5,6 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <glog/logging.h>
 
+#include "config/config.h"
 #include "lib.hpp"
 
 namespace fs = std::filesystem;
@@ -33,6 +34,9 @@ TEST_CASE("Temporary directory creation", "[utility]") {
 auto main(int argc, char* argv[]) -> int {
   google::InitGoogleLogging(
       argv[0]);  // NOLINT(*-pro-bounds-pointer-arithmetic)
+
+  // Load config data
+  album_architect::Config::load("config.test.yaml");
 
   auto result = Catch::Session().run(argc, argv);
 

@@ -119,10 +119,8 @@ public:
   /// Destructor
   virtual ~Photo() = default;
 
-#ifdef _DEBUG
   /// Get the internal opencv2 representation
   auto get_cv_mat() -> const cv::Mat&;
-#endif
 
   // Constructors and assignment
   Photo(const Photo& other) = delete;

@@ -57,6 +57,9 @@ auto Config::load(const std::filesystem::path& path) -> bool {
     return false;
   }
 }
+void Config::clear() {
+  config_data.reset();
+}
 auto Config::get_cv_face_classifier_model() -> std::filesystem::path {
   return get_value("paths.cv_face_classifier")
       .value_or("data/face_detection_yunet_2023mar.onnx"s);
