@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <ranges>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,11 +14,14 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <cereal/archives/binary.hpp>
 #include <glog/logging.h>
+#include <range/v3/algorithm.hpp>
+#include <range/v3/range.hpp>
+#include <range/v3/view.hpp>
+#include <range/v3/view/drop.hpp>
 
 using album_architect::Photo;
 using namespace std::string_literals;
-namespace views = std::ranges::views;
-namespace ranges = std::ranges;
+namespace views = ranges::views;
 namespace fs = std::filesystem;
 
 /// Holds data about a test image
@@ -189,7 +191,8 @@ Projection: Near-sided perspective from
             12742 kilometers above 45 North by 0 East
 Author: Norman Kuring
 Created: 2012-02-21T14:00:00Z
-)"},
+)",
+                                      {}},
   };
 
   // Iterate through all the photos

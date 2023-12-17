@@ -6,14 +6,8 @@
 #include <glog/logging.h>
 
 #include "config/config.h"
-#include "lib.hpp"
 
 namespace fs = std::filesystem;
-
-TEST_CASE("Name is AlbumArchitect", "[library]") {
-  auto const lib = library {};
-  REQUIRE(lib.name == "AlbumArchitect");
-}
 
 TEST_CASE("Temporary directory creation", "[utility]") {
   auto temp_path = std::filesystem::path {};

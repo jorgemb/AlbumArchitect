@@ -1,12 +1,13 @@
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <string>
+#include <range/v3/view.hpp>
 
 #include <album/util.h>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include <config/config.h>
+#include <fmt/core.h>
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;
@@ -23,7 +24,7 @@ TEST_CASE("Basic configuration load", "[config]") {
   const auto dlib_classifier = "dlib.dat"s;
   const auto tesseract_dir = "test_data/"s;
   {
-    const auto config = std::format(R"(
+    const auto config = fmt::format(R"(
 paths:
   cv_face_classifier: {}
   dlib_face_classifier: {}

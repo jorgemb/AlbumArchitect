@@ -15,24 +15,23 @@ include(cmake/variables.cmake)
 
 # ---- Other dependencies ----
 
-# Import dlib with FetchContent, as CUDA support cannot be conditionally enabled via vcpkg manifest mode
-if (DLIB_BUILD)
-    message("Fetching and building dlib")
-    include(FetchContent)
-    FetchContent_Declare(dlib
-            GIT_REPOSITORY https://github.com/davisking/dlib.git
-            GIT_TAG v19.24.2
-    )
-    FetchContent_MakeAvailable(dlib)
-else (DLIB_BUILD)
-    find_package(dlib CONFIG REQUIRED)
-endif (DLIB_BUILD)
+## Import dlib with FetchContent, as CUDA support cannot be conditionally enabled via vcpkg manifest mode
+#if (DLIB_BUILD)
+#    message("Fetching and building dlib")
+#    include(FetchContent)
+#    FetchContent_Declare(dlib
+#            GIT_REPOSITORY https://github.com/davisking/dlib.git
+#            GIT_TAG v19.24.2
+#    )
+#    FetchContent_MakeAvailable(dlib)
+#else (DLIB_BUILD)
+#    find_package(dlib CONFIG REQUIRED)
+#endif (DLIB_BUILD)
 
 # ---- Declare library ----
 
 add_library(
         AlbumArchitect_lib OBJECT
-        source/lib.cpp
         source/album/photo.cpp
         source/album/photo_dnn.cpp
         source/album/photo.h
@@ -68,6 +67,10 @@ find_package(Tesseract CONFIG REQUIRED) # OCR support
 find_package(cereal CONFIG REQUIRED) # Serialization library
 find_package(yaml-cpp CONFIG REQUIRED)
 
+find_package(dlib CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(range-v3 CONFIG REQUIRED)
+
 target_link_libraries(AlbumArchitect_lib PRIVATE
         Boost::thread
         Boost::filesystem
@@ -75,7 +78,9 @@ target_link_libraries(AlbumArchitect_lib PRIVATE
         OpenEXR::OpenEXR
         dlib::dlib
         Tesseract::libtesseract
-        yaml-cpp::yaml-cpp)
+        yaml-cpp::yaml-cpp
+        fmt::fmt
+        range-v3::range-v3)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         OpenImageIO::OpenImageIO
         glog::glog
