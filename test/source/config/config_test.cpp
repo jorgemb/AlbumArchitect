@@ -79,5 +79,6 @@ paths:
   }
 
   // Return everything to default
-  Config::load("config.test.yaml");
+  Config::clear();
+  album_architect::Config::load("config.test.yaml");
 }

@@ -117,6 +117,7 @@ set(RUNTIME_MODELS ${CMAKE_SOURCE_DIR}/data)
 
 # .. dlib
 if (DLIB_DOWNLOAD_DATA)
+    message("Downloading DLIB models")
     add_custom_command(TARGET AlbumArchitect_data
             COMMAND ${CMAKE_COMMAND} -E make_directory
             ${RUNTIME_MODELS})
@@ -125,6 +126,8 @@ if (DLIB_DOWNLOAD_DATA)
         file(DOWNLOAD dlib.net/files/mmod_human_face_detector.dat.bz2 ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2)
         execute_process(
                 COMMAND 7z x ${RUNTIME_MODELS}/mmod_human_face_detector.dat.bz2 -aos -o${RUNTIME_MODELS})
+    else (7ZIP)
+        message(FATAL_ERROR "Couldn't find 7zip for unzipping DLIB models")
     endif (7ZIP)
 endif (DLIB_DOWNLOAD_DATA)
 
