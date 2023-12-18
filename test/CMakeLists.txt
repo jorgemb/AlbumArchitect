@@ -7,6 +7,7 @@ project(AlbumArchitectTests LANGUAGES CXX)
 # ---- Dependencies ----
 
 find_package(Catch2 REQUIRED)
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 include(Catch)
 
 # ---- Tests ----

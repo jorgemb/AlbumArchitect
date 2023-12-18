@@ -51,17 +51,20 @@ ENV CXX=/usr/bin/g++-13
 ENV VCPKG_ROOT=/vcpkg
 
 WORKDIR ${VCPKG_ROOT}
-RUN git clone https://github.com/microsoft/vcpkg . \
+RUN --mount=type=cache,target=${VCPKG_ROOT} \
+    git clone https://github.com/microsoft/vcpkg . \
     && sh bootstrap-vcpkg.sh
 COPY vcpkg.json .
-RUN ./vcpkg install --clean-after-build
+RUN --mount=type=cache,target=${VCPKG_ROOT} \
+    ./vcpkg install --clean-after-build
 
 # Copy source code files
 WORKDIR /app
 COPY . .
 
 # Prepare for build
-RUN --mount=type=cache,target=/app/build/vcpkg_installed \
+RUN --mount=type=cache,target=${VCPKG_ROOT} \
+    --mount=type=cache,target=/app/build/vcpkg_installed \
     cmake -Bbuild/ -DDLIB_BUILD=OFF -DDLIB_DOWNLOAD_DATA=OFF --preset=ci-ubuntu .\
     && cmake --build build/
 
