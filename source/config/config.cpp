@@ -26,8 +26,7 @@ auto Config::get_value(std::string_view key) -> std::optional<std::string> {
   auto stack = std::vector {*config_data};
   stack.reserve(result.size());
 
-  for (auto & current_part : result)
-  {
+  for (auto& current_part : result) {
     if (auto& current_node = stack.back(); current_node[current_part]) {
       stack.push_back(current_node[current_part]);
     } else {
