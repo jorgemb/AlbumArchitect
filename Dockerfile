@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libxext-dev \
     libxrandr-dev \
     linux-libc-dev \
+    gfortran \
     # OpenImageIO packages \
     libxi-dev \
     libgl1-mesa-dev \
@@ -37,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     mesa-common-dev \
     libxrandr-dev \
     libxxf86vm-dev \
+    libsystemd-dev \
     nasm \
     # DLIB
     libdlib-dev \

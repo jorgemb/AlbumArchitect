@@ -4,6 +4,7 @@
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <glog/logging.h>
+#include <iostream>
 
 #include "config/config.h"
 
@@ -28,6 +29,10 @@ TEST_CASE("Temporary directory creation", "[utility]") {
 auto main(int argc, char* argv[]) -> int {
   google::InitGoogleLogging(
       argv[0]);  // NOLINT(*-pro-bounds-pointer-arithmetic)
+
+  // Set working directory
+  auto path = fs::path(__FILE__).parent_path().parent_path();
+  fs::current_path(path);
 
   // Load config data
   album_architect::Config::load("config.test.yaml");

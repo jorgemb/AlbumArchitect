@@ -1,13 +1,14 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include <range/v3/view.hpp>
+#include <memory>
 
 #include <album/util.h>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include <config/config.h>
 #include <fmt/core.h>
+#include <range/v3/view.hpp>
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;
@@ -16,8 +17,9 @@ using album_architect::Config;
 
 TEST_CASE("Basic configuration load", "[config]") {
   const auto temp_dir = album_architect::util::AutoTempDirectory {};
-  const auto current_dir =
-      album_architect::util::AutoSetWorkingDirectory(temp_dir.path());
+  auto current_dir =
+      std::make_unique<album_architect::util::AutoSetWorkingDirectory>(
+          temp_dir.path());
 
   // Write in the standard directory
   const auto cv_classifier = "cv.onnx"s;
@@ -56,6 +58,8 @@ paths:
   }
 
   SECTION("Specific values") {
+    Config::load();
+
     REQUIRE(Config::get_cv_face_classifier_model() == fs::path(cv_classifier));
     REQUIRE(Config::get_dlib_face_classifier_model()
             == fs::path(dlib_classifier));
@@ -79,6 +83,6 @@ paths:
   }
 
   // Return everything to default
-  Config::clear();
+  current_dir.reset();
   album_architect::Config::load("config.test.yaml");
 }

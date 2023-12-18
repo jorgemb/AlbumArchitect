@@ -25,7 +25,7 @@ target_link_libraries(
 target_compile_features(AlbumArchitect_test PRIVATE cxx_std_20)
 
 catch_discover_tests(AlbumArchitect_test
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/test/"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 
 # Add required files for testing
