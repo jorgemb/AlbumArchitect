@@ -107,8 +107,8 @@ auto create_test_image(const std::filesystem::path& path, int width, int height)
   // Fill buffer with data
   OIIO::ImageSpec spec(width, height, 3, OIIO::TypeDesc::FLOAT);
   OIIO::ImageBuf buffer(spec);
-  constexpr auto dark = std::array<float, 3> {0.1, 0.1, 0.1};
-  constexpr auto light = std::array<float, 3> {0.8, 0.8, 0.8};
+  constexpr auto dark = std::array<float, 3> {0.1F, 0.1F, 0.1F};
+  constexpr auto light = std::array<float, 3> {0.8F, 0.8F, 0.8F};
   constexpr auto square_size = 64;
   OIIO::ImageBufAlgo::checker(buffer, square_size, square_size, 1, dark, light);
 

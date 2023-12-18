@@ -68,6 +68,12 @@ class AutoSetWorkingDirectory {
   std::filesystem::path m_previous_path;
 
 public:
+  /* Operators: Copy and Move deleted */
+  AutoSetWorkingDirectory(const AutoSetWorkingDirectory& other) = delete;
+  AutoSetWorkingDirectory(AutoSetWorkingDirectory&& other) noexcept = delete;
+  auto operator=(const AutoSetWorkingDirectory& other) -> AutoSetWorkingDirectory& = delete;
+  auto operator=(AutoSetWorkingDirectory&& other) noexcept -> AutoSetWorkingDirectory& = delete;
+
   /// \brief Sets the working directory to the given path
   /// \param path
   explicit AutoSetWorkingDirectory(const std::filesystem::path& path);

@@ -1,23 +1,24 @@
 # BUILD STAGE
-FROM ubuntu:23.10 as configure
+FROM nvidia/cuda:12.3.1-devel-ubuntu22.04 as configure
 LABEL authors="Jorge L. Martínez"
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
-    gcc-13 \
-    g++-13 \
     bison \
     cmake \
     curl \
     zip \
     unzip \
     tar \
+    clang-15 \
     clang-tidy \
+    libstdc++-12-dev \
     cppcheck \
     pkg-config \
     jq \
+    libcudnn8-dev \
     # OpenCV packages
     python3 \
     python-is-python3 \
@@ -30,6 +31,7 @@ RUN apt-get update && apt-get install -y \
     libxext-dev \
     libxrandr-dev \
     linux-libc-dev \
+    gfortran \
     # OpenImageIO packages \
     libxi-dev \
     libgl1-mesa-dev \
@@ -37,6 +39,7 @@ RUN apt-get update && apt-get install -y \
     mesa-common-dev \
     libxrandr-dev \
     libxxf86vm-dev \
+    libsystemd-dev \
     nasm \
     # DLIB
     libdlib-dev \
@@ -44,8 +47,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf rm -rf /var/lib/apt/lists/*
 
 # Get vcpkg and install packages
-ENV CC=/usr/bin/gcc-13
-ENV CXX=/usr/bin/g++-13
+ENV CC=/usr/bin/clang-15
+ENV CXX=/usr/bin/clang++-15
 ENV VCPKG_ROOT=/vcpkg
 
 WORKDIR ${VCPKG_ROOT}
