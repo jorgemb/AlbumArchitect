@@ -207,7 +207,11 @@ auto Photo::get_text_ocr() -> std::vector<TextElement> {
           lines->GetUTF8Text(iterator_level));
       auto confidence = lines->Confidence(iterator_level);
 
-      result.emplace_back(rect, std::string(raw_text.get()), confidence);
+      //      result.emplace_back(rect, std::string(raw_text.get()),
+      //      confidence);
+      auto element =
+          TextElement {rect, std::string(raw_text.get()), confidence};
+      result.push_back(std::move(element));
     }
 
     // Get next element

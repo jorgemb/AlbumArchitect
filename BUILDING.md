@@ -4,6 +4,39 @@
 
 For a list of dependencies, please refer to [vcpkg.json](vcpkg.json).
 
+For linux you'll need to install the following packages:
+```shell
+pkg-config
+bison
+
+# OpenCV packages
+python3
+python-is-python3
+python3-distutils
+libdbus-1-dev
+libxi-dev
+libxtst-dev
+libx11-dev
+libxft-dev
+libxext-dev
+libxrandr-dev
+linux-libc-dev
+libsystemd-dev
+
+# OpenImageIO packages
+libxi-dev
+libgl1-mesa-dev
+libglu1-mesa-dev
+mesa-common-dev
+libxrandr-dev
+libxxf86vm-dev
+nasm 
+
+# dlib
+libcudnn8-dev
+gfortran
+```
+
 ## Build
 
 This project doesn't require any special command-line flags to build to keep
