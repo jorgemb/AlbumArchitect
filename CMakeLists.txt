@@ -46,6 +46,7 @@ add_library(
         source/album/album.h
         source/config/config.cpp
         source/config/config.h
+        source/support/serialize/cvmat.h
 )
 
 target_include_directories(
