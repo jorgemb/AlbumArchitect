@@ -3,26 +3,24 @@
 //
 
 #include <fstream>
-#include <ranges>
 #include <set>
 
 #include "album.h"
 
 #include <album/photo.h>
 #include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/string.hpp>
 #include <glog/logging.h>
+#include <range/v3/algorithm.hpp>
+#include <range/v3/range.hpp>
 
 #include "util.h"
 
 namespace album_architect {
 
 namespace fs = std::filesystem;
-namespace ranges = std::ranges;
-namespace views = std::ranges::views;
 
 Album::Album(std::filesystem::path absolute_path, bool save_metadata)
     : m_absolute_path(std::move(absolute_path))
@@ -31,7 +29,7 @@ Album::Album(std::filesystem::path absolute_path, bool save_metadata)
     update_album();
   }
 }
-bool Album::load_metadata() {
+auto Album::load_metadata() -> bool {
   const auto metadata_path = m_absolute_path / default_metadata_filename;
   auto metadata_file = std::ifstream(metadata_path, std::ios::binary);
   if (!metadata_file.is_open()) {
@@ -41,7 +39,7 @@ bool Album::load_metadata() {
   // Try loading the metadata
   {
     auto set_working_directory = util::AutoSetWorkingDirectory(m_absolute_path);
-    auto archive = cereal::JSONInputArchive(metadata_file);
+    auto archive = cereal::BinaryInputArchive(metadata_file);
     archive(m_metadata);
   }
 
@@ -62,14 +60,15 @@ bool Album::load_metadata() {
 }
 void Album::save_metadata() {
   // Check if allowed to save metadata
-  if (!m_save_metadata)
+  if (!m_save_metadata) {
     return;
+  }
 
   const auto metadata_path = m_absolute_path / default_metadata_filename;
   auto metadata_file = std::ofstream(metadata_path, std::ios::binary);
   if (metadata_file.is_open()) {
     // Try saving the metadata
-    auto archive = cereal::JSONOutputArchive(metadata_file);
+    auto archive = cereal::BinaryOutputArchive(metadata_file);
     archive(m_metadata);
   } else {
     LOG(ERROR) << "Couldn't save metadata for album at " << m_absolute_path;

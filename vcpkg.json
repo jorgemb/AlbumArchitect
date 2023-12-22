@@ -13,7 +13,7 @@
     },
     {
       "name": "glog",
-      "version>=": "0.6.0#2"
+      "version>=": "0.6.0#3"
     },
     {
       "name": "lcms",
@@ -26,7 +26,7 @@
     },
     {
       "name": "openimageio",
-      "version>=": "2.4.14.0#2",
+      "version>=": "2.4.14.0#3",
       "features": ["opencv", "libheif", "gif", "webp", "libraw", "openjpeg", "ffmpeg", "freetype"]
     },
     {
@@ -50,5 +50,5 @@
       ]
     }
   },
-  "builtin-baseline": "23ceb9cbf9b6d32f485cf039547b70102a6ef9d8"
+  "builtin-baseline": "16ee2ecb31788c336ace8bb14c21801efb6836e4"
 }

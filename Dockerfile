@@ -64,5 +64,5 @@ COPY . .
 # Prepare for build
 RUN --mount=type=cache,target=/app/build/vcpkg_installed \
     cmake -Bbuild/ -DDLIB_BUILD=OFF -DDLIB_DOWNLOAD_DATA=OFF --preset=ci-ubuntu .\
-    && cmake --build build/
+    && cmake --build build/ -j8
 

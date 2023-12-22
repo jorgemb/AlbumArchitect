@@ -135,22 +135,37 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   return faces;
 }
 auto Photo::calculate_average_hash() -> Hash<cv::img_hash::AverageHash> {
-  load_opencv();
-  return calculate_hash<cv::img_hash::AverageHash>(m_image_cv);
+  if (!m_average_hash) {
+    load_opencv();
+    m_average_hash = calculate_hash<cv::img_hash::AverageHash>(m_image_cv);
+  }
+  return m_average_hash.value();
 }
 auto Photo::calculate_phash() -> Hash<cv::img_hash::PHash> {
-  load_opencv();
-  return calculate_hash<cv::img_hash::PHash>(m_image_cv);
+  if (!m_phash) {
+    load_opencv();
+    m_phash = calculate_hash<cv::img_hash::PHash>(m_image_cv);
+  }
+  return m_phash.value();
 }
 auto Photo::calculate_color_moment_hash()
     -> Hash<cv::img_hash::ColorMomentHash> {
-  load_opencv();
-  return calculate_hash<cv::img_hash::ColorMomentHash>(m_image_cv);
+  if (!m_color_moment_hash) {
+    load_opencv();
+    m_color_moment_hash =
+        calculate_hash<cv::img_hash::ColorMomentHash>(m_image_cv);
+  }
+  return m_color_moment_hash.value();
 }
 auto Photo::calculate_marr_hildreth_hash()
     -> Hash<cv::img_hash::MarrHildrethHash> {
-  load_opencv();
-  return calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
+  if (!m_marr_hildreth_hash) {
+    load_opencv();
+    m_marr_hildreth_hash =
+        calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
+  }
+
+  return m_marr_hildreth_hash.value();
 }
 auto Photo::get_text_ocr() -> std::vector<TextElement> {
   load_opencv();

@@ -13,9 +13,11 @@
 #include <boost/algorithm/hex.hpp>
 #include <cereal/access.hpp>
 #include <cereal/types/string.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/vector.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
+#include <support/serialize/cvmat.h>
 
 namespace album_architect {
 
@@ -29,7 +31,20 @@ concept ImgHasher = std::is_base_of_v<cv::img_hash::ImgHashBase, T>;
 template<ImgHasher T>
 struct Hash {
   cv::Mat hash;
+
+  /// Serialization function for hash
+  /// \tparam Archive
+  /// \param archive
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(hash);
+  }
 };
+
+using AverageHash = Hash<cv::img_hash::AverageHash>;
+using PHash = Hash<cv::img_hash::PHash>;
+using ColorMomentHash = Hash<cv::img_hash::ColorMomentHash>;
+using MarrHildrethHash = Hash<cv::img_hash::MarrHildrethHash>;
 
 /// Compares two hashes, returning a value of how close they are
 /// \tparam T
@@ -83,10 +98,10 @@ public:
   auto get_height() const -> int64_t;
 
   // Hashes
-  auto calculate_average_hash() -> Hash<cv::img_hash::AverageHash>;
-  auto calculate_phash() -> Hash<cv::img_hash::PHash>;
-  auto calculate_color_moment_hash() -> Hash<cv::img_hash::ColorMomentHash>;
-  auto calculate_marr_hildreth_hash() -> Hash<cv::img_hash::MarrHildrethHash>;
+  auto calculate_average_hash() -> AverageHash;
+  auto calculate_phash() -> PHash;
+  auto calculate_color_moment_hash() -> ColorMomentHash;
+  auto calculate_marr_hildreth_hash() -> MarrHildrethHash;
 
   /// Tries to detect the faces from within the photo
   /// \return
@@ -140,6 +155,12 @@ private:
   OIIO::ImageBuf m_image;
   cv::Mat m_image_cv;
 
+  /// Hash cache
+  std::optional<AverageHash> m_average_hash;
+  std::optional<PHash> m_phash;
+  std::optional<ColorMomentHash> m_color_moment_hash;
+  std::optional<MarrHildrethHash> m_marr_hildreth_hash;
+
   /// Standard metadata
   PhotoMetadata m_metadata;
 
@@ -156,20 +177,20 @@ private:
 
   /// \brief Save function for serialization
   /// \tparam Archive
-  /// \param ar
+  /// \param archive
   template<class Archive>
-  void save(Archive& ar) const {
-    ar(m_path.string(), m_metadata);
+  void save(Archive& archive) const {
+    archive(m_path.string(), m_metadata, m_average_hash, m_phash, m_color_moment_hash, m_marr_hildreth_hash);
   }
 
   /// \brief Load function for serialization
   /// \tparam Archive
-  /// \param ar
+  /// \param archive
   template<class Archive>
-  void load(Archive& ar) {
+  void load(Archive& archive) {
     // Load values
     auto path = std::string {};
-    ar(path, m_metadata);
+    archive(path, m_metadata, m_average_hash, m_phash, m_color_moment_hash, m_marr_hildreth_hash);
     m_path = path;
 
     // Load the image buffer
