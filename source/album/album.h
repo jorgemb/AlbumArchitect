@@ -45,14 +45,14 @@ class Album {
   std::vector<std::string> m_files;
 
   /// \brief Loads the metadata file
-  bool load_metadata();
+  auto load_metadata() -> bool;
 
   /// \brief Saves the metadata file
   void save_metadata();
 
 public:
   /// Name of metadata file
-  static inline const char* default_metadata_filename = ".albumarchitect";
+  static inline const auto default_metadata_filename = ".albumarchitect";
 
   /// \brief Returns the absolute path associated to the Album
   /// \return
