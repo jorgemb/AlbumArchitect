@@ -24,7 +24,7 @@ TEST_CASE("CV Mat serialization", "[support][serialize]") {
   // Try to serialize
   auto stream = std::stringstream {};
   {
-    auto output = cereal::BinaryOutputArchive{stream};
+    auto output = cereal::BinaryOutputArchive {stream};
     output(random_mat);
   }
 

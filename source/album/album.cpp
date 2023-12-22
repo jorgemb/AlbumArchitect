@@ -13,8 +13,8 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/string.hpp>
 #include <glog/logging.h>
-#include <range/v3/range.hpp>
 #include <range/v3/algorithm.hpp>
+#include <range/v3/range.hpp>
 
 #include "util.h"
 

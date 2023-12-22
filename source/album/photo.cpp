@@ -159,9 +159,10 @@ auto Photo::calculate_color_moment_hash()
 }
 auto Photo::calculate_marr_hildreth_hash()
     -> Hash<cv::img_hash::MarrHildrethHash> {
-  if(!m_marr_hildreth_hash) {
+  if (!m_marr_hildreth_hash) {
     load_opencv();
-    m_marr_hildreth_hash = calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
+    m_marr_hildreth_hash =
+        calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
   }
 
   return m_marr_hildreth_hash.value();
