@@ -70,4 +70,25 @@ auto Config::get_tesseract_ocr_model_directory() -> std::filesystem::path {
   return get_value("paths.tesseract_ocr_directory")
       .value_or("3rdparty/tessdata_best"s);
 }
+auto Config::get_root_album_list() -> std::vector<std::filesystem::path> {
+  // Load config data
+  if (!config_data) {
+    load();
+  }
+
+  // Get paths value
+  const auto root_albums_key = "root_album"s;
+  auto result = std::vector<std::filesystem::path> {};
+  auto& config = *config_data;
+  if (config[root_albums_key]) {
+    for (auto iter = config[root_albums_key].begin();
+         iter != config[root_albums_key].end();
+         ++iter)
+    {
+      result.emplace_back(iter->as<std::string>());
+    }
+  }
+
+  return result;
+}
 }  // namespace album_architect

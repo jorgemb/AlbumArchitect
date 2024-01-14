@@ -93,6 +93,8 @@ add_dependencies(AlbumArchitect_lib AlbumArchitect_data)
 
 # ---- Declare executable ----
 
+add_definitions(-DDLIB_NO_GUI_SUPPORT)
+
 add_executable(AlbumArchitect_exe source/main.cpp)
 add_executable(AlbumArchitect::exe ALIAS AlbumArchitect_exe)
 

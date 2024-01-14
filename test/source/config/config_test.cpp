@@ -30,6 +30,9 @@ paths:
   cv_face_classifier: {}
   dlib_face_classifier: {}
   tesseract_ocr_directory: {}
+root_album:
+  - /album/one
+  - /album/two
 )",
                                     cv_classifier,
                                     dlib_classifier,
@@ -64,6 +67,11 @@ paths:
             == fs::path(dlib_classifier));
     REQUIRE(Config::get_tesseract_ocr_model_directory()
             == fs::path(tesseract_dir));
+
+    auto expected_album_list =
+        std::vector<fs::path> {"/album/one", "/album/two"};
+    auto album_list = Config::get_root_album_list();
+    REQUIRE(expected_album_list == album_list);
   }
 
   SECTION("Default values") {
@@ -79,6 +87,7 @@ paths:
             == fs::path("data") / "mmod_human_face_detector.dat");
     REQUIRE(Config::get_tesseract_ocr_model_directory()
             == fs::path("3rdparty") / "tessdata_best");
+    REQUIRE(Config::get_root_album_list().empty());
   }
 
   // Return everything to default

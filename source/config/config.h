@@ -7,10 +7,11 @@
 
 #include <filesystem>
 #include <memory>
-#include <string>
 #include <optional>
+#include <string>
+#include <vector>
 
-namespace YAML { // NOLINT(*-identifier-naming)
+namespace YAML {  // NOLINT(*-identifier-naming)
 // Forward declaration
 class Node;
 }  // namespace YAML
@@ -38,6 +39,10 @@ public:
   static auto get_cv_face_classifier_model() -> std::filesystem::path;
   static auto get_dlib_face_classifier_model() -> std::filesystem::path;
   static auto get_tesseract_ocr_model_directory() -> std::filesystem::path;
+
+  /// Returns a list of the root albums to scan
+  /// \return
+  static auto get_root_album_list() -> std::vector<std::filesystem::path>;
 };
 
 }  // namespace album_architect
