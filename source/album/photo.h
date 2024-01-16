@@ -210,6 +210,8 @@ auto from_hex_to_cv(std::string_view hex_string) -> cv::Mat {
   return result;
 }
 
+auto from_cv_to_hex(const cv::Mat& mat) -> std::string;
+
 }  // namespace album_architect
 
 #endif  // ALBUMARCHITECT_PHOTO_H

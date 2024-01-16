@@ -79,14 +79,14 @@ target_link_libraries(AlbumArchitect_lib PRIVATE
         OpenEXR::OpenEXR
         dlib::dlib
         Tesseract::libtesseract
-        yaml-cpp::yaml-cpp
-        fmt::fmt
-        range-v3::range-v3)
+        yaml-cpp::yaml-cpp)
 target_link_libraries(AlbumArchitect_lib PUBLIC
+        fmt::fmt
         OpenImageIO::OpenImageIO
         glog::glog
         opencv_core
-        cereal::cereal)
+        cereal::cereal
+        range-v3::range-v3)
 
 add_custom_target(AlbumArchitect_data)
 add_dependencies(AlbumArchitect_lib AlbumArchitect_data)

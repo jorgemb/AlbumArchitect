@@ -6,6 +6,7 @@
 #include <album/photo.h>
 #include <album/util.h>
 #include <config/config.h>
+#include <fmt/core.h>
 #include <glog/logging.h>
 
 using namespace std::string_literals;
@@ -32,8 +33,14 @@ auto main(int argc, char* argv[]) -> int {
 
   auto root_album = Album::load_album(album_list.front());
   for (auto& photo : root_album->get_photos()) {
-    fmt::print("Hash of: {}", photo->get_path().filename());
-    photo->calculate_average_hash();
+    const auto photo_path = photo->get_path();
+    const auto photo_hash = photo->calculate_average_hash();
+    fmt::print("Hash of ({}): {} -- {}\n",
+               photo.use_count(),
+               photo_path.filename().string(),
+               album_architect::from_cv_to_hex(photo_hash.hash));
+
+    photo.reset();
   }
 
   return 0;

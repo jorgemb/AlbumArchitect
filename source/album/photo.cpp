@@ -261,4 +261,17 @@ auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
           << " keywords: " << boost::algorithm::join(metadata.keywords, ";");
   return ostream;
 }
+auto from_cv_to_hex(const cv::Mat& mat) -> std::string {
+    std::ostringstream hex_string_stream;
+
+    for (int row = 0; row < mat.rows; ++row) {
+        const uchar* ptr = mat.ptr(row);
+
+        for (int col = 0; col < mat.cols; ++col) {
+            hex_string_stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*ptr++) << " ";
+        }
+    }
+
+    return hex_string_stream.str();
+}
 }  // namespace album_architect
