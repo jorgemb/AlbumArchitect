@@ -30,10 +30,12 @@ auto handle_cv_log_messages(int status,
 /// \brief Manages a self destructing temporary directory with a random name
 class AutoTempDirectory {
   std::filesystem::path m_path;
+  static constexpr size_t default_random_name_size = 16;
 
   /// \brief Generates a random name valid for the filesystem
   /// \return
-  static auto generate_random_name(size_t size = 16) -> std::string;
+  static auto generate_random_name(size_t size = default_random_name_size)
+      -> std::string;
 
 public:
   /* Operators: Copy deleted, move default */
@@ -71,8 +73,10 @@ public:
   /* Operators: Copy and Move deleted */
   AutoSetWorkingDirectory(const AutoSetWorkingDirectory& other) = delete;
   AutoSetWorkingDirectory(AutoSetWorkingDirectory&& other) noexcept = delete;
-  auto operator=(const AutoSetWorkingDirectory& other) -> AutoSetWorkingDirectory& = delete;
-  auto operator=(AutoSetWorkingDirectory&& other) noexcept -> AutoSetWorkingDirectory& = delete;
+  auto operator=(const AutoSetWorkingDirectory& other)
+      -> AutoSetWorkingDirectory& = delete;
+  auto operator=(AutoSetWorkingDirectory&& other) noexcept
+      -> AutoSetWorkingDirectory& = delete;
 
   /// \brief Sets the working directory to the given path
   /// \param path

@@ -18,17 +18,17 @@ namespace album_architect {
 
 auto Photo::get_faces_dnn() -> std::vector<cv::Rect2f> {
   // Get detector
-  auto detector = FaceClassifier::get_dlib_face_detector();
+  const auto detector = FaceClassifier::get_dlib_face_detector();
 
   // Convert image to dlib
-  load_opencv();
+  const auto image_cv = get_cv_mat();
 
-  auto image_wrapper = dlib::cv_image<dlib::bgr_pixel>(m_image_cv);
+  const auto image_wrapper = dlib::cv_image<dlib::bgr_pixel>(image_cv);
   auto target_image = dlib::matrix<dlib::rgb_pixel> {};
   dlib::assign_image(target_image, image_wrapper);
 
   // Find the faces with the detector and convert to OpenCV
-  auto found_faces = (*detector)(target_image);
+  const auto found_faces = (*detector)(target_image);
   auto result = std::vector<cv::Rect2f> {};
 
   for (const auto& face : found_faces) {

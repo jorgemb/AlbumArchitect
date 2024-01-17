@@ -18,44 +18,9 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
 #include <support/serialize/cvmat.h>
+#include <album/photo_hash.h>
 
 namespace album_architect {
-
-/// Concept to represent hashers that derive from ImgHashBase (OpenCV)
-/// \tparam T
-template<class T>
-concept ImgHasher = std::is_base_of_v<cv::img_hash::ImgHashBase, T>;
-
-/// Represents the Hash calculated by a given Image Hasher.
-/// \tparam T
-template<ImgHasher T>
-struct Hash {
-  cv::Mat hash;
-
-  /// Serialization function for hash
-  /// \tparam Archive
-  /// \param archive
-  template<class Archive>
-  void serialize(Archive& archive) {
-    archive(hash);
-  }
-};
-
-using AverageHash = Hash<cv::img_hash::AverageHash>;
-using PHash = Hash<cv::img_hash::PHash>;
-using ColorMomentHash = Hash<cv::img_hash::ColorMomentHash>;
-using MarrHildrethHash = Hash<cv::img_hash::MarrHildrethHash>;
-
-/// Compares two hashes, returning a value of how close they are
-/// \tparam T
-/// \param lhs
-/// \param rhs
-/// \return
-template<ImgHasher T>
-auto compare_hashes(const Hash<T>& lhs, const Hash<T>& rhs) -> double {
-  auto hasher = T::create();
-  return hasher->compare(lhs.hash, rhs.hash);
-}
 
 /// Represents a text element that was identified in photo OCR
 struct TextElement {
@@ -135,7 +100,7 @@ public:
   virtual ~Photo() = default;
 
   /// Get the internal opencv2 representation
-  auto get_cv_mat() -> const cv::Mat&;
+  auto get_cv_mat() -> cv::Mat;
 
   // Constructors and assignment
   Photo(const Photo& other) = delete;
@@ -153,7 +118,6 @@ private:
 
   /// Internal data
   OIIO::ImageBuf m_image;
-  cv::Mat m_image_cv;
 
   /// Hash cache
   std::optional<AverageHash> m_average_hash;
@@ -168,9 +132,6 @@ private:
   Photo(std::filesystem::path path,
         OIIO::ImageBuf&& image,
         PhotoMetadata&& metadata);
-
-  /// Loads OpenCV image on demand
-  void load_opencv();
 
   /* SERIALIZATION */
   friend class cereal::access;

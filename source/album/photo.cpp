@@ -64,19 +64,16 @@ auto calculate_hash(cv::InputArray input, cv::OutputArray output) -> void {
   hasher->compute(input, output);
 }
 
-void Photo::load_opencv() {
-  if (m_image_cv.empty()) {
-    m_image.read(0, 0, /*force=*/true);
-    auto is_ok = OIIO::ImageBufAlgo::to_OpenCV(m_image_cv, m_image);
+auto Photo::get_cv_mat() -> cv::Mat {
+  auto image_cv = cv::Mat{};
+  m_image.read(0, 0, /*force=*/true);
+  const auto is_ok = OIIO::ImageBufAlgo::to_OpenCV(image_cv, m_image);
 
-    LOG_IF(ERROR, !is_ok)
+  LOG_IF(ERROR, !is_ok)
         << "Couldn't create OpenCV image from loaded image. Error: "
         << OIIO::geterror();
-  }
-}
-auto Photo::get_cv_mat() -> const cv::Mat& {
-  load_opencv();
-  return m_image_cv;
+
+  return image_cv;
 }
 auto Photo::load_metadata() -> bool {
   if (!is_ok()) {
@@ -106,17 +103,16 @@ auto Photo::load_metadata() -> bool {
 auto Photo::get_faces() -> std::vector<cv::Rect2f> {
   auto face_detector = FaceClassifier::get_opencv_face_detector();
 
-  load_opencv();
-
   // TODO: Get configuration details from Config
 
   // Check if scaling is required
+  const auto image_cv = get_cv_mat();
   const auto max_width = 800.0F;
   const auto scale =
-      std::min(max_width / static_cast<float>(m_image_cv.size().width), 1.0F);
+      std::min(max_width / static_cast<float>(image_cv.size().width), 1.0F);
 
   auto target = cv::Mat {};
-  cv::resize(m_image_cv, target, cv::Size(), scale, scale);
+  cv::resize(image_cv, target, cv::Size(), scale, scale);
 
   // Detect faces
   auto detected_faces = cv::Mat {};
@@ -136,57 +132,52 @@ auto Photo::get_faces() -> std::vector<cv::Rect2f> {
 }
 auto Photo::calculate_average_hash() -> Hash<cv::img_hash::AverageHash> {
   if (!m_average_hash) {
-    load_opencv();
-    m_average_hash = calculate_hash<cv::img_hash::AverageHash>(m_image_cv);
+    m_average_hash = calculate_hash<cv::img_hash::AverageHash>(get_cv_mat());
   }
   return m_average_hash.value();
 }
 auto Photo::calculate_phash() -> Hash<cv::img_hash::PHash> {
   if (!m_phash) {
-    load_opencv();
-    m_phash = calculate_hash<cv::img_hash::PHash>(m_image_cv);
+    m_phash = calculate_hash<cv::img_hash::PHash>(get_cv_mat());
   }
   return m_phash.value();
 }
 auto Photo::calculate_color_moment_hash()
     -> Hash<cv::img_hash::ColorMomentHash> {
   if (!m_color_moment_hash) {
-    load_opencv();
     m_color_moment_hash =
-        calculate_hash<cv::img_hash::ColorMomentHash>(m_image_cv);
+        calculate_hash<cv::img_hash::ColorMomentHash>(get_cv_mat());
   }
   return m_color_moment_hash.value();
 }
 auto Photo::calculate_marr_hildreth_hash()
     -> Hash<cv::img_hash::MarrHildrethHash> {
   if (!m_marr_hildreth_hash) {
-    load_opencv();
     m_marr_hildreth_hash =
-        calculate_hash<cv::img_hash::MarrHildrethHash>(m_image_cv);
+        calculate_hash<cv::img_hash::MarrHildrethHash>(get_cv_mat());
   }
 
   return m_marr_hildreth_hash.value();
 }
 auto Photo::get_text_ocr() -> std::vector<TextElement> {
-  load_opencv();
-
   // Do photo conversion
+  const auto image_cv = get_cv_mat();
   auto copy = cv::Mat {};
-  if (m_image_cv.channels() == 4) {
-    cv::cvtColor(m_image_cv, copy, cv::COLOR_BGRA2RGB);
-  } else if (m_image_cv.channels() == 3) {
-    cv::cvtColor(m_image_cv, copy, cv::COLOR_BGR2RGB);
+  if (image_cv.channels() == 4) {
+    cv::cvtColor(image_cv, copy, cv::COLOR_BGRA2RGB);
+  } else if (image_cv.channels() == 3) {
+    cv::cvtColor(image_cv, copy, cv::COLOR_BGR2RGB);
   } else {
-    copy = m_image_cv;
+    copy = image_cv;
   }
 
   // Perform OCR
-  auto classifier = TextClassifier::get_tesseract_classifier();
+  const auto classifier = TextClassifier::get_tesseract_classifier();
   if (!classifier) {
     return {};
   }
 
-  const auto page_segmentation_mode = tesseract::PageSegMode::PSM_AUTO;
+  constexpr auto page_segmentation_mode = tesseract::PageSegMode::PSM_AUTO;
   classifier->SetPageSegMode(page_segmentation_mode);
 
   classifier->SetImage(copy.data,
@@ -204,7 +195,7 @@ auto Photo::get_text_ocr() -> std::vector<TextElement> {
     return {};
   }
 
-  const auto iterator_level = tesseract::RIL_TEXTLINE;
+  constexpr auto iterator_level = tesseract::RIL_TEXTLINE;
   auto keep_going = true;
   while (keep_going) {
     // Get bounding box, text and confidence
