@@ -7,6 +7,7 @@
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
+#include <support/serialize/cvmat.h>
 
 namespace album_architect {
 /// Concept to represent hashers that derive from ImgHashBase (OpenCV)

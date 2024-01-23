@@ -7,6 +7,7 @@
 #define ALBUMARCHITECT_SUPPORT_CVMAT_H
 
 #include <opencv2/core/mat.hpp>
+#include <cereal/archives/binary.hpp>
 
 namespace cereal {
 template<class Archive>

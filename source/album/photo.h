@@ -7,18 +7,22 @@
 
 #include <filesystem>
 #include <ostream>
-#include <ranges>
 
-#include <OpenImageIO/imagebuf.h>
+#include <album/photo_hash.h>
 #include <boost/algorithm/hex.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <cereal/access.hpp>
-#include <cereal/types/string.hpp>
 #include <cereal/types/optional.hpp>
+#include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash.hpp>
-#include <support/serialize/cvmat.h>
-#include <album/photo_hash.h>
+
+// Forward declaration
+// NOLINTNEXTLINE
+namespace OpenImageIO_v2_4{
+class ImageBuf;
+} // namespace OpenImageIO_v2_4
 
 namespace album_architect {
 
@@ -36,14 +40,10 @@ struct PhotoMetadata {
   std::string description;
   std::vector<std::string> keywords;
 
-  auto operator<=>(const PhotoMetadata& other) const = default;
+  int64_t width {};
+  int64_t height {};
 
-  /// Stream Output operator for PhotoMetadata
-  /// \param os
-  /// \param metadata
-  /// \return
-  friend auto operator<<(std::ostream& ostream, const PhotoMetadata& metadata)
-      -> std::ostream&;
+  auto operator<=>(const PhotoMetadata& other) const = default;
 
   /* Serialization */
   template<class Archive>
@@ -51,9 +51,18 @@ struct PhotoMetadata {
     archive(CEREAL_NVP(creation_time),
             CEREAL_NVP(date_time),
             CEREAL_NVP(description),
-            CEREAL_NVP(keywords));
+            CEREAL_NVP(keywords),
+            CEREAL_NVP(width),
+            CEREAL_NVP(height));
   }
 };
+
+/// \brief Creates a string representation of the PhotoMetadata instance
+/// \param ostream
+/// \param obj
+/// \return
+auto operator<<(std::ostream& ostream, const PhotoMetadata& obj)
+    -> std::ostream&;
 
 /// Represents a photo that can be loaded and processed.
 class Photo final {
@@ -94,13 +103,14 @@ public:
 
   /// \brief Constructor with path
   /// \param path
-  explicit Photo(const std::filesystem::path& path);
+  explicit Photo(std::filesystem::path path);
 
   /// Destructor
   virtual ~Photo() = default;
 
-  /// Get the internal opencv2 representation
-  auto get_cv_mat() -> cv::Mat;
+  /// Get an OpenCV::Mat representation of the photo
+  static auto get_cv_mat(
+      const std::unique_ptr<OpenImageIO_v2_4::ImageBuf>& image) -> cv::Mat;
 
   // Constructors and assignment
   Photo(const Photo& other) = delete;
@@ -113,11 +123,12 @@ private:
   /// \brief Loads the metadata from the photo file
   auto load_metadata() -> bool;
 
+  /// \brief Loads the image from disk on demand
+  /// \return
+  auto load_image() -> std::unique_ptr<OpenImageIO_v2_4::ImageBuf>;
+
   /// Path of the photo
   std::filesystem::path m_path;
-
-  /// Internal data
-  OIIO::ImageBuf m_image;
 
   /// Hash cache
   std::optional<AverageHash> m_average_hash;
@@ -128,10 +139,11 @@ private:
   /// Standard metadata
   PhotoMetadata m_metadata;
 
+  /// Internal data
+  bool m_is_last_operation_ok = true;
+
   /// Default constructor
-  Photo(std::filesystem::path path,
-        OIIO::ImageBuf&& image,
-        PhotoMetadata&& metadata);
+  Photo(std::filesystem::path path, PhotoMetadata&& metadata);
 
   /* SERIALIZATION */
   friend class cereal::access;
@@ -141,7 +153,12 @@ private:
   /// \param archive
   template<class Archive>
   void save(Archive& archive) const {
-    archive(m_path.string(), m_metadata, m_average_hash, m_phash, m_color_moment_hash, m_marr_hildreth_hash);
+    archive(m_path.string(),
+            m_metadata,
+            m_average_hash,
+            m_phash,
+            m_color_moment_hash,
+            m_marr_hildreth_hash);
   }
 
   /// \brief Load function for serialization
@@ -151,11 +168,13 @@ private:
   void load(Archive& archive) {
     // Load values
     auto path = std::string {};
-    archive(path, m_metadata, m_average_hash, m_phash, m_color_moment_hash, m_marr_hildreth_hash);
+    archive(path,
+            m_metadata,
+            m_average_hash,
+            m_phash,
+            m_color_moment_hash,
+            m_marr_hildreth_hash);
     m_path = path;
-
-    // Load the image buffer
-    m_image = OIIO::ImageBuf(path);
   }
 };
 

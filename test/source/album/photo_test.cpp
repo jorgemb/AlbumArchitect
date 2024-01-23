@@ -175,9 +175,9 @@ TEST_CASE("Retrieve image metadata", "[album][photo][metadata]") {
 
   auto metadata = std::vector<album_architect::PhotoMetadata> {
       album_architect::PhotoMetadata {
-          "2017:10:27 20:37:16", "2017:10:27 20:37:16", "", {}},
-      album_architect::PhotoMetadata {},
-      album_architect::PhotoMetadata {},
+          "2017:10:27 20:37:16", "2017:10:27 20:37:16", "", {}, 3024, 4032},
+      album_architect::PhotoMetadata {{}, {}, {}, {}, 563, 434},
+      album_architect::PhotoMetadata {{}, {}, {}, {}, 250, 250},
       album_architect::PhotoMetadata {""s,
                                       ""s,
                                       R"(Satellite: Suomi NPP
@@ -192,7 +192,9 @@ Projection: Near-sided perspective from
 Author: Norman Kuring
 Created: 2012-02-21T14:00:00Z
 )",
-                                      {}},
+                                      {},
+                                      12000,
+                                      12000},
   };
 
   // Iterate through all the photos

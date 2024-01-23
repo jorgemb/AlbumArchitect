@@ -7,6 +7,7 @@
 
 #include "photo.h"
 
+#include <OpenImageIO/imagebuf.h>
 #include <dlib/data_io.h>
 #include <dlib/opencv.h>
 #include <glog/logging.h>
@@ -21,7 +22,8 @@ auto Photo::get_faces_dnn() -> std::vector<cv::Rect2f> {
   const auto detector = FaceClassifier::get_dlib_face_detector();
 
   // Convert image to dlib
-  const auto image_cv = get_cv_mat();
+  const auto image = load_image();
+  const auto image_cv = get_cv_mat(image);
 
   const auto image_wrapper = dlib::cv_image<dlib::bgr_pixel>(image_cv);
   auto target_image = dlib::matrix<dlib::rgb_pixel> {};
