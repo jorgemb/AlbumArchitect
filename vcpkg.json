@@ -1,0 +1,23 @@
+{
+  "name": "albumarchitect",
+  "version-semver": "0.1.0",
+  "dependencies": [
+    {
+      "name": "fmt",
+      "version>=": "10.2.1#1"
+    }
+  ],
+  "default-features": [],
+  "features": {
+    "test": {
+      "description": "Dependencies for testing",
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "3.5.3"
+        }
+      ]
+    }
+  },
+  "builtin-baseline": "b323a5992e8cc742deddac74df6224419d662c16"
+}
