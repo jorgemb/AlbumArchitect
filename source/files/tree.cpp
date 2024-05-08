@@ -50,6 +50,8 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   {
     
   }
+
+  return false;
 }
 FileTree::FileTree(std::filesystem::path root_path)
     : m_root_path(std::move(root_path)) {
@@ -63,5 +65,12 @@ FileTree::FileTree(std::filesystem::path root_path)
 
   // Create the file tree recursively
   add_directory(m_root_path, /*add_files=*/true, /*recursive=*/true);
+}
+auto FileTree::add_file(const std::filesystem::path& path) -> bool {
+  return false;
+}
+auto FileTree::contains_path(const std::filesystem::path& path)
+    -> std::optional<PathType> {
+  return std::optional<PathType>();
 }
 }  // namespace album_architect::files
