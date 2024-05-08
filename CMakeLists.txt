@@ -18,6 +18,8 @@ include(cmake/variables.cmake)
 add_library(
     AlbumArchitect_lib OBJECT
     source/lib.cpp
+    source/files/tree.cpp
+    source/files/tree.h
 )
 
 target_include_directories(
@@ -29,7 +31,8 @@ target_include_directories(
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt)
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt spdlog::spdlog)
 
 # ---- Declare executable ----
 
