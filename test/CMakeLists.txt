@@ -13,7 +13,7 @@ include(Catch)
 set(TEST_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 
 add_executable(AlbumArchitect_test source/AlbumArchitect_test.cpp
-        source/files.cpp)
+        source/files_test.cpp)
 target_link_libraries(
         AlbumArchitect_test PRIVATE
         AlbumArchitect_lib
