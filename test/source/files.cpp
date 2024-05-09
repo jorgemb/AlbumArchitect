@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fmt/core.h>
 #include "files/tree.h"
+#include "files/graph.h"
 
 static auto const resources_dir = std::filesystem::path(TEST_RESOURCES_DIR); // NOLINT(cert-err58-cpp)
 
@@ -30,4 +31,8 @@ TEST_CASE("Tree structure of directory", "[files][tree]"){
 
   const auto album_three_one_1_path = resources_dir / "album_three" / "album_three_one" / "three.one.1.txt";
   REQUIRE(directory_tree->contains_path(album_three_one_1_path) == files::PathType::file);
+}
+
+TEST_CASE("Graph for directories", "[files][graph]"){
+  auto tree_graph = files::FileGraph{};
 }

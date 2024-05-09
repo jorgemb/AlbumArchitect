@@ -4,6 +4,8 @@
 
 #include "graph.h"
 
-namespace album_architect {
-namespace files {}  // namespace files
-}  // namespace album_architect
+
+namespace album_architect::files {
+FileGraph::FileGraph(): m_root_vertex(boost::add_vertex(m_graph)){
+}
+} // namespace album_architect::files
