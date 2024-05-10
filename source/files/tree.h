@@ -11,11 +11,10 @@
 namespace album_architect::files {
 
 /// Represents the type of path
-enum class PathType: std::uint8_t {
+enum class PathType : std::uint8_t {
   file,
   directory
 };
-
 
 /// Represents a tree from the filesystem, mirroring the values inside
 class FileTree {
@@ -63,6 +62,12 @@ private:
   /// \param path
   /// \return
   auto is_subpath(const std::filesystem::path& path) -> bool;
+
+  /// Converts a path into a path list
+  /// \param path
+  /// \return
+  auto to_path_list(const std::filesystem::path& path)
+      -> std::vector<std::string>;
 
   std::filesystem::path m_root_path;
 

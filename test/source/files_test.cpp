@@ -29,7 +29,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   REQUIRE(directory_tree);
 
   // Check that some paths are available
-  const auto not_valid_path = std::filesystem::path("not/a/valid/path");
+  const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
   REQUIRE_FALSE(directory_tree->contains_path(not_valid_path));
 
   const auto album_one_path = resources_dir / "album_one";
