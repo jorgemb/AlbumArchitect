@@ -11,6 +11,8 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
+#include "graph.h"
+
 namespace fs = std::filesystem;
 
 namespace album_architect::files {
@@ -28,33 +30,33 @@ auto FileTree::add_directory(const std::filesystem::path& path,
                              bool add_files,
                              bool recursive) -> bool {
   // Check that directory is subdirectory of root
-  auto error_code = std::error_code{};
+  auto error_code = std::error_code {};
   auto relative_path = fs::relative(path, m_root_path, error_code);
-  if(error_code){
-    spdlog::error("Couldn't add directory {}. Error: {}", path.string(), error_code.message());
+  if (error_code) {
+    spdlog::error("Couldn't add directory {}. Error: {}",
+                  path.string(),
+                  error_code.message());
     return false;
   }
 
-  if(relative_path.native()[0] == '.'){
+  if (relative_path.native()[0] == '.') {
     spdlog::error("Path {} is not a subpath of root.", path.string());
     return false;
   }
 
   // TODO: Add the file to the internal representation
 
-
   // Iterate through all the files
   for (auto directory_iterator = fs::directory_iterator(path);
        directory_iterator != fs::directory_iterator();
        ++directory_iterator)
-  {
-    
-  }
+  {}
 
   return false;
 }
 FileTree::FileTree(std::filesystem::path root_path)
-    : m_root_path(std::move(root_path)) {
+    : m_root_path(std::move(root_path))
+    , m_graph(std::make_unique<FileGraph>()) {
   // Check that the path is a directory
   if (!std::filesystem::is_directory(m_root_path)) {
     const auto message =

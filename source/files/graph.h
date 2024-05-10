@@ -14,16 +14,16 @@
 namespace album_architect::files {
 
 /// Represents the type of node
-enum class NodeType {
+enum class NodeType : std::uint8_t {
   directory,
   file
 };
 
 /// Print the node type to standard output
-/// \param os
+/// \param ostream
 /// \param node
 /// \return
-auto operator<<(std::ostream& os, const NodeType& node) -> std::ostream&;
+auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream&;
 
 class FileGraph {
 public:
@@ -39,6 +39,21 @@ public:
   /// \return
   auto get_node_type(boost::span<std::string> path_list)
       -> std::optional<NodeType>;
+
+  /// Changes the name of a node with the new name
+  /// \param path_list
+  /// \param new_name
+  auto rename_node(boost::span<std::string> path_list,
+                   const std::string& new_name) -> bool;
+
+  /// Moves a node to a new path, conserving all sub-nodes
+  /// \param old_path
+  /// \param new_path
+  /// \param force
+  /// \return
+  auto move_node(boost::span<std::string> old_path,
+                 boost::span<std::string> new_path,
+                 bool force = false) -> bool;
 
   /// Returns the GraphViz representation of the map. For debugging purposes.
   /// \return
@@ -58,6 +73,13 @@ private:
   /// Internal graph
   graph_type m_graph;
   graph_type::vertex_descriptor m_root_vertex;
+
+  /// Returns a node with the edge that goes into it, if it exists
+  /// \param path_list
+  /// \return
+  auto get_node_data(boost::span<std::string> path_list)
+      -> std::optional<std::pair<graph_type::edge_descriptor,
+                                 graph_type::vertex_descriptor>>;
 };
 
 }  // namespace album_architect::files

@@ -69,6 +69,24 @@ TEST_CASE("Graph for directories", "[files][graph]") {
   tree_graph.add_node(path2, files::NodeType::file);
   REQUIRE(tree_graph.get_node_type(path2) == files::NodeType::file);
 
+  // Try to rename a node
+  path1 = std::vector {"route"s, "to"s, "first"s};
+  auto new_path1 = std::vector{"route"s, "to"s, "new_first"s};
+  tree_graph.rename_node(path1, "new_first"s);
+  REQUIRE_FALSE(tree_graph.get_node_type(path1));
+  REQUIRE(tree_graph.get_node_type(new_path1) == files::NodeType::file);
+
+  // Try to rename a node that has children
+  auto subpath = std::vector{"route"s, "to"s};
+  tree_graph.rename_node(subpath, "new_to");
+  REQUIRE_FALSE(tree_graph.get_node_type(path2));
+
+  path2[1] = "new_to";
+  REQUIRE(tree_graph.get_node_type(path2) == files::NodeType::file);
+
+  // ... renaming the root should fail
+  REQUIRE_FALSE(tree_graph.rename_node({}, "new_root_name"));
+
   // DEBUG: Show graph representation
   tree_graph.to_graphviz(std::cout);
 }

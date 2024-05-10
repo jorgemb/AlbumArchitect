@@ -3,6 +3,7 @@
 //
 
 #include <sstream>
+#include <spdlog/spdlog.h>
 
 #include "graph.h"
 
@@ -78,16 +79,63 @@ void FileGraph::to_graphviz(std::ostream& os) const {
                         boost::make_label_writer(vertex_property),
                         boost::make_label_writer(edge_property));
 }
-auto operator<<(std::ostream& os, const NodeType& node) -> std::ostream& {
+auto FileGraph::rename_node(boost::span<std::string> path_list,
+                            const std::string& new_name) -> bool {
+  // Root node cannot be renamed
+  if(path_list.empty()){
+    spdlog::error("Cannot rename root node");
+    return false;
+  }
+
+  // Get the node data
+  auto node_data = get_node_data(path_list);
+  if (!node_data) {
+    return false;
+  }
+
+  auto [edge, node] = *node_data;
+  auto name_property = boost::get(boost::edge_name_t(), m_graph);
+  boost::put(name_property, edge, new_name);
+  return true;
+}
+auto FileGraph::get_node_data(boost::span<std::string> path_list)
+    -> std::optional<
+        std::pair<graph_type::edge_descriptor, graph_type::vertex_descriptor>> {
+  // Search for the node
+  auto current_node = m_root_vertex;
+  auto current_edge = graph_type::edge_descriptor {};
+  auto name_property = boost::get(boost::edge_name_t(), m_graph);
+
+  for (const auto& current_path : path_list) {
+    auto [start, end] = boost::out_edges(current_node, m_graph);
+    auto edge_iter = std::find_if(
+        start,
+        end,
+        [&name_property, &current_path](auto iter)
+        { return boost::get(name_property, iter) == current_path; });
+
+    if (edge_iter == end) {
+      // The path was not found
+      return {};
+    }
+
+    // Get the current info
+    current_edge = *edge_iter;
+    current_node = boost::target(*edge_iter, m_graph);
+  }
+
+  return std::make_pair(current_edge, current_node);
+}
+auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
   switch (node) {
     case NodeType::directory:
-      os << "directory";
+      ostream << "directory";
       break;
     case NodeType::file:
-      os << "file";
+      ostream << "file";
       break;
   }
 
-  return os;
+  return ostream;
 }
 }  // namespace album_architect::files
