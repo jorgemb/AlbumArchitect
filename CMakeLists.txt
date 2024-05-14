@@ -22,6 +22,8 @@ add_library(
     source/files/tree.h
         source/files/graph.cpp
         source/files/graph.h
+        source/files/helper.cpp
+        source/files/helper.h
 )
 
 target_include_directories(
@@ -46,7 +48,7 @@ set_property(TARGET AlbumArchitect_exe PROPERTY OUTPUT_NAME AlbumArchitect)
 
 target_compile_features(AlbumArchitect_exe PRIVATE cxx_std_17)
 
-target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib)
+target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib fmt::fmt spdlog::spdlog)
 
 # ---- Install rules ----
 

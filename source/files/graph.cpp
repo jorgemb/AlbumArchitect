@@ -45,6 +45,11 @@ void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
               // edge should be created.
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
   for (const auto& current_path : path_list) {
+    // Skip files that have "."
+    if(current_path == "."){
+      continue;
+    }
+
     if (!last_was_created) {
       // Find among the nodes
       auto [start, end] = boost::out_edges(current_node, m_graph);

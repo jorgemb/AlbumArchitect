@@ -5,6 +5,7 @@
 #ifndef ALBUMARCHITECT_TREE_H
 #define ALBUMARCHITECT_TREE_H
 
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 
@@ -19,10 +20,21 @@ enum class PathType : std::uint8_t {
 /// Represents a tree from the filesystem, mirroring the values inside
 class FileTree {
 public:
+  /// Destructor has to be visible to support forward declarations.
+  ~FileTree();
+
+  // Disable copy
+  FileTree(const FileTree& other) = delete;
+  auto operator=(const FileTree& other) = delete;
+
+  // Default move
+  FileTree(FileTree&& other) = default;
+  auto operator=(FileTree&& other) -> FileTree& = default;
+
   /// Creates a file tree from the specified root directory.
   /// \param path Path to a directory to search recursively.
   /// \return A file tree, or None if a directory is not specified
-  static auto create_file_tree(const std::filesystem::path& path)
+  static auto build(const std::filesystem::path& path)
       -> std::optional<FileTree>;
 
   /// Returns an optional PathType if the given path is part of the tree. In
@@ -50,6 +62,10 @@ public:
                  const std::filesystem::path& new_path) -> bool;
   auto move_directory(const std::filesystem::path& old_path,
                       const std::filesystem::path& new_path) -> bool;
+
+  /// Outputs a graphviz representation to the given stream
+  /// \param ostream
+  void to_graphviz(std::ostream& ostream) const;
 
 private:
   /// Recursively populates the tree with all the files and folders under the

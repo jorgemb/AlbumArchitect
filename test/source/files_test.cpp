@@ -11,21 +11,23 @@
 
 #include "files/graph.h"
 #include "files/tree.h"
+#include "files/helper.h"
 
 static auto const resources_dir =
     std::filesystem::path(TEST_RESOURCES_DIR);  // NOLINT(cert-err58-cpp)
 
 using namespace album_architect;
 using namespace std::string_literals;
+namespace fs = std::filesystem;
 
 TEST_CASE("Tree structure of directory", "[files][tree]") {
   // Check that passing a file returns None
-  auto invalid_tree = files::FileTree::create_file_tree(
-      resources_dir / "album_one" / "one.1.jpg");
+  auto invalid_tree =
+      files::FileTree::build(resources_dir / "album_one" / "one.1.jpg");
   REQUIRE_FALSE(invalid_tree);
 
   // Create a directory tree from the test tree
-  auto directory_tree = files::FileTree::create_file_tree(resources_dir);
+  auto directory_tree = files::FileTree::build(resources_dir);
   REQUIRE(directory_tree);
 
   // Check that some paths are available
@@ -89,4 +91,23 @@ TEST_CASE("Graph for directories", "[files][graph]") {
 
   // DEBUG: Show graph representation
   tree_graph.to_graphviz(std::cout);
+}
+
+TEST_CASE("TempCurrentDir tests", "[files][helper]" ){
+  // Get current directories
+  auto original_dir = fs::current_path();
+
+  auto temporary_dir = fs::temp_directory_path().parent_path();
+  REQUIRE(original_dir != temporary_dir);
+
+  // Create temporary dir
+  {
+    auto temp = files::TempCurrentDir(temporary_dir);
+    REQUIRE(fs::current_path() == temporary_dir);
+    REQUIRE(fs::current_path() != original_dir);
+  }
+
+  // Check original dir
+  REQUIRE(fs::current_path() != temporary_dir);
+  REQUIRE(fs::current_path() == original_dir);
 }
