@@ -10,8 +10,8 @@
 #include <fmt/core.h>
 
 #include "files/graph.h"
-#include "files/tree.h"
 #include "files/helper.h"
+#include "files/tree.h"
 
 static auto const resources_dir =
     std::filesystem::path(TEST_RESOURCES_DIR);  // NOLINT(cert-err58-cpp)
@@ -65,7 +65,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
     REQUIRE(tree_graph.get_node_type(path1) == files::NodeType::directory);
   }
 
-  auto path2 = std::vector{"route"s, "to"s, "second"s};
+  auto path2 = std::vector {"route"s, "to"s, "second"s};
   REQUIRE_FALSE(tree_graph.get_node_type(path2));
 
   tree_graph.add_node(path2, files::NodeType::file);
@@ -73,13 +73,13 @@ TEST_CASE("Graph for directories", "[files][graph]") {
 
   // Try to rename a node
   path1 = std::vector {"route"s, "to"s, "first"s};
-  auto new_path1 = std::vector{"route"s, "to"s, "new_first"s};
+  auto new_path1 = std::vector {"route"s, "to"s, "new_first"s};
   tree_graph.rename_node(path1, "new_first"s);
   REQUIRE_FALSE(tree_graph.get_node_type(path1));
   REQUIRE(tree_graph.get_node_type(new_path1) == files::NodeType::file);
 
   // Try to rename a node that has children
-  auto subpath = std::vector{"route"s, "to"s};
+  auto subpath = std::vector {"route"s, "to"s};
   tree_graph.rename_node(subpath, "new_to");
   REQUIRE_FALSE(tree_graph.get_node_type(path2));
 
@@ -93,7 +93,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
   tree_graph.to_graphviz(std::cout);
 }
 
-TEST_CASE("TempCurrentDir tests", "[files][helper]" ){
+TEST_CASE("TempCurrentDir tests", "[files][helper]") {
   // Get current directories
   auto original_dir = fs::current_path();
 

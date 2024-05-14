@@ -24,7 +24,7 @@ auto main(int argc, char* argv[]) -> int {
 
   // Create the file tree and output
   auto file_tree = album_architect::files::FileTree::build(path);
-  if(!file_tree){
+  if (!file_tree) {
     spdlog::error("Couldn't create a tree of path: {}", path.string());
     return -1;
   }

@@ -93,7 +93,6 @@ void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
   // Set the correct type to the last node
   auto type_property = boost::get(boost::vertex_color_t(), m_graph);
   boost::put(type_property, current_node, type);
-
 }
 void FileGraph::to_graphviz(std::ostream& os) const {
   auto vertex_property = boost::get(boost::vertex_color_t(), m_graph);

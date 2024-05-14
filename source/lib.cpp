@@ -3,6 +3,4 @@
 #include <fmt/core.h>
 
 library::library()
-    : name {fmt::format("{}", "AlbumArchitect")}
-{
-}
+    : name {fmt::format("{}", "AlbumArchitect")} {}
