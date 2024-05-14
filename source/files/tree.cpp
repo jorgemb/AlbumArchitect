@@ -51,6 +51,9 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   auto path_list = to_path_list(relative_path);
   if (path != m_root_path) {
     m_graph->add_node(path_list, NodeType::directory);
+  } else {
+    // Clear the path list to not include "."
+    path_list.clear();
   }
 
   // Iterate through all the files

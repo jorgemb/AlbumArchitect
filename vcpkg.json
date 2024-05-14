@@ -9,6 +9,10 @@
     {
       "name": "spdlog",
       "version>=": "1.14.1"
+    },
+    {
+      "name": "abseil",
+      "version>=": "20240116.2"
     }
   ],
   "default-features": [],

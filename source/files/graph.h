@@ -5,11 +5,18 @@
 #ifndef ALBUMARCHITECT_GRAPH_H
 #define ALBUMARCHITECT_GRAPH_H
 
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <functional>
+#include <optional>
+#include <ostream>
 #include <string>
 
 #include <boost/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <absl/container/btree_map.h>
+#include <absl/hash/hash.h>
 
 namespace album_architect::files {
 
@@ -27,6 +34,8 @@ auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream&;
 
 class FileGraph {
 public:
+  using path_hash = std::size_t;
+
   /// Creates the root node of the FileGraph
   FileGraph();
 
@@ -73,6 +82,9 @@ private:
   /// Internal graph
   graph_type m_graph;
   graph_type::vertex_descriptor m_root_vertex;
+
+  /// Cache for efficient lookup
+  absl::btree_map<path_hash, graph_type::vertex_descriptor> m_vertex_hash;
 
   /// Returns a node with the edge that goes into it, if it exists
   /// \param path_list
