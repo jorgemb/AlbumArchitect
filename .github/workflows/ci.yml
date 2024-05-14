@@ -132,7 +132,7 @@ jobs:
     - name: Install linux requirements
       if: matrix.os == 'ubuntu-22.04'
       run: >-
-        sudo apt-get install curl zip unzip tar libboost-dev
+        sudo apt-get install curl zip unzip tar libboost-dev libboost-graph-dev libboost-container-dev -y -q
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1

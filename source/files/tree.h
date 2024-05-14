@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <optional>
+#include <vector>
 
 namespace album_architect::files {
 
