@@ -7,16 +7,15 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
-#include <functional>
 #include <optional>
 #include <ostream>
 #include <string>
+#include <utility>
 
+#include <absl/container/btree_map.h>
 #include <boost/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <absl/container/btree_map.h>
-#include <absl/hash/hash.h>
+#include <boost/graph/graph_selectors.hpp>
 
 namespace album_architect::files {
 
@@ -84,7 +83,7 @@ private:
   graph_type::vertex_descriptor m_root_vertex;
 
   /// Cache for efficient lookup
-  absl::btree_map<path_hash, graph_type::vertex_descriptor> m_vertex_hash;
+  absl::btree_map<path_hash, graph_type::vertex_descriptor> m_vertex_cache;
 
   /// Returns a node with the edge that goes into it, if it exists
   /// \param path_list
@@ -92,6 +91,17 @@ private:
   auto get_node_data(boost::span<std::string> path_list)
       -> std::optional<std::pair<graph_type::edge_descriptor,
                                  graph_type::vertex_descriptor>>;
+
+  /// Returns a node from the cache if it exists
+  /// \param path_list
+  /// \return
+  auto get_node_from_cache(boost::span<std::string> path_list)
+      -> std::optional<graph_type::vertex_descriptor>;
+
+  /// Adds a node to the cache
+  /// \param path_list
+  /// \param vertex
+  void add_node_to_cache(boost::span<std::string> path_list, graph_type::vertex_descriptor vertex);
 };
 
 }  // namespace album_architect::files
