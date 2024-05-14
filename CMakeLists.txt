@@ -36,7 +36,7 @@ target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
-find_package(Boost 1.84 REQUIRED COMPONENTS graph)
+find_package(Boost 1.74 REQUIRED COMPONENTS graph)
 find_package(absl CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt spdlog::spdlog Boost::graph Boost::headers absl::btree absl::hash)
 

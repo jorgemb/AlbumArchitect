@@ -129,6 +129,11 @@ jobs:
         /usr/bin/clang-tidy clang-tidy
         /usr/bin/clang-tidy-14 140
 
+    - name: Install linux requirements
+      if: matrix.os == 'ubuntu-22.04'
+      run: >-
+        sudo apt-get install curl zip unzip tar libboost-dev
+
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1
       with: { committish: "${{ env.VCPKG_COMMIT }}" }
