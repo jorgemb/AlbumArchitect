@@ -43,14 +43,15 @@ auto FileGraph::get_node_type(boost::span<std::string> path_list)
 }
 void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
   // If the path list is empty do not create a new node
-  if(path_list.empty()){
+  if (path_list.empty()) {
     return;
   }
 
   // Try to find the previous node in the cache
   auto previous_node = m_root_node;
   if (path_list.size() > 1) {
-    previous_node = get_or_create_nodes(path_list.subspan(0, path_list.size()-1));
+    previous_node =
+        get_or_create_nodes(path_list.subspan(0, path_list.size() - 1));
   }
 
   // Create the new node
@@ -134,7 +135,7 @@ auto FileGraph::get_or_create_nodes(boost::span<std::string> path_list)
     -> graph_type::vertex_descriptor {
   // Try to find in the cache
   auto cached_node = get_node_from_cache(path_list);
-  if(cached_node){
+  if (cached_node) {
     return cached_node.value();
   }
 
