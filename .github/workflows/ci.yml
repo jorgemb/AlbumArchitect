@@ -88,11 +88,6 @@ jobs:
       uses: friendlyanon/setup-vcpkg@v1
       with: { committish: "${{ env.VCPKG_COMMIT }}" }
 
-    - name: Install linux requirements
-      run: >-
-        sudo apt-get install curl zip unzip tar libboost-dev libboost-graph-dev libboost-container-dev -y -q
-
-
     - name: Configure
       run: cmake --preset=ci-sanitize
 
@@ -133,11 +128,6 @@ jobs:
         sudo update-alternatives --install
         /usr/bin/clang-tidy clang-tidy
         /usr/bin/clang-tidy-14 140
-
-    - name: Install linux requirements
-      if: matrix.os == 'ubuntu-22.04'
-      run: >-
-        sudo apt-get install curl zip unzip tar libboost-dev libboost-graph-dev libboost-container-dev -y -q
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1

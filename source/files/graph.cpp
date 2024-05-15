@@ -14,13 +14,13 @@
 
 namespace album_architect::files {
 FileGraph::FileGraph()
-    : m_root_vertex(boost::add_vertex(m_graph)) {
+    : m_root_node(boost::add_vertex(m_graph)) {
   auto color = boost::get(boost::vertex_color_t(), m_graph);
-  boost::put(color, m_root_vertex, NodeType::directory);
+  boost::put(color, m_root_node, NodeType::directory);
 }
 auto FileGraph::get_node_type(boost::span<std::string> path_list)
     -> std::optional<NodeType> {
-  auto current_node = m_root_vertex;
+  auto current_node = m_root_node;
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
   for (auto& current_path : path_list) {
     // Find if any of the outer edges has the given name
@@ -58,7 +58,7 @@ void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
   }
 
   // Try to find the previous node in case
-  auto current_node = m_root_vertex;
+  auto current_node = m_root_node;
   bool last_was_created =
       false;  // Set to true on the first edge that is created. Afterward every
               // edge should be created.
@@ -128,7 +128,7 @@ auto FileGraph::get_node_data(boost::span<std::string> path_list)
     -> std::optional<
         std::pair<graph_type::edge_descriptor, graph_type::vertex_descriptor>> {
   // Search for the node
-  auto current_node = m_root_vertex;
+  auto current_node = m_root_node;
   auto current_edge = graph_type::edge_descriptor {};
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
 
@@ -165,6 +165,52 @@ void FileGraph::add_node_to_cache(boost::span<std::string> path_list,
                                   graph_type::vertex_descriptor vertex) {
   auto hash = boost::hash_value(path_list);
   m_vertex_cache[hash] = vertex;
+}
+auto FileGraph::get_or_create_nodes(boost::span<std::string> path_list)
+    -> graph_type::vertex_descriptor {
+  // Try to find in the cache
+  auto cached_node = get_node_from_cache(path_list);
+  if(cached_node){
+    return cached_node.value();
+  }
+
+  // Iterate through the graph to find the node, and create any intermediary
+  // nodes as directories
+  auto current_node = m_root_node;
+  bool last_was_created =
+      false;  // Set to true on the first edge that is created. Afterward every
+              // edge should be created.
+  auto name_property = boost::get(boost::edge_name_t(), m_graph);
+
+  // Iterate through every member of the path list
+  for (const auto& current_path : path_list) {
+    if (!last_was_created) {
+      // Find among the nodes
+      auto [start, end] = boost::out_edges(current_node, m_graph);
+      auto found_edge = std::find_if(
+          start,
+          end,
+          [&name_property, &current_path](auto iter)
+          { return boost::get(name_property, iter) == current_path; });
+
+      if (found_edge == end) {
+        last_was_created = true;
+      } else {
+        current_node = boost::target(*found_edge, m_graph);
+        continue;
+      }
+    }
+
+    // Create the new node
+    auto new_node = boost::add_vertex(NodeType::directory, m_graph);
+    boost::add_edge(current_node, new_node, current_path, m_graph);
+    current_node = new_node;
+
+    // Add the node to the cache
+    add_node_to_cache(path_list, current_node);
+  }
+
+  return current_node;
 }
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
   switch (node) {

@@ -80,7 +80,7 @@ private:
 
   /// Internal graph
   graph_type m_graph;
-  graph_type::vertex_descriptor m_root_vertex;
+  graph_type::vertex_descriptor m_root_node;
 
   /// Cache for efficient lookup
   absl::btree_map<path_hash, graph_type::vertex_descriptor> m_vertex_cache;
@@ -91,6 +91,11 @@ private:
   auto get_node_data(boost::span<std::string> path_list)
       -> std::optional<std::pair<graph_type::edge_descriptor,
                                  graph_type::vertex_descriptor>>;
+
+  /// Gets or creates the nodes in the path_list, and returns the last one
+  /// \param path_list
+  /// \return
+  auto get_or_create_nodes(boost::span<std::string> path_list) -> graph_type::vertex_descriptor;
 
   /// Returns a node from the cache if it exists
   /// \param path_list
