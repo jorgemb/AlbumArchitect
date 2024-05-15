@@ -55,6 +55,7 @@ public:
                    const std::string& new_name) -> bool;
 
   /// Moves a node to a new path, conserving all sub-nodes
+  /// TODO: Added at a later time, as it requires a merge operation
   /// \param old_path
   /// \param new_path
   /// \param force

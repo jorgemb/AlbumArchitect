@@ -176,6 +176,7 @@ auto FileGraph::get_or_create_nodes(boost::span<std::string> path_list)
 
   return current_node;
 }
+
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
   switch (node) {
     case NodeType::directory:
