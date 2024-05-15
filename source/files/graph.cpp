@@ -42,57 +42,21 @@ auto FileGraph::get_node_type(boost::span<std::string> path_list)
   return std::make_optional<NodeType>(boost::get(color_property, current_node));
 }
 void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
+  // If the path list is empty do not create a new node
+  if(path_list.empty()){
+    return;
+  }
+
   // Try to find the previous node in the cache
+  auto previous_node = m_root_node;
   if (path_list.size() > 1) {
-    auto cached_node =
-        get_node_from_cache(path_list.subspan(0, path_list.size() - 1));
-    if (cached_node) {
-      auto new_node = boost::add_vertex(type, m_graph);
-      boost::add_edge(cached_node.value(), new_node, path_list.back(), m_graph);
-
-      // Add node to the cache
-      add_node_to_cache(path_list, new_node);
-
-      return;
-    }
+    previous_node = get_or_create_nodes(path_list.subspan(0, path_list.size()-1));
   }
 
-  // Try to find the previous node in case
-  auto current_node = m_root_node;
-  bool last_was_created =
-      false;  // Set to true on the first edge that is created. Afterward every
-              // edge should be created.
-  auto name_property = boost::get(boost::edge_name_t(), m_graph);
-  for (const auto& current_path : path_list) {
-    if (!last_was_created) {
-      // Find among the nodes
-      auto [start, end] = boost::out_edges(current_node, m_graph);
-      auto found_edge = std::find_if(
-          start,
-          end,
-          [&name_property, &current_path](auto iter)
-          { return boost::get(name_property, iter) == current_path; });
-
-      if (found_edge == end) {
-        last_was_created = true;
-      } else {
-        current_node = boost::target(*found_edge, m_graph);
-        continue;
-      }
-    }
-
-    // Create the new node
-    auto new_node = boost::add_vertex(NodeType::directory, m_graph);
-    boost::add_edge(current_node, new_node, current_path, m_graph);
-    current_node = new_node;
-
-    // Add the node to the cache
-    add_node_to_cache(path_list, current_node);
-  }
-
-  // Set the correct type to the last node
-  auto type_property = boost::get(boost::vertex_color_t(), m_graph);
-  boost::put(type_property, current_node, type);
+  // Create the new node
+  // TODO: Check if node already exists
+  auto new_node = boost::add_vertex(type, m_graph);
+  boost::add_edge(previous_node, new_node, path_list.back(), m_graph);
 }
 void FileGraph::to_graphviz(std::ostream& os) const {
   auto vertex_property = boost::get(boost::vertex_color_t(), m_graph);
