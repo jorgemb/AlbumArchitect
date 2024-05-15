@@ -18,6 +18,12 @@ include(cmake/variables.cmake)
 add_library(
     AlbumArchitect_lib OBJECT
     source/lib.cpp
+    source/files/tree.cpp
+    source/files/tree.h
+        source/files/graph.cpp
+        source/files/graph.h
+        source/files/helper.cpp
+        source/files/helper.h
 )
 
 target_include_directories(
@@ -29,7 +35,10 @@ target_include_directories(
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
-target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt)
+find_package(spdlog CONFIG REQUIRED)
+find_package(Boost 1.83 REQUIRED COMPONENTS graph)
+find_package(absl CONFIG REQUIRED)
+target_link_libraries(AlbumArchitect_lib PRIVATE fmt::fmt spdlog::spdlog Boost::graph Boost::headers absl::btree absl::hash)
 
 # ---- Declare executable ----
 
@@ -40,7 +49,7 @@ set_property(TARGET AlbumArchitect_exe PROPERTY OUTPUT_NAME AlbumArchitect)
 
 target_compile_features(AlbumArchitect_exe PRIVATE cxx_std_17)
 
-target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib)
+target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib fmt::fmt spdlog::spdlog)
 
 # ---- Install rules ----
 

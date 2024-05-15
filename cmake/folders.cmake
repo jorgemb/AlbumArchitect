@@ -1,9 +1,9 @@
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 
-# Call this function at the end of a directory scope to assign a folder to
+# Call this function at the end of a directory scope to assign a directory to
 # targets created in that directory. Utility targets will be assigned to the
-# UtilityTargets folder, otherwise to the ${name}Targets folder. If a target
-# already has a folder assigned, then that target will be skipped.
+# UtilityTargets directory, otherwise to the ${name}Targets directory. If a target
+# already has a directory assigned, then that target will be skipped.
 function(add_folders name)
   get_property(targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
   foreach(target IN LISTS targets)

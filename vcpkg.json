@@ -5,6 +5,22 @@
     {
       "name": "fmt",
       "version>=": "10.2.1#1"
+    },
+    {
+      "name": "spdlog",
+      "version>=": "1.14.1"
+    },
+    {
+      "name": "abseil",
+      "version>=": "20240116.2"
+    },
+    {
+      "name": "boost-core",
+      "version>=": "1.83.0"
+    },
+    {
+      "name": "boost-graph",
+      "version>=": "1.83.0"
     }
   ],
   "default-features": [],

@@ -1,12 +1,39 @@
-#include <iostream>
-#include <string>
+#include <fstream>
+#include <utility>
 
-#include "lib.hpp"
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
 
-auto main() -> int
-{
-  auto const lib = library {};
-  auto const message = "Hello from " + lib.name + "!";
-  std::cout << message << '\n';
+#include "files/tree.h"
+
+namespace fs = std::filesystem;
+
+auto main(int argc, char* argv[]) -> int {
+  // Check usage
+  if (argc != 2) {
+    fmt::println("Usage: albumarchitect <FOLDER>");
+    return -1;
+  }
+
+  // Try to create path
+  auto path = fs::path(argv[1]);
+  if (!fs::exists(path) || !fs::is_directory(path)) {
+    spdlog::error("The given path {} is not valid.", path.string());
+    return -1;
+  }
+
+  // Create the file tree and output
+  auto file_tree = album_architect::files::FileTree::build(path);
+  if (!file_tree) {
+    spdlog::error("Couldn't create a tree of path: {}", path.string());
+    return -1;
+  }
+
+  // ... write to graphviz
+  auto output_file = std::ofstream("filesystem.dot");
+  if (output_file) {
+    file_tree->to_graphviz(output_file);
+  }
+
   return 0;
 }
