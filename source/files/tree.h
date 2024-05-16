@@ -9,11 +9,11 @@
 #include <istream>
 #include <memory>
 #include <optional>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include <boost/filesystem.hpp>
 #include <boost/serialization/access.hpp>
 
 namespace album_architect::files {
@@ -41,7 +41,7 @@ public:
   /// Creates a file tree from the specified root directory.
   /// \param path Path to a directory to search recursively.
   /// \return A file tree, or None if a directory is not specified
-  static auto build(const boost::filesystem::path& path)
+  static auto build(const std::filesystem::path& path)
       -> std::optional<FileTree>;
 
   /// Builds a filetree from the provided stream
@@ -74,8 +74,16 @@ public:
   /// \param version
   template<class Archive>
   void serialize(Archive& archive, const unsigned int version) {
-    auto path = m_root_path.string();
-    archive & path;
+    // Serialize root path
+    auto str_path = std::string{};
+    if(Archive::is_saving::value){
+      str_path = m_root_path.string();
+      archive & str_path;
+    } else {
+      archive & str_path;
+      m_root_path = str_path;
+    }
+
     archive & m_graph;
   }
 
