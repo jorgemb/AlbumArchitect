@@ -2,8 +2,13 @@
 // Created by Jorge on 08/05/2024.
 //
 
+#include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <memory>
+#include <thread>
+#include <vector>
 
 #include <boost/core/make_span.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -42,6 +47,17 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
       resources_dir / "album_three" / "album_three_one" / "three.one.1.txt";
   REQUIRE(directory_tree->contains_path(album_three_one_1_path)
           == files::PathType::file);
+
+  // Check that the tree can be serialized
+  auto temp_file = files::TemporaryFile {};
+  {
+    auto out_file = std::ofstream {temp_file.get_path()};
+    directory_tree->to_stream(out_file);
+  }
+
+  // Try to get the tree and compare
+  auto in_file = std::ifstream{temp_file.get_path()};
+  auto new_tree = files::FileTree::from_stream(in_file);
 }
 
 TEST_CASE("Graph for directories", "[files][graph]") {
@@ -110,4 +126,23 @@ TEST_CASE("TempCurrentDir tests", "[files][helper]") {
   // Check original dir
   REQUIRE(fs::current_path() != temporary_dir);
   REQUIRE(fs::current_path() == original_dir);
+}
+
+TEST_CASE("TemporaryFile tests", "[files][helper]") {
+  auto temporary_file = std::make_unique<files::TemporaryFile>();
+  auto path = temporary_file->get_path();
+  REQUIRE_FALSE(fs::exists(path));
+
+  {
+    // Write to file to make it exist
+    auto file = std::ofstream(path);
+    file << "This is a test";
+  }
+
+  REQUIRE(fs::exists(path));
+
+  // Sleep to allow for the file handler to be released
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  temporary_file.reset();
+  REQUIRE_FALSE(fs::exists(path));
 }

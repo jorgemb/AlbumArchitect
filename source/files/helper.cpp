@@ -3,10 +3,13 @@
 //
 
 #include <filesystem>
+#include <string>
+#include <array>
 
 #include "helper.h"
 
 #include <spdlog/spdlog.h>
+#include <boost/filesystem/operations.hpp>
 
 namespace album_architect::files {
 
@@ -32,5 +35,20 @@ TempCurrentDir::~TempCurrentDir() {
     spdlog::error("Couldn't restore to the previous directory. Error: {}",
                   has_error.message());
   }
+}
+TemporaryFile::TemporaryFile(): m_path() {
+  auto path = boost::filesystem::unique_path();
+  m_path = std::filesystem::temp_directory_path() / path.string();
+}
+TemporaryFile::~TemporaryFile() {
+  if(std::filesystem::exists(m_path)){
+    auto status = std::filesystem::remove(m_path);
+    if(!status){
+      spdlog::error("Couldn't delete temporary file: {}", m_path.string());
+    }
+  }
+}
+auto TemporaryFile::get_path() const -> std::filesystem::path {
+  return m_path;
 }
 }  // namespace album_architect::files
