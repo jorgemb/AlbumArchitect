@@ -6,15 +6,15 @@
 #define ALBUMARCHITECT_TREE_H
 
 #include <cstdint>
+#include <filesystem>
 #include <istream>
 #include <memory>
 #include <optional>
-#include <filesystem>
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include <boost/serialization/access.hpp>
+#include <boost/serialization/split_member.hpp>
 
 namespace album_architect::files {
 
@@ -49,12 +49,10 @@ public:
   /// \return
   static auto from_stream(std::istream& input) -> std::optional<FileTree>;
 
-
   /// Writes the FileTree to the provided stream
   /// \param output
   /// \return
-  void to_stream(std::ostream& output);
-
+  void to_stream(std::ostream& output) const;
 
   /// Returns an optional PathType if the given path is part of the tree. In
   /// case it exists it returns the path type.
@@ -73,25 +71,32 @@ public:
   /// \param archive
   /// \param version
   template<class Archive>
-  void serialize(Archive& archive, const unsigned int version) {
-    // Serialize root path
-    auto str_path = std::string{};
-    if(Archive::is_saving::value){
-      str_path = m_root_path.string();
-      archive & str_path;
-    } else {
-      archive & str_path;
-      m_root_path = str_path;
-    }
+  void load(Archive& archive, const unsigned int /* version */) {
+    auto str_path = std::string {};
+    archive & str_path;
+    m_root_path = str_path;
 
     archive & m_graph;
   }
 
-  friend class boost::serialization::access;
+  /// Allows for serialization via the << and >> operators using boost
+  /// serialization framework.
+  /// \tparam Archive
+  /// \param archive
+  /// \param version
+  template<class Archive>
+  void save(Archive& archive, const unsigned int /* version */) const {
+    auto str_path = m_root_path.string();
+
+    archive & str_path;
+    archive & m_graph;
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
 
   /// Comparison operators
-  bool operator==(const FileTree& rhs) const;
-  bool operator!=(const FileTree& rhs) const;
+  auto operator==(const FileTree& rhs) const -> bool;
+  auto operator!=(const FileTree& rhs) const -> bool;
 
 private:
   /// Adds a directory that is a part of the filesystem

@@ -58,10 +58,12 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   // Try to get the tree and compare
   auto in_file = std::ifstream{temp_file.get_path()};
   auto new_tree = files::FileTree::from_stream(in_file);
+  REQUIRE(new_tree);
+  REQUIRE(directory_tree == new_tree);
 }
 
 TEST_CASE("Graph for directories", "[files][graph]") {
-  auto tree_graph = files::FileGraph {};
+  auto tree_graph = files::FileGraph {true};
 
   // Get root node
   auto root_node_type = tree_graph.get_node_type({});
@@ -106,7 +108,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
   REQUIRE_FALSE(tree_graph.rename_node({}, "new_root_name"));
 
   // DEBUG: Show graph representation
-  tree_graph.to_graphviz(std::cout);
+//  tree_graph.to_graphviz(std::cout);
 }
 
 TEST_CASE("TempCurrentDir tests", "[files][helper]") {

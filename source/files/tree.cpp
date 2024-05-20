@@ -10,8 +10,8 @@
 #include "tree.h"
 
 #include <boost/archive/archive_exception.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
@@ -35,7 +35,7 @@ auto FileTree::build(const std::filesystem::path& path)
 
 FileTree::FileTree(std::filesystem::path root_path)
     : m_root_path(std::move(root_path))
-    , m_graph(std::make_unique<FileGraph>()) {
+    , m_graph(std::make_unique<FileGraph>(true)) {
   // Check that the path is a directory
   if (!std::filesystem::is_directory(m_root_path)) {
     const auto message =
@@ -149,20 +149,20 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
 void FileTree::to_graphviz(std::ostream& ostream) const {
   m_graph->to_graphviz(ostream);
 }
-bool FileTree::operator==(const FileTree& rhs) const {
-  return m_root_path == rhs.m_root_path && m_graph == rhs.m_graph;
+auto FileTree::operator==(const FileTree& rhs) const -> bool {
+  return m_root_path == rhs.m_root_path && *m_graph == *rhs.m_graph;
 }
-bool FileTree::operator!=(const FileTree& rhs) const {
+auto FileTree::operator!=(const FileTree& rhs) const -> bool {
   return !(rhs == *this);
 }
-void FileTree::to_stream(std::ostream& output) {
-  auto archiver = boost::archive::binary_oarchive {output};
-  output << this;
+void FileTree::to_stream(std::ostream& output) const{
+  auto archiver = boost::archive::text_oarchive {output};
+  archiver << *this;
 }
 auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
-  auto archiver = boost::archive::binary_iarchive {input};
+  auto archiver = boost::archive::text_iarchive {input};
   try {
-    auto new_tree = FileTree {};
+    auto new_tree = files::FileTree {};
     archiver >> new_tree;
 
     return std::make_optional(std::move(new_tree));

@@ -2,14 +2,14 @@
 // Created by Jorge on 14/05/2024.
 //
 
+#include <array>
 #include <filesystem>
 #include <string>
-#include <array>
 
 #include "helper.h"
 
-#include <spdlog/spdlog.h>
 #include <boost/filesystem/operations.hpp>
+#include <spdlog/spdlog.h>
 
 namespace album_architect::files {
 
@@ -36,16 +36,23 @@ TempCurrentDir::~TempCurrentDir() {
                   has_error.message());
   }
 }
-TemporaryFile::TemporaryFile(): m_path() {
+TemporaryFile::TemporaryFile() {
   auto path = boost::filesystem::unique_path();
   m_path = std::filesystem::temp_directory_path() / path.string();
 }
 TemporaryFile::~TemporaryFile() {
-  if(std::filesystem::exists(m_path)){
-    auto status = std::filesystem::remove(m_path);
-    if(!status){
-      spdlog::error("Couldn't delete temporary file: {}", m_path.string());
+  try {
+    if (std::filesystem::exists(m_path)) {
+      auto status = std::filesystem::remove(m_path);
+      if (!status) {
+        spdlog::error("Couldn't delete temporary file: {}", m_path.string());
+      }
     }
+  } catch (const std::filesystem::filesystem_error& ex) {
+    spdlog::error(
+        "Exception while handling removal of temporary file: {}. Error: {}",
+        m_path.string(),
+        ex.what());
   }
 }
 auto TemporaryFile::get_path() const -> std::filesystem::path {
