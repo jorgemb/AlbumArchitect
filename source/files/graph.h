@@ -14,6 +14,7 @@
 
 #include <absl/container/btree_map.h>
 #include <boost/core/span.hpp>
+#include <boost/graph/adj_list_serialize.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_selectors.hpp>
 
@@ -36,7 +37,7 @@ public:
   using path_hash = std::size_t;
 
   /// Creates the root node of the FileGraph
-  FileGraph();
+  FileGraph(bool create_root = false);
 
   /// Creates a new node with all the intermediate representations
   /// \param path_list
@@ -68,6 +69,20 @@ public:
   /// \return
   void to_graphviz(std::ostream& os) const;
 
+  /// Enable serialization for the graph
+  /// \tparam Archive
+  /// \param archive
+  /// \param version
+  template<class Archive>
+  void serialize(Archive& archive, unsigned int /* version */) {
+    archive & m_graph;
+    archive & m_root_node;
+  }
+
+  /// Comparison operators
+  bool operator==(const FileGraph& rhs) const;
+  bool operator!=(const FileGraph& rhs) const;
+
 private:
   using vertex_property = boost::property<boost::vertex_color_t, NodeType>;
   using edge_property = boost::property<boost::edge_name_t, std::string>;
@@ -96,7 +111,8 @@ private:
   /// Gets or creates the nodes in the path_list, and returns the last one
   /// \param path_list
   /// \return
-  auto get_or_create_nodes(boost::span<std::string> path_list) -> graph_type::vertex_descriptor;
+  auto get_or_create_nodes(boost::span<std::string> path_list)
+      -> graph_type::vertex_descriptor;
 
   /// Returns a node from the cache if it exists
   /// \param path_list
@@ -107,7 +123,8 @@ private:
   /// Adds a node to the cache
   /// \param path_list
   /// \param vertex
-  void add_node_to_cache(boost::span<std::string> path_list, graph_type::vertex_descriptor vertex);
+  void add_node_to_cache(boost::span<std::string> path_list,
+                         graph_type::vertex_descriptor vertex);
 };
 
 }  // namespace album_architect::files

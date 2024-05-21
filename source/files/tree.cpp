@@ -9,6 +9,10 @@
 
 #include "tree.h"
 
+#include <boost/archive/archive_exception.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
@@ -27,6 +31,45 @@ auto FileTree::build(const std::filesystem::path& path)
   }
 
   return std::make_optional<FileTree>(FileTree {path});
+}
+
+FileTree::FileTree(std::filesystem::path root_path)
+    : m_root_path(std::move(root_path))
+    , m_graph(std::make_unique<FileGraph>(true)) {
+  // Check that the path is a directory
+  if (!std::filesystem::is_directory(m_root_path)) {
+    const auto message =
+        fmt::format("The path {} is not a directory.", m_root_path.string());
+    spdlog::error(message);
+    throw std::invalid_argument(message);
+  }
+
+  // Create the file tree recursively
+  add_directory(m_root_path, /*add_files=*/true, /*recursive=*/true);
+}
+auto FileTree::contains_path(const std::filesystem::path& path)
+    -> std::optional<PathType> {
+  // Check path
+  if (!is_subpath(path)) {
+    return {};
+  }
+
+  auto relative_path = std::filesystem::relative(path, m_root_path);
+  auto path_list = to_path_list(relative_path);
+  auto node = m_graph->get_node_type(path_list);
+
+  if (!node) {
+    return {};
+  }
+
+  switch (node.value()) {
+    case NodeType::directory:
+      return PathType::directory;
+    case NodeType::file:
+      return PathType::file;
+  }
+
+  throw std::runtime_error("Unreachable");
 }
 auto FileTree::add_directory(const std::filesystem::path& path,
                              bool add_files,
@@ -73,47 +116,6 @@ auto FileTree::add_directory(const std::filesystem::path& path,
 
   return true;
 }
-FileTree::FileTree(std::filesystem::path root_path)
-    : m_root_path(std::move(root_path))
-    , m_graph(std::make_unique<FileGraph>()) {
-  // Check that the path is a directory
-  if (!std::filesystem::is_directory(m_root_path)) {
-    const auto message =
-        fmt::format("The path {} is not a directory.", m_root_path.string());
-    spdlog::error(message);
-    throw std::invalid_argument(message);
-  }
-
-  // Create the file tree recursively
-  add_directory(m_root_path, /*add_files=*/true, /*recursive=*/true);
-}
-auto FileTree::add_file(const std::filesystem::path& path) -> bool {
-  return false;
-}
-auto FileTree::contains_path(const std::filesystem::path& path)
-    -> std::optional<PathType> {
-  // Check path
-  if (!is_subpath(path)) {
-    return {};
-  }
-
-  auto relative_path = std::filesystem::relative(path, m_root_path);
-  auto path_list = to_path_list(relative_path);
-  auto node = m_graph->get_node_type(path_list);
-
-  if (!node) {
-    return {};
-  }
-
-  switch (node.value()) {
-    case NodeType::directory:
-      return PathType::directory;
-    case NodeType::file:
-      return PathType::file;
-  }
-
-  throw std::runtime_error("Unreachable");
-}
 auto FileTree::is_subpath(const std::filesystem::path& path) -> bool {
   auto error_code = std::error_code {};
   auto relative_path = fs::relative(path, m_root_path, error_code);
@@ -146,6 +148,28 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
 }
 void FileTree::to_graphviz(std::ostream& ostream) const {
   m_graph->to_graphviz(ostream);
+}
+auto FileTree::operator==(const FileTree& rhs) const -> bool {
+  return m_root_path == rhs.m_root_path && *m_graph == *rhs.m_graph;
+}
+auto FileTree::operator!=(const FileTree& rhs) const -> bool {
+  return !(rhs == *this);
+}
+void FileTree::to_stream(std::ostream& output) const {
+  auto archiver = boost::archive::binary_oarchive {output};
+  archiver << *this;
+}
+auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
+  auto archiver = boost::archive::binary_iarchive {input};
+  try {
+    auto new_tree = files::FileTree {};
+    archiver >> new_tree;
+
+    return std::make_optional(std::move(new_tree));
+  } catch (const boost::archive::archive_exception& e) {
+    spdlog::error("Couldn't deserialize FileTree. Error: {}", e.what());
+    return {};
+  }
 }
 FileTree::~FileTree() = default;
 }  // namespace album_architect::files

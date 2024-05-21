@@ -7,8 +7,14 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <istream>
+#include <memory>
 #include <optional>
+#include <ostream>
+#include <string>
 #include <vector>
+
+#include <boost/serialization/split_member.hpp>
 
 namespace album_architect::files {
 
@@ -38,6 +44,16 @@ public:
   static auto build(const std::filesystem::path& path)
       -> std::optional<FileTree>;
 
+  /// Builds a filetree from the provided stream
+  /// \param input
+  /// \return
+  static auto from_stream(std::istream& input) -> std::optional<FileTree>;
+
+  /// Writes the FileTree to the provided stream
+  /// \param output
+  /// \return
+  void to_stream(std::ostream& output) const;
+
   /// Returns an optional PathType if the given path is part of the tree. In
   /// case it exists it returns the path type.
   /// \param path
@@ -45,8 +61,44 @@ public:
   auto contains_path(const std::filesystem::path& path)
       -> std::optional<PathType>;
 
-  auto add_file(const std::filesystem::path& path) -> bool;
+  /// Outputs a graphviz representation to the given stream
+  /// \param ostream
+  void to_graphviz(std::ostream& ostream) const;
 
+  /// Allows for serialization via the << and >> operators using boost
+  /// serialization framework.
+  /// \tparam Archive
+  /// \param archive
+  /// \param version
+  template<class Archive>
+  void load(Archive& archive, const unsigned int /* version */) {
+    auto str_path = std::string {};
+    archive & str_path;
+    m_root_path = str_path;
+
+    archive & m_graph;
+  }
+
+  /// Allows for serialization via the << and >> operators using boost
+  /// serialization framework.
+  /// \tparam Archive
+  /// \param archive
+  /// \param version
+  template<class Archive>
+  void save(Archive& archive, const unsigned int /* version */) const {
+    auto str_path = m_root_path.string();
+
+    archive & str_path;
+    archive & m_graph;
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+  /// Comparison operators
+  auto operator==(const FileTree& rhs) const -> bool;
+  auto operator!=(const FileTree& rhs) const -> bool;
+
+private:
   /// Adds a directory that is a part of the filesystem
   /// \param path Path to use
   /// \param add_files Add files to the tree
@@ -56,24 +108,14 @@ public:
                      bool add_files,
                      bool recursive) -> bool;
 
-  auto remove_file(const std::filesystem::path& path) -> bool;
-  auto remove_directory(const std::filesystem::path& path) -> bool;
-
-  auto move_file(const std::filesystem::path& old_path,
-                 const std::filesystem::path& new_path) -> bool;
-  auto move_directory(const std::filesystem::path& old_path,
-                      const std::filesystem::path& new_path) -> bool;
-
-  /// Outputs a graphviz representation to the given stream
-  /// \param ostream
-  void to_graphviz(std::ostream& ostream) const;
-
-private:
   /// Recursively populates the tree with all the files and folders under the
   /// root path. Root path should be a directory. If a file is provided an
   /// exception is thrown.
   /// \param root_path
   explicit FileTree(std::filesystem::path root_path);
+
+  /// Default constructor to allow building from a stream
+  FileTree() = default;
 
   /// Returns true if the given path is a sub-path of root
   /// \param path

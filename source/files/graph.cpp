@@ -2,21 +2,27 @@
 // Created by Jorge on 08/05/2024.
 //
 
+#include <algorithm>
+#include <optional>
 #include <ostream>
 #include <string>
 
 #include "graph.h"
 
 #include <boost/container_hash/hash.hpp>
+#include <boost/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_concepts.hpp>
 #include <boost/graph/graphviz.hpp>
 #include <spdlog/spdlog.h>
 
 namespace album_architect::files {
-FileGraph::FileGraph()
-    : m_root_node(boost::add_vertex(m_graph)) {
-  auto color = boost::get(boost::vertex_color_t(), m_graph);
-  boost::put(color, m_root_node, NodeType::directory);
+FileGraph::FileGraph(bool create_root) {
+  if (create_root) {
+    m_root_node = boost::add_vertex(m_graph);
+    auto color = boost::get(boost::vertex_color_t(), m_graph);
+    boost::put(color, m_root_node, NodeType::directory);
+  }
 }
 auto FileGraph::get_node_type(boost::span<std::string> path_list)
     -> std::optional<NodeType> {
@@ -176,6 +182,34 @@ auto FileGraph::get_or_create_nodes(boost::span<std::string> path_list)
   }
 
   return current_node;
+}
+bool FileGraph::operator==(const FileGraph& rhs) const {
+  // Compare number of vertices and edges
+  auto lhs_vertices = boost::num_vertices(m_graph);
+  auto rhs_vertices = boost::num_vertices(rhs.m_graph);
+  if (boost::num_vertices(m_graph) != boost::num_vertices(rhs.m_graph)) {
+    return false;
+  }
+
+  if (boost::num_edges(m_graph) != boost::num_edges(rhs.m_graph)) {
+    return false;
+  }
+
+  // TODO: Provide isomorphism equality. Right now is exact equality.
+  auto lhs_type = boost::get(boost::vertex_color_t(), m_graph);
+  auto rhs_type = boost::get(boost::vertex_color_t(), rhs.m_graph);
+  auto [lhs_iter, lhs_e] = boost::vertices(m_graph);
+  auto [rhs_iter, rhs_e] = boost::vertices(rhs.m_graph);
+  for (; lhs_iter != lhs_e && rhs_iter != rhs_e; ++lhs_iter, ++rhs_iter) {
+    if (boost::get(lhs_type, *lhs_iter) != boost::get(rhs_type, *rhs_iter)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+bool FileGraph::operator!=(const FileGraph& rhs) const {
+  return !(rhs == *this);
 }
 
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
