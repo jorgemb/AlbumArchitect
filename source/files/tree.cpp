@@ -10,8 +10,8 @@
 #include "tree.h"
 
 #include <boost/archive/archive_exception.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
@@ -156,11 +156,11 @@ auto FileTree::operator!=(const FileTree& rhs) const -> bool {
   return !(rhs == *this);
 }
 void FileTree::to_stream(std::ostream& output) const{
-  auto archiver = boost::archive::text_oarchive {output};
+  auto archiver = boost::archive::binary_oarchive {output};
   archiver << *this;
 }
 auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
-  auto archiver = boost::archive::text_iarchive {input};
+  auto archiver = boost::archive::binary_iarchive {input};
   try {
     auto new_tree = files::FileTree {};
     archiver >> new_tree;
