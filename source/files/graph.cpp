@@ -17,8 +17,8 @@
 #include <spdlog/spdlog.h>
 
 namespace album_architect::files {
-FileGraph::FileGraph(bool create_root){
-  if(create_root) {
+FileGraph::FileGraph(bool create_root) {
+  if (create_root) {
     m_root_node = boost::add_vertex(m_graph);
     auto color = boost::get(boost::vertex_color_t(), m_graph);
     boost::put(color, m_root_node, NodeType::directory);

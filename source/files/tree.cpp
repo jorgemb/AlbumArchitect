@@ -155,7 +155,7 @@ auto FileTree::operator==(const FileTree& rhs) const -> bool {
 auto FileTree::operator!=(const FileTree& rhs) const -> bool {
   return !(rhs == *this);
 }
-void FileTree::to_stream(std::ostream& output) const{
+void FileTree::to_stream(std::ostream& output) const {
   auto archiver = boost::archive::binary_oarchive {output};
   archiver << *this;
 }

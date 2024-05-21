@@ -32,16 +32,16 @@ auto main(int argc, char* argv[]) -> int {
   // .. serialize
   fmt::println("Serializing");
   auto serialize_output = std::ofstream("filesystem.data");
-  if(serialize_output){
+  if (serialize_output) {
     file_tree->to_stream(serialize_output);
   }
 
   // ... write to graphviz
-//  fmt::println("Writing to Graphviz");
-//  auto output_file = std::ofstream("filesystem.dot");
-//  if (output_file) {
-//    file_tree->to_graphviz(output_file);
-//  }
+  //  fmt::println("Writing to Graphviz");
+  //  auto output_file = std::ofstream("filesystem.dot");
+  //  if (output_file) {
+  //    file_tree->to_graphviz(output_file);
+  //  }
 
   return 0;
 }
