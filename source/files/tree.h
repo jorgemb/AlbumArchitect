@@ -31,6 +31,8 @@ class FileTree;
 /// Represents an element from within the FileTree
 class Element{
 public:
+  using ElementList = std::vector<Element>;
+
   /// Creates a new Element
   /// \param type
   /// \param path
@@ -40,13 +42,27 @@ public:
           FileTree* parent);
 
   // Getters
-
   auto get_type() const -> PathType;
   auto get_path() const -> const std::filesystem::path&;
 
   // Comparison
-  bool operator==(const Element& rhs) const;
-  bool operator!=(const Element& rhs) const;
+  auto operator==(const Element& rhs) const -> bool;
+  auto operator!=(const Element& rhs) const -> bool;
+
+  // Get different elements relative from this
+
+  /// Returns the elements that are at the same level as this element.
+  /// \return
+  auto get_siblings() const -> ElementList;
+
+  /// If this Element is a directory, then returns all direct elements that are
+  /// children of this
+  /// \return
+  auto get_children() const -> ElementList;
+
+  /// Returns the parent of this element. The root object doesn't have a parent.
+  /// \return
+  auto get_parent() const -> std::optional<Element>;
 
 private:
   PathType m_type;

@@ -67,8 +67,16 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   REQUIRE(directory_tree == new_tree);
 }
 
+TEST_CASE("File iteration", "[files][tree][element]"){
+  // Create a directory tree from the test tree
+  auto directory_tree = files::FileTree::build(resources_dir);
+  REQUIRE(directory_tree);
+
+  auto root_element =
+}
+
 TEST_CASE("Graph for directories", "[files][graph]") {
-  auto tree_graph = files::FileGraph {true};
+  auto tree_graph = files::FileGraph {/*create_root=*/true};
 
   // Get root node
   auto root_node_type = tree_graph.get_node_type({});
