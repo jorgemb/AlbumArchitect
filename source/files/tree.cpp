@@ -27,6 +27,18 @@ auto FileTree::build(const std::filesystem::path& path)
     -> std::optional<FileTree> {
   // Check if path is directory or file
   if (!fs::is_directory(path)) {
+    spdlog::error(
+        "Cannot create a FileTree on path {}. Path should be a directory.",
+        path.string());
+    return {};
+  }
+
+  auto has_error = std::error_code {};
+  auto absolute_path = fs::absolute(path, has_error);
+  if (has_error) {
+    spdlog::error("Couldn't convert path {} to absolute. Error: {}",
+                  path.string(),
+                  has_error.message());
     return {};
   }
 

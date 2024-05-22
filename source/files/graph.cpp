@@ -185,8 +185,6 @@ auto FileGraph::get_or_create_nodes(boost::span<std::string> path_list)
 }
 bool FileGraph::operator==(const FileGraph& rhs) const {
   // Compare number of vertices and edges
-  auto lhs_vertices = boost::num_vertices(m_graph);
-  auto rhs_vertices = boost::num_vertices(rhs.m_graph);
   if (boost::num_vertices(m_graph) != boost::num_vertices(rhs.m_graph)) {
     return false;
   }
