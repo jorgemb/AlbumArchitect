@@ -20,8 +20,38 @@ namespace album_architect::files {
 
 /// Represents the type of path
 enum class PathType : std::uint8_t {
+  invalid = 0,
   file,
   directory
+};
+
+/// Forward declarations
+class FileTree;
+
+/// Represents an element from within the FileTree
+class Element{
+public:
+  /// Creates a new Element
+  /// \param type
+  /// \param path
+  /// \param parent
+  Element(PathType type,
+          const std::filesystem::path& path,
+          FileTree* parent);
+
+  // Getters
+
+  auto get_type() const -> PathType;
+  auto get_path() const -> const std::filesystem::path&;
+
+  // Comparison
+  bool operator==(const Element& rhs) const;
+  bool operator!=(const Element& rhs) const;
+
+private:
+  PathType m_type;
+  std::filesystem::path m_path;
+  FileTree *m_parent;
 };
 
 /// Represents a tree from the filesystem, mirroring the values inside
@@ -59,7 +89,7 @@ public:
   /// \param path
   /// \return
   auto contains_path(const std::filesystem::path& path)
-      -> std::optional<PathType>;
+      -> std::optional<Element>;
 
   /// Outputs a graphviz representation to the given stream
   /// \param ostream

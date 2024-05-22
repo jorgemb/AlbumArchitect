@@ -40,13 +40,18 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   REQUIRE_FALSE(directory_tree->contains_path(not_valid_path));
 
   const auto album_one_path = resources_dir / "album_one";
-  REQUIRE(directory_tree->contains_path(album_one_path)
-          == files::PathType::directory);
+  const auto album_one_element = directory_tree->contains_path(album_one_path);
+  REQUIRE(album_one_element);
+  REQUIRE(album_one_element->get_path() == album_one_path);
+  REQUIRE(album_one_element->get_type() == files::PathType::directory);
 
   const auto album_three_one_1_path =
       resources_dir / "album_three" / "album_three_one" / "three.one.1.txt";
-  REQUIRE(directory_tree->contains_path(album_three_one_1_path)
-          == files::PathType::file);
+  const auto album_three_one_1_element =
+      directory_tree->contains_path(album_three_one_1_path);
+  REQUIRE(album_three_one_1_element);
+  REQUIRE(album_three_one_1_element->get_path() == album_three_one_1_path);
+  REQUIRE(album_three_one_1_element->get_type() == files::PathType::file);
 
   // Check that the tree can be serialized
   auto temp_file = files::TemporaryFile {};

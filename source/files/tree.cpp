@@ -60,7 +60,7 @@ FileTree::FileTree(std::filesystem::path root_path)
   add_directory(m_root_path, /*add_files=*/true, /*recursive=*/true);
 }
 auto FileTree::contains_path(const std::filesystem::path& path)
-    -> std::optional<PathType> {
+    -> std::optional<Element> {
   // Check path
   if (!is_subpath(path)) {
     return {};
@@ -74,14 +74,21 @@ auto FileTree::contains_path(const std::filesystem::path& path)
     return {};
   }
 
+  // Convert from NodeType to PathType
+  auto path_type = PathType{};
   switch (node.value()) {
     case NodeType::directory:
-      return PathType::directory;
+      path_type = PathType::directory;
+      break;
     case NodeType::file:
-      return PathType::file;
+      path_type = PathType::file;
+      break;
+    default:
+      path_type = PathType::invalid;
+      break;
   }
 
-  throw std::runtime_error("Unreachable");
+  return std::make_optional<Element>(path_type, fs::absolute(path), this);
 }
 auto FileTree::add_directory(const std::filesystem::path& path,
                              bool add_files,
@@ -184,4 +191,23 @@ auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
   }
 }
 FileTree::~FileTree() = default;
+Element::Element(PathType type,
+                 const std::filesystem::path& path,
+                 FileTree* parent)
+    : m_type(type)
+    , m_path(path)
+    , m_parent(parent) {}
+auto Element::get_type() const -> PathType {
+  return m_type;
+}
+auto Element::get_path() const -> const std::filesystem::path& {
+  return m_path;
+}
+bool Element::operator==(const Element& rhs) const {
+  return m_type == rhs.m_type && m_path == rhs.m_path
+      && m_parent == rhs.m_parent;
+}
+bool Element::operator!=(const Element& rhs) const {
+  return !(rhs == *this);
+}
 }  // namespace album_architect::files
