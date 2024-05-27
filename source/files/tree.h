@@ -29,7 +29,7 @@ enum class PathType : std::uint8_t {
 class FileTree;
 
 /// Represents an element from within the FileTree
-class Element{
+class Element {
 public:
   using ElementList = std::vector<Element>;
 
@@ -37,9 +37,7 @@ public:
   /// \param type
   /// \param path
   /// \param parent
-  Element(PathType type,
-          const std::filesystem::path& path,
-          FileTree* parent);
+  Element(PathType type, const std::filesystem::path& path, FileTree* parent);
 
   // Getters
   auto get_type() const -> PathType;
@@ -67,7 +65,7 @@ public:
 private:
   PathType m_type;
   std::filesystem::path m_path;
-  FileTree *m_parent;
+  FileTree* m_parent;
 };
 
 /// Represents a tree from the filesystem, mirroring the values inside
@@ -104,8 +102,14 @@ public:
   /// case it exists it returns the path type.
   /// \param path
   /// \return
-  auto contains_path(const std::filesystem::path& path)
-      -> std::optional<Element>;
+  auto get_element(const std::filesystem::path& path) -> std::optional<Element>;
+
+  /// Returns the elements under the path
+  /// \param path
+  /// \param output
+  /// \return True if the path is within the tree, false otherwise
+  auto get_elements_under_path(const std::filesystem::path& path,
+                               std::vector<Element>& output) -> bool;
 
   /// Outputs a graphviz representation to the given stream
   /// \param ostream
