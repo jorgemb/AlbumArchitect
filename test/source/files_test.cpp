@@ -130,7 +130,8 @@ TEST_CASE("Graph for directories", "[files][graph]") {
   tree_graph.add_node(path2, files::NodeType::file);
 
   SECTION("Basic retrieval of nodes") {
-    const auto non_existant_path = std::vector{"route"s, "to"s, "non"s, "existant"s};
+    const auto non_existant_path =
+        std::vector {"route"s, "to"s, "non"s, "existant"s};
     REQUIRE_FALSE(tree_graph.get_node(non_existant_path));
 
     // Get another type
@@ -144,7 +145,8 @@ TEST_CASE("Graph for directories", "[files][graph]") {
       path1.pop_back();
       auto subpath_node = tree_graph.get_node(path1);
       REQUIRE(subpath_node);
-      REQUIRE(tree_graph.get_node_type(*subpath_node) == files::NodeType::directory);
+      REQUIRE(tree_graph.get_node_type(*subpath_node)
+              == files::NodeType::directory);
     }
 
     // Get children of a node
@@ -156,7 +158,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
     REQUIRE(root_children.size() == 1);
 
     // ... add new path to root and check children
-    auto path3 = std::vector{"path"s, "to"s, "third"s};
+    auto path3 = std::vector {"path"s, "to"s, "third"s};
     tree_graph.add_node(path3, files::NodeType::file);
 
     root_children = tree_graph.get_node_children(*root_node);
@@ -191,7 +193,6 @@ TEST_CASE("Graph for directories", "[files][graph]") {
     // ... renaming the root should fail
     REQUIRE_FALSE(tree_graph.rename_node({}, "new_root_name"));
   }
-
 
   // DEBUG: Show graph representation
   //  tree_graph.to_graphviz(std::cout);

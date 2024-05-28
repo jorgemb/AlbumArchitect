@@ -130,7 +130,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   return true;
 }
 auto FileTree::is_subpath(const std::filesystem::path& path) -> bool {
-  if(path == m_root_path){
+  if (path == m_root_path) {
     return true;
   }
 
@@ -245,7 +245,7 @@ bool Element::operator!=(const Element& rhs) const {
   return !(rhs == *this);
 }
 auto Element::get_children() const -> Element::ElementList {
-  auto elements = ElementList{};
+  auto elements = ElementList {};
   m_parent->get_elements_under_path(get_path(), elements);
   return elements;
 }
