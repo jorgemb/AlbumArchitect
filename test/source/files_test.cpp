@@ -131,7 +131,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
 
   SECTION("Basic retrieval of nodes") {
     const auto non_existent_path =
-        std::vector {"route"s, "to"s, "non"s, "existant"s};
+        std::vector {"route"s, "to"s, "non"s, "existent"s};
     REQUIRE_FALSE(tree_graph.get_node(non_existent_path));
 
     // Get another type
