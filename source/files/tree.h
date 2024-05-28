@@ -18,10 +18,60 @@
 
 namespace album_architect::files {
 
+/// Forward declarations
+class FileTree;
+enum class NodeType: std::uint8_t;
+
 /// Represents the type of path
 enum class PathType : std::uint8_t {
+  invalid = 0,
   file,
   directory
+};
+
+/// Converts a NodeType into a PathType
+/// \param path_type
+/// \return
+auto from_node_type(const NodeType& path_type) -> PathType;
+
+/// Represents an element from within the FileTree
+class Element {
+public:
+  using ElementList = std::vector<Element>;
+
+  /// Creates a new Element
+  /// \param type
+  /// \param path
+  /// \param parent
+  Element(PathType type, const std::filesystem::path& path, FileTree* parent);
+
+  // Getters
+  auto get_type() const -> PathType;
+  auto get_path() const -> const std::filesystem::path&;
+
+  // Comparison
+  auto operator==(const Element& rhs) const -> bool;
+  auto operator!=(const Element& rhs) const -> bool;
+
+  // Get different elements relative from this
+
+  /// Returns the elements that are at the same level as this element.
+  /// \return
+  auto get_siblings() const -> ElementList;
+
+  /// If this Element is a directory, then returns all direct elements that are
+  /// children of this
+  /// \return
+  auto get_children() const -> ElementList;
+
+  /// Returns the parent of this element. The root object doesn't have a parent.
+  /// \return
+  auto get_parent() const -> std::optional<Element>;
+
+private:
+  PathType m_type;
+  std::filesystem::path m_path;
+  FileTree* m_parent;
 };
 
 /// Represents a tree from the filesystem, mirroring the values inside
@@ -58,8 +108,14 @@ public:
   /// case it exists it returns the path type.
   /// \param path
   /// \return
-  auto contains_path(const std::filesystem::path& path)
-      -> std::optional<PathType>;
+  auto get_element(const std::filesystem::path& path) -> std::optional<Element>;
+
+  /// Returns the elements under the path
+  /// \param path
+  /// \param output
+  /// \return True if the path is within the tree, false otherwise
+  auto get_elements_under_path(const std::filesystem::path& path,
+                               std::vector<Element>& output) -> bool;
 
   /// Outputs a graphviz representation to the given stream
   /// \param ostream
