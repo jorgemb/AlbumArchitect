@@ -80,7 +80,6 @@ auto FileTree::get_element(const std::filesystem::path& path)
   }
 
   // Convert from NodeType to PathType
-    default:
   auto path_type = from_node_type(m_graph->get_node_type(*node));
 
   return std::make_optional<Element>(path_type, fs::absolute(path), this);
