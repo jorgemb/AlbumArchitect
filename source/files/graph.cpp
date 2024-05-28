@@ -190,6 +190,15 @@ bool FileGraph::operator!=(const FileGraph& rhs) const {
 }
 auto FileGraph::get_node(boost::span<const std::string> path_list)
     -> std::optional<node_id> {
+  // Check for the case where the node is the root
+  if (path_list.empty()) {
+    return {m_root_node};
+  }
+
+  if (path_list.size() == 1 && path_list[0] == ".") {
+    return {m_root_node};
+  }
+
   // Get the node and return
   auto node_data = get_node_data(path_list);
   if (!node_data) {
@@ -218,16 +227,18 @@ auto FileGraph::get_node_children(FileGraph::node_id id)
 }
 auto FileGraph::get_node_path(FileGraph::node_id id)
     -> std::vector<std::string> {
-  auto ret = std::vector<std::string>{};
+  auto ret = std::vector<std::string> {};
 
   auto current_node = id;
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
-  while(current_node != m_root_node){
+  while (current_node != m_root_node) {
     auto [edges_b, edges_e] = boost::in_edges(current_node, m_graph);
 
     // NOTE: Except for the root, every vertex should have in-edges
-    if(edges_b == edges_e){
-      auto message = fmt::format("The vertex with ID {} is not the root and doesn't have in-edges.", id);
+    if (edges_b == edges_e) {
+      auto message = fmt::format(
+          "The vertex with ID {} is not the root and doesn't have in-edges.",
+          id);
       spdlog::error(message);
       throw std::runtime_error(std::move(message));
     }

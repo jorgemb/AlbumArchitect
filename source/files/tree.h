@@ -18,6 +18,10 @@
 
 namespace album_architect::files {
 
+/// Forward declarations
+class FileTree;
+enum class NodeType: std::uint8_t;
+
 /// Represents the type of path
 enum class PathType : std::uint8_t {
   invalid = 0,
@@ -25,8 +29,10 @@ enum class PathType : std::uint8_t {
   directory
 };
 
-/// Forward declarations
-class FileTree;
+/// Converts a NodeType into a PathType
+/// \param path_type
+/// \return
+auto from_node_type(const NodeType& path_type) -> PathType;
 
 /// Represents an element from within the FileTree
 class Element {
