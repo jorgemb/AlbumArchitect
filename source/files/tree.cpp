@@ -250,12 +250,35 @@ auto Element::get_children() const -> Element::ElementList {
   return elements;
 }
 auto Element::get_parent() const -> std::optional<Element> {
-  // TODO
-  return std::optional<Element>();
+  auto own_path = get_path();
+  if (!own_path.has_parent_path()) {
+    return {};
+  }
+
+  auto parent_path = own_path.parent_path();
+  return m_parent->get_element(parent_path);
 }
 auto Element::get_siblings() const -> Element::ElementList {
-  // TODO
-  return album_architect::files::Element::ElementList();
+  auto siblings = ElementList {};
+
+  // Get the children of the parent
+  auto parent = get_parent();
+  if (!parent) {
+    return {};
+  }
+
+  auto children = parent->get_children();
+  siblings.reserve(children.size());
+
+  // Remove oneself from the sibling list
+  auto own_path = get_path();
+  std::copy_if(children.begin(),
+               children.end(),
+               std::back_inserter(siblings),
+               [&own_path](auto element)
+               { return element.get_path() != own_path; });
+
+  return siblings;
 }
 auto from_node_type(const NodeType& path_type) -> PathType {
   switch (path_type) {

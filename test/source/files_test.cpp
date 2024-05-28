@@ -113,7 +113,35 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 
     REQUIRE_THAT(expected_root_children,
                  Catch::Matchers::UnorderedRangeEquals(root_children));
+
+    // ... get siblings of an album
+    auto album_one = directory_tree->get_element(resources_dir / "album_one");
+    REQUIRE(album_one);
+
+    auto album_one_siblings = album_one->get_siblings();
+    REQUIRE(album_one_siblings.size() == 2);
+
+    auto album_one_siblings_expected = std::vector {
+        resources_dir / "album_two", resources_dir / "album_three"};
+    auto album_one_siblings_calculated =
+        decltype(album_one_siblings_expected) {};
+    std::transform(album_one_siblings.begin(),
+                   album_one_siblings.end(),
+                   std::back_inserter(album_one_siblings_calculated),
+                   [](auto& element) { return element.get_path(); });
+    REQUIRE_THAT(
+        album_one_siblings_expected,
+        Catch::Matchers::UnorderedRangeEquals(album_one_siblings_calculated));
+
+    // ... get parent of an album
+    auto album_one_parent = album_one->get_parent();
+    REQUIRE(album_one_parent);
+    REQUIRE(album_one_parent->get_path() == resources_dir);
+
+    // ... parent of root should be null
+    REQUIRE_FALSE(album_one_parent->get_parent());
   }
+
 }
 
 TEST_CASE("Graph for directories", "[files][graph]") {
