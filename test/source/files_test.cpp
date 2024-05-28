@@ -141,7 +141,6 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     // ... parent of root should be null
     REQUIRE_FALSE(album_one_parent->get_parent());
   }
-
 }
 
 TEST_CASE("Graph for directories", "[files][graph]") {
