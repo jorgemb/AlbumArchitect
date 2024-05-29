@@ -1,0 +1,5 @@
+.github/
+build/
+docker/
+CMakeUserPresets.json
+*.md
