@@ -17,7 +17,6 @@ include(cmake/variables.cmake)
 
 add_library(
         AlbumArchitect_lib OBJECT
-        source/lib.cpp
         source/files/tree.cpp
         source/files/tree.h
         source/files/graph.cpp
