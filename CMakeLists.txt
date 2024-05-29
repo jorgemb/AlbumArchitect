@@ -17,7 +17,6 @@ include(cmake/variables.cmake)
 
 add_library(
         AlbumArchitect_lib OBJECT
-        source/lib.cpp
         source/files/tree.cpp
         source/files/tree.h
         source/files/graph.cpp
@@ -56,7 +55,7 @@ add_executable(AlbumArchitect::exe ALIAS AlbumArchitect_exe)
 
 set_property(TARGET AlbumArchitect_exe PROPERTY OUTPUT_NAME AlbumArchitect)
 
-target_compile_features(AlbumArchitect_exe PRIVATE cxx_std_17)
+target_compile_features(AlbumArchitect_exe PRIVATE cxx_std_20)
 
 target_link_libraries(AlbumArchitect_exe PRIVATE AlbumArchitect_lib fmt::fmt spdlog::spdlog)
 
