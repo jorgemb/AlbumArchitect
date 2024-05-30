@@ -43,12 +43,12 @@ auto FileTree::build(const std::filesystem::path& path)
     return {};
   }
 
-  return std::make_optional<FileTree>(FileTree {path});
+  return FileTree {path};
 }
 
 FileTree::FileTree(std::filesystem::path root_path)
     : m_root_path(std::move(root_path))
-    , m_graph(true) {
+    , m_graph(std::make_unique<FileGraph>(true)) {
   // Check that the path is a directory
   if (!std::filesystem::is_directory(m_root_path)) {
     const auto message =
@@ -74,14 +74,14 @@ auto FileTree::get_element(const std::filesystem::path& path)
 
   auto relative_path = std::filesystem::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
-  auto node = m_graph.get_node(path_list);
+  auto node = m_graph->get_node(path_list);
 
   if (!node) {
     return {};
   }
 
   // Convert from NodeType to PathType
-  auto path_type = from_node_type(m_graph.get_node_type(*node));
+  auto path_type = from_node_type(m_graph->get_node_type(*node));
 
   return std::make_optional<Element>(path_type, fs::absolute(path), this);
 }
@@ -107,7 +107,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   auto relative_path = std::filesystem::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
   if (path != m_root_path) {
-    m_graph.add_node(path_list, NodeType::directory);
+    m_graph->add_node(path_list, NodeType::directory);
   } else {
     // Clear the path list to not include "."
     path_list.clear();
@@ -123,7 +123,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
       add_directory(directory_iterator->path(), add_files, recursive);
     } else if (directory_iterator->is_regular_file() && add_files) {
       path_list.push_back(directory_iterator->path().filename().string());
-      m_graph.add_node(path_list, NodeType::file);
+      m_graph->add_node(path_list, NodeType::file);
       path_list.pop_back();
     }
   }
@@ -165,10 +165,10 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
   return path_list;
 }
 void FileTree::to_graphviz(std::ostream& ostream) const {
-  m_graph.to_graphviz(ostream);
+  m_graph->to_graphviz(ostream);
 }
 auto FileTree::operator==(const FileTree& rhs) const -> bool {
-  return m_root_path == rhs.m_root_path && m_graph == rhs.m_graph;
+  return m_root_path == rhs.m_root_path && *m_graph == *rhs.m_graph;
 }
 auto FileTree::operator!=(const FileTree& rhs) const -> bool {
   return !(rhs == *this);
@@ -199,12 +199,12 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
   // Get the children under the path
   auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
-  auto node = m_graph.get_node(path_list);
+  auto node = m_graph->get_node(path_list);
   if (!node) {
     return false;
   }
 
-  auto children = m_graph.get_node_children(*node);
+  auto children = m_graph->get_node_children(*node);
 
   // Create the Elements from the children
   std::transform(children.begin(),
@@ -212,8 +212,8 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
                  std::back_inserter(output),
                  [this](auto child)
                  {
-                   auto type = m_graph.get_node_type(child);
-                   auto path_list = m_graph.get_node_path(child);
+                   auto type = m_graph->get_node_type(child);
+                   auto path_list = m_graph->get_node_path(child);
 
                    auto path = m_root_path;
                    for (auto&& e : path_list) {

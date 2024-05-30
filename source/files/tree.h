@@ -191,7 +191,7 @@ private:
       -> std::vector<std::string>;
 
   std::filesystem::path m_root_path;
-  FileGraph m_graph;
+  std::unique_ptr<FileGraph> m_graph;
 };
 
 }  // namespace album_architect::files
