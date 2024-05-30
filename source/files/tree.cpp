@@ -2,22 +2,22 @@
 // Created by Jorge on 08/05/2024.
 //
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include <utility>
 #include <optional>
-#include <vector>
 #include <string>
-#include <algorithm>
+#include <utility>
+#include <vector>
 
 #include "tree.h"
 
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <spdlog/spdlog.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #include "graph.h"
 #include "helper.h"

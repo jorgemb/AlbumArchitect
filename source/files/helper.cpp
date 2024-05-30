@@ -26,7 +26,7 @@ TempCurrentDir::TempCurrentDir(
   }
 }
 TempCurrentDir::~TempCurrentDir() {
-  if(m_original_path.empty()){
+  if (m_original_path.empty()) {
     // Don't do anything, the object was probably moved
   }
 
