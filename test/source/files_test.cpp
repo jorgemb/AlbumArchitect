@@ -43,6 +43,12 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
     REQUIRE_FALSE(directory_tree->get_element(not_valid_path));
 
+    // Check root element
+    const auto root_element = directory_tree->get_root_element();
+    REQUIRE(root_element.get_path() == resources_dir);
+
+
+    // Get other element
     const auto album_one_path = resources_dir / "album_one";
     const auto album_one_element = directory_tree->get_element(album_one_path);
     REQUIRE(album_one_element);

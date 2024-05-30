@@ -40,11 +40,11 @@ find_package(absl CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
-        Boost::graph
         Boost::headers
         absl::btree
         absl::hash)
 target_link_libraries(AlbumArchitect_lib PUBLIC
+        Boost::graph
         Boost::filesystem
         Boost::serialization)
 
