@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 
 #include "files/graph.h"
 

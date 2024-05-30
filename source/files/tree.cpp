@@ -2,20 +2,22 @@
 // Created by Jorge on 08/05/2024.
 //
 
-#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <optional>
+#include <vector>
+#include <string>
+#include <algorithm>
 
 #include "tree.h"
 
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <fmt/format.h>
 #include <spdlog/spdlog.h>
+#include <fmt/format.h>
 
 #include "graph.h"
 #include "helper.h"
@@ -43,7 +45,7 @@ auto FileTree::build(const std::filesystem::path& path)
     return {};
   }
 
-  return FileTree {path};
+  return FileTree {absolute_path};
 }
 
 FileTree::FileTree(std::filesystem::path root_path)
