@@ -13,6 +13,9 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+# Remove extra targets from CTest
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+
 # ---- Declare library ----
 
 add_library(

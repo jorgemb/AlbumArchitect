@@ -240,11 +240,11 @@ auto Element::get_type() const -> PathType {
 auto Element::get_path() const -> const std::filesystem::path& {
   return m_path;
 }
-auto Element::operator==(const Element& rhs) const -> bool{
+auto Element::operator==(const Element& rhs) const -> bool {
   return m_type == rhs.m_type && m_path == rhs.m_path
       && m_parent == rhs.m_parent;
 }
-auto Element::operator!=(const Element& rhs) const -> bool{
+auto Element::operator!=(const Element& rhs) const -> bool {
   return !(rhs == *this);
 }
 auto Element::get_children() const -> Element::ElementList {
