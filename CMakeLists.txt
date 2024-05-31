@@ -13,6 +13,9 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+# Remove extra targets from CTest
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+
 # ---- Declare library ----
 
 add_library(
@@ -40,11 +43,11 @@ find_package(absl CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
-        Boost::graph
         Boost::headers
         absl::btree
         absl::hash)
 target_link_libraries(AlbumArchitect_lib PUBLIC
+        Boost::graph
         Boost::filesystem
         Boost::serialization)
 

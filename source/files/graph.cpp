@@ -27,20 +27,20 @@ FileGraph::FileGraph(bool create_root) {
   }
 }
 void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
-  // If the path list is empty do not create a new node_id
+  // If the path list is empty do not create a new NodeId
   if (path_list.empty()) {
     return;
   }
 
-  // Try to find the previous node_id in the cache
+  // Try to find the previous NodeId in the cache
   auto previous_node = m_root_node;
   if (path_list.size() > 1) {
     previous_node =
         get_or_create_nodes(path_list.subspan(0, path_list.size() - 1));
   }
 
-  // Create the new node_id
-  // TODO: Check if node_id already exists
+  // Create the new NodeId
+  // TODO: Check if NodeId already exists
   auto new_node = boost::add_vertex(type, m_graph);
   boost::add_edge(previous_node, new_node, path_list.back(), m_graph);
 }
@@ -57,13 +57,13 @@ auto FileGraph::rename_node(boost::span<std::string> path_list,
   // TODO: Fix cache, but clear for the time being
   m_vertex_cache.clear();
 
-  // Root node_id cannot be renamed
+  // Root NodeId cannot be renamed
   if (path_list.empty()) {
-    spdlog::error("Cannot rename root node_id");
+    spdlog::error("Cannot rename root NodeId");
     return false;
   }
 
-  // Get the node_id data
+  // Get the NodeId data
   auto node_data = get_node_data(path_list);
   if (!node_data) {
     return false;
@@ -76,10 +76,10 @@ auto FileGraph::rename_node(boost::span<std::string> path_list,
 }
 auto FileGraph::get_node_data(boost::span<const std::string> path_list)
     -> std::optional<
-        std::pair<graph_type::edge_descriptor, graph_type::vertex_descriptor>> {
-  // Search for the node_id
+        std::pair<GraphType::edge_descriptor, GraphType::vertex_descriptor>> {
+  // Search for the NodeId
   auto current_node = m_root_node;
-  auto current_edge = graph_type::edge_descriptor {};
+  auto current_edge = GraphType::edge_descriptor {};
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
 
   for (const auto& current_path : path_list) {
@@ -103,7 +103,7 @@ auto FileGraph::get_node_data(boost::span<const std::string> path_list)
   return std::make_pair(current_edge, current_node);
 }
 auto FileGraph::get_node_from_cache(boost::span<const std::string> path_list)
-    -> std::optional<graph_type::vertex_descriptor> {
+    -> std::optional<GraphType::vertex_descriptor> {
   auto hash = boost::hash_value(path_list);
   auto cache_iterator = m_vertex_cache.find(hash);
   if (cache_iterator != m_vertex_cache.end()) {
@@ -112,19 +112,19 @@ auto FileGraph::get_node_from_cache(boost::span<const std::string> path_list)
   return {};
 }
 void FileGraph::add_node_to_cache(boost::span<const std::string> path_list,
-                                  graph_type::vertex_descriptor vertex) {
+                                  GraphType::vertex_descriptor vertex) {
   auto hash = boost::hash_value(path_list);
   m_vertex_cache[hash] = vertex;
 }
 auto FileGraph::get_or_create_nodes(boost::span<const std::string> path_list)
-    -> graph_type::vertex_descriptor {
+    -> GraphType::vertex_descriptor {
   // Try to find in the cache
   auto cached_node = get_node_from_cache(path_list);
   if (cached_node) {
     return cached_node.value();
   }
 
-  // Iterate through the graph to find the node_id, and create any intermediary
+  // Iterate through the graph to find the NodeId, and create any intermediary
   // nodes as directories
   auto current_node = m_root_node;
   bool last_was_created =
@@ -151,12 +151,12 @@ auto FileGraph::get_or_create_nodes(boost::span<const std::string> path_list)
       }
     }
 
-    // Create the new node_id
+    // Create the new NodeId
     auto new_node = boost::add_vertex(NodeType::directory, m_graph);
     boost::add_edge(current_node, new_node, current_path, m_graph);
     current_node = new_node;
 
-    // Add the node_id to the cache
+    // Add the NodeId to the cache
     add_node_to_cache(path_list, current_node);
   }
 
@@ -189,7 +189,7 @@ bool FileGraph::operator!=(const FileGraph& rhs) const {
   return !(rhs == *this);
 }
 auto FileGraph::get_node(boost::span<const std::string> path_list)
-    -> std::optional<node_id> {
+    -> std::optional<NodeId> {
   // Check for the case where the node is the root
   if (path_list.empty()) {
     return {m_root_node};
@@ -206,16 +206,16 @@ auto FileGraph::get_node(boost::span<const std::string> path_list)
   }
   auto [edge, vertex] = node_data.value();
 
-  return std::make_optional<node_id>(vertex);
+  return std::make_optional<NodeId>(vertex);
 }
-auto FileGraph::get_node_type(FileGraph::node_id node) -> NodeType {
+auto FileGraph::get_node_type(FileGraph::NodeId node) -> NodeType {
   auto type_property = boost::get(boost::vertex_color_t(), m_graph);
   return boost::get(type_property, node);
 }
-auto FileGraph::get_node_children(FileGraph::node_id id)
-    -> std::vector<node_id> {
-  auto ret = std::vector<node_id> {};
-  auto [begin, end] = boost::out_edges(id, m_graph);
+auto FileGraph::get_node_children(FileGraph::NodeId node_id)
+    -> std::vector<NodeId> {
+  auto ret = std::vector<NodeId> {};
+  auto [begin, end] = boost::out_edges(node_id, m_graph);
 
   // Get the target vertex of each edge
   std::transform(begin,
@@ -225,11 +225,11 @@ auto FileGraph::get_node_children(FileGraph::node_id id)
 
   return ret;
 }
-auto FileGraph::get_node_path(FileGraph::node_id id)
+auto FileGraph::get_node_path(FileGraph::NodeId node_id)
     -> std::vector<std::string> {
   auto ret = std::vector<std::string> {};
 
-  auto current_node = id;
+  auto current_node = node_id;
   auto name_property = boost::get(boost::edge_name_t(), m_graph);
   while (current_node != m_root_node) {
     auto [edges_b, edges_e] = boost::in_edges(current_node, m_graph);
@@ -238,7 +238,7 @@ auto FileGraph::get_node_path(FileGraph::node_id id)
     if (edges_b == edges_e) {
       auto message = fmt::format(
           "The vertex with ID {} is not the root and doesn't have in-edges.",
-          id);
+          node_id);
       spdlog::error(message);
       throw std::runtime_error(std::move(message));
     }

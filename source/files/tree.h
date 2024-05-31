@@ -15,12 +15,16 @@
 #include <vector>
 
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+
+#include "files/graph.h"
 
 namespace album_architect::files {
 
 /// Forward declarations
 class FileTree;
-enum class NodeType: std::uint8_t;
+class FileGraph;
+enum class NodeType : std::uint8_t;
 
 /// Represents the type of path
 enum class PathType : std::uint8_t {
@@ -78,7 +82,7 @@ private:
 class FileTree {
 public:
   /// Destructor has to be visible to support forward declarations.
-  ~FileTree();
+  ~FileTree() = default;
 
   // Disable copy
   FileTree(const FileTree& other) = delete;
@@ -109,6 +113,9 @@ public:
   /// \param path
   /// \return
   auto get_element(const std::filesystem::path& path) -> std::optional<Element>;
+
+  /// Returns the root element of the FileTree
+  auto get_root_element() -> Element;
 
   /// Returns the elements under the path
   /// \param path
@@ -185,8 +192,7 @@ private:
       -> std::vector<std::string>;
 
   std::filesystem::path m_root_path;
-
-  std::unique_ptr<class FileGraph> m_graph;
+  std::unique_ptr<FileGraph> m_graph;
 };
 
 }  // namespace album_architect::files

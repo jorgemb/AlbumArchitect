@@ -2,17 +2,20 @@
 // Created by Jorge on 08/05/2024.
 //
 
-#include <exception>
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <memory>
+#include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "tree.h"
 
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
@@ -42,7 +45,7 @@ auto FileTree::build(const std::filesystem::path& path)
     return {};
   }
 
-  return std::make_optional<FileTree>(FileTree {path});
+  return FileTree {absolute_path};
 }
 
 FileTree::FileTree(std::filesystem::path root_path)
@@ -224,7 +227,9 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
 
   return true;
 }
-FileTree::~FileTree() = default;
+auto FileTree::get_root_element() -> Element {
+  return Element(PathType::directory, m_root_path, this);
+}
 Element::Element(PathType type,
                  const std::filesystem::path& path,
                  FileTree* parent)
@@ -237,11 +242,11 @@ auto Element::get_type() const -> PathType {
 auto Element::get_path() const -> const std::filesystem::path& {
   return m_path;
 }
-bool Element::operator==(const Element& rhs) const {
+auto Element::operator==(const Element& rhs) const -> bool {
   return m_type == rhs.m_type && m_path == rhs.m_path
       && m_parent == rhs.m_parent;
 }
-bool Element::operator!=(const Element& rhs) const {
+auto Element::operator!=(const Element& rhs) const -> bool {
   return !(rhs == *this);
 }
 auto Element::get_children() const -> Element::ElementList {

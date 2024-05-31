@@ -2,9 +2,7 @@
 // Created by Jorge on 14/05/2024.
 //
 
-#include <array>
 #include <filesystem>
-#include <string>
 
 #include "helper.h"
 
@@ -28,6 +26,10 @@ TempCurrentDir::TempCurrentDir(
   }
 }
 TempCurrentDir::~TempCurrentDir() {
+  if (m_original_path.empty()) {
+    // Don't do anything, the object was probably moved
+  }
+
   auto has_error = std::error_code {};
   fs::current_path(m_original_path, has_error);
 

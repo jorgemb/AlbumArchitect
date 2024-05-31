@@ -23,6 +23,13 @@ public:
   /// Restores the current dir to a new value
   ~TempCurrentDir();
 
+  // Deleted operators
+  TempCurrentDir(const TempCurrentDir& other) = delete;
+  auto operator=(const TempCurrentDir& other) = delete;
+
+  // Move operators
+  TempCurrentDir(TempCurrentDir&& other) = default;
+  auto operator=(TempCurrentDir&& other) -> TempCurrentDir& = default;
 private:
   std::filesystem::path m_original_path;
 };

@@ -43,6 +43,11 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
     REQUIRE_FALSE(directory_tree->get_element(not_valid_path));
 
+    // Check root element
+    const auto root_element = directory_tree->get_root_element();
+    REQUIRE(root_element.get_path() == resources_dir);
+
+    // Get other element
     const auto album_one_path = resources_dir / "album_one";
     const auto album_one_element = directory_tree->get_element(album_one_path);
     REQUIRE(album_one_element);
@@ -146,7 +151,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 TEST_CASE("Graph for directories", "[files][graph]") {
   auto tree_graph = files::FileGraph {/*create_root=*/true};
 
-  // Get root node_id
+  // Get root NodeId
   auto root_node_type = tree_graph.get_node_type({});
   REQUIRE(root_node_type == files::NodeType::directory);
 
@@ -198,7 +203,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
   }
 
   SECTION("Renaming nodes") {
-    // Try to rename a node_id
+    // Try to rename a NodeId
     auto new_path1 = std::vector {"route"s, "to"s, "new_first"s};
     tree_graph.rename_node(path1, "new_first"s);
     REQUIRE_FALSE(tree_graph.get_node(path1));
@@ -207,7 +212,7 @@ TEST_CASE("Graph for directories", "[files][graph]") {
     REQUIRE(new_path1_node);
     REQUIRE(tree_graph.get_node_type(*new_path1_node) == files::NodeType::file);
 
-    // Try to rename a node_id that has children
+    // Try to rename a NodeId that has children
     auto subpath = std::vector {"route"s, "to"s};
     tree_graph.rename_node(subpath, "new_to");
     REQUIRE_FALSE(tree_graph.get_node(path2));
