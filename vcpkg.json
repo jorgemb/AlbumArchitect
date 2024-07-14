@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name": "fmt",
-      "version>=": "10.2.1#1"
+      "version>=": "10.2.1#2"
     },
     {
       "name": "spdlog",
@@ -12,7 +12,7 @@
     },
     {
       "name": "abseil",
-      "version>=": "20240116.2"
+      "version>=": "20240116.2#3"
     },
     {
       "name": "boost-core",
@@ -38,7 +38,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "3.5.3"
+          "version>=": "3.6.0"
         }
       ]
     }
