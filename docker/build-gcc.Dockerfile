@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 as build
+FROM ubuntu:24.04 AS build
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -54,7 +54,7 @@ RUN cmake --install build --config Release --prefix dist
 
 
 
-FROM ubuntu:24.04 as runtime
+FROM ubuntu:24.04 AS runtime
 
 # TODO: Create non-root user
 
