@@ -47,7 +47,7 @@ public:
   /// \param type
   /// \param path
   /// \param parent
-  Element(PathType type, const std::filesystem::path& path, FileTree* parent);
+  Element(PathType type, std::filesystem::path  path, FileTree* parent);
 
   // Getters
   auto get_type() const -> PathType;
@@ -183,12 +183,12 @@ private:
   /// Returns true if the given path is a sub-path of root
   /// \param path
   /// \return
-  auto is_subpath(const std::filesystem::path& path) -> bool;
+  auto is_subpath(const std::filesystem::path& path) const -> bool;
 
   /// Converts a path into a path list
   /// \param path
   /// \return
-  auto to_path_list(const std::filesystem::path& path)
+  static auto to_path_list(const std::filesystem::path& path)
       -> std::vector<std::string>;
 
   std::filesystem::path m_root_path;
