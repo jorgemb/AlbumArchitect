@@ -21,13 +21,15 @@
 #include "files/helper.h"
 #include "files/tree.h"
 
-static auto const resources_dir =
-    std::filesystem::path(TEST_RESOURCES_DIR);  // NOLINT(cert-err58-cpp)
+// NOLINTNEXTLINE(cert-err58-cpp)
+static auto const resources_dir = std::filesystem::path(TEST_RESOURCES_DIR);
 
+// NOLINTNEXTLINE(*-build-using-namespace)
 using namespace album_architect;
 using namespace std::string_literals;
 namespace fs = std::filesystem;
 
+// NOLINTNEXTLINE(*-function-cognitive-complexity)
 TEST_CASE("Tree structure of directory", "[files][tree]") {
   // Check that passing a file returns None
   auto invalid_tree =

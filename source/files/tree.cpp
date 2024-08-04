@@ -87,6 +87,8 @@ auto FileTree::get_element(const std::filesystem::path& path)
 
   return std::make_optional<Element>(path_type, fs::absolute(path), this);
 }
+
+// NOLINTNEXTLINE(misc-no-recursion)
 auto FileTree::add_directory(const std::filesystem::path& path,
                              bool add_files,
                              bool recursive) -> bool {
@@ -132,7 +134,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
 
   return true;
 }
-auto FileTree::is_subpath(const std::filesystem::path& path) -> bool {
+auto FileTree::is_subpath(const std::filesystem::path& path) const -> bool {
   if (path == m_root_path) {
     return true;
   }
@@ -218,8 +220,8 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
                    auto path_list = m_graph->get_node_path(child);
 
                    auto path = m_root_path;
-                   for (auto&& e : path_list) {
-                     path.append(std::move(e));
+                   for (auto&& element : path_list) {
+                     path.append(std::move(element));
                    }
 
                    return Element {from_node_type(type), path, this};
@@ -228,13 +230,11 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
   return true;
 }
 auto FileTree::get_root_element() -> Element {
-  return Element(PathType::directory, m_root_path, this);
+  return {PathType::directory, m_root_path, this};
 }
-Element::Element(PathType type,
-                 const std::filesystem::path& path,
-                 FileTree* parent)
+Element::Element(PathType type, std::filesystem::path path, FileTree* parent)
     : m_type(type)
-    , m_path(path)
+    , m_path(std::move(path))
     , m_parent(parent) {}
 auto Element::get_type() const -> PathType {
   return m_type;
