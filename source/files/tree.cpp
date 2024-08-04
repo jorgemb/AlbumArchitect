@@ -232,9 +232,7 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
 auto FileTree::get_root_element() -> Element {
   return {PathType::directory, m_root_path, this};
 }
-Element::Element(PathType type,
-                 std::filesystem::path  path,
-                 FileTree* parent)
+Element::Element(PathType type, std::filesystem::path path, FileTree* parent)
     : m_type(type)
     , m_path(std::move(path))
     , m_parent(parent) {}
