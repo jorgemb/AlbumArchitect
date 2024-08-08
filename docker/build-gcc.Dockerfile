@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     git \
     gcc-14 \
     g++-14 \
+    libopencv-dev \
+    libopencv-contrib-dev \
     ninja-build \
     pkg-config \
     tar \

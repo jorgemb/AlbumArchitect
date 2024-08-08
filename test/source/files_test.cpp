@@ -82,7 +82,8 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 
   auto expected_root_children = std::vector {resources_dir / "album_one",
                                              resources_dir / "album_two",
-                                             resources_dir / "album_three"};
+                                             resources_dir / "album_three",
+  resources_dir / "images"};
 
   SECTION("Siblings, children and parent") {
     auto children = std::vector<files::Element> {};

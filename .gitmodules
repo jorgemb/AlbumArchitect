@@ -1,0 +1,3 @@
+[submodule "test/resources/images"]
+	path = test/resources/images
+	url = https://github.com/ckenst/images-catalog.git
