@@ -12,7 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include <boost/core/make_span.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <fmt/core.h>
@@ -20,14 +19,10 @@
 #include "files/graph.h"
 #include "files/helper.h"
 #include "files/tree.h"
-
-// NOLINTNEXTLINE(cert-err58-cpp)
-static auto const resources_dir = std::filesystem::path(TEST_RESOURCES_DIR);
+#include "common.h"
 
 // NOLINTNEXTLINE(*-build-using-namespace)
 using namespace album_architect;
-using namespace std::string_literals;
-namespace fs = std::filesystem;
 
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 TEST_CASE("Tree structure of directory", "[files][tree]") {
@@ -83,7 +78,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   auto expected_root_children = std::vector {resources_dir / "album_one",
                                              resources_dir / "album_two",
                                              resources_dir / "album_three",
-  resources_dir / "images"};
+                                             resources_dir / "images"};
 
   SECTION("Siblings, children and parent") {
     auto children = std::vector<files::Element> {};
@@ -127,10 +122,12 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     REQUIRE(album_one);
 
     auto album_one_siblings = album_one->get_siblings();
-    REQUIRE(album_one_siblings.size() == 2);
+    REQUIRE(album_one_siblings.size() == 3);
 
-    auto album_one_siblings_expected = std::vector {
-        resources_dir / "album_two", resources_dir / "album_three"};
+    auto album_one_siblings_expected =
+        std::vector {resources_dir / "album_two",
+                     resources_dir / "album_three",
+                     resources_dir / "images"};
     auto album_one_siblings_calculated =
         decltype(album_one_siblings_expected) {};
     std::transform(album_one_siblings.begin(),
