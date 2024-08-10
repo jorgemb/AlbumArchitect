@@ -29,6 +29,22 @@
     {
       "name": "boost-filesystem",
       "version>=": "1.83.0"
+    },
+    {
+      "name": "opencv",
+      "version>=": "4.8.0#1",
+      "features": [
+        "contrib"
+      ]
+    },
+    {
+      "name": "openimageio",
+      "version>=": "2.5.12.0#2",
+      "features": [
+        "opencv",
+        "gif",
+        "libheif"
+      ]
     }
   ],
   "default-features": [],

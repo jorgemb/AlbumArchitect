@@ -1,6 +1,9 @@
 FROM ubuntu:24.04 AS build
 
 RUN apt-get update && apt-get install -y \
+    autoconf \
+    automake \
+    bison \
     build-essential \
     clang-tidy \
     cmake \
@@ -9,10 +12,20 @@ RUN apt-get update && apt-get install -y \
     git \
     gcc-14 \
     g++-14 \
-    libopencv-dev \
-    libopencv-contrib-dev \
+    libtool \
+    libx11-dev \
+    libxext-dev \
+    libxft-dev \
+    libxi-dev \
+    libxrandr-dev \
+    libxtst-dev \
+    nasm \
     ninja-build \
+    openimageio-tools \
     pkg-config \
+    python3 \
+    python3-setuptools \
+    python3-jinja2 \
     tar \
     unzip \
     zip \

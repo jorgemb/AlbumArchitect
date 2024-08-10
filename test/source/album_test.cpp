@@ -36,8 +36,16 @@ TEST_CASE("Image loading", "[album][image]") {
   }
 
   // Check that images of supported extensions are loaded correctly
-  const auto supported_extensions =
-      std::set {".png"s, ".jpg"s, ".jpeg"s, ".bmp"s, ".tiff"s, ".tif"s};
+  const auto supported_extensions = std::set {".png"s,
+                                              ".jpg"s,
+                                              ".jpeg"s,
+                                              ".bmp"s,
+                                              ".tiff"s,
+                                              ".tif"s,
+                                              ".gif"s,
+                                              ".heic"s,
+                                              ".cr2"s,
+                                              ".psd"s};
   auto unsupported_extensions = std::set<std::string> {};
 
   for (const auto& [current_path, current_image] : loaded_images) {

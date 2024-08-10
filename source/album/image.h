@@ -7,9 +7,10 @@
 #include <filesystem>
 #include <optional>
 
-#include <opencv2/core/mat.hpp>
-
 namespace albumarchitect::album {
+
+// Forward declaration
+class ImageImpl;
 
 /// General class to represent a single image in the drive
 class Image {
@@ -19,15 +20,19 @@ public:
   /// @return
   static auto load(const std::filesystem::path& path) -> std::optional<Image>;
 
+  /// Default constructor
+  explicit Image(std::shared_ptr<ImageImpl> impl);
+
+  /// Default constructor
+  ~Image() = default;
+
+  Image(const Image& other) = default;
+  Image(Image&& other) noexcept = default;
+  auto operator=(const Image& other) -> Image& = default;
+  auto operator=(Image&& other) noexcept -> Image& = default;
+
 private:
-  /// Default constructor private, so ::load has to be used
-  explicit Image(std::filesystem::path path);
-
-  // Path to the image
-  std::filesystem::path m_path;
-
-  // Internal representation of image
-  cv::Mat m_mat;
+  std::shared_ptr<ImageImpl> m_impl;
 };
 
 }  // namespace albumarchitect::album
