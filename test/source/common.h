@@ -4,7 +4,7 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace std::string_literals; // NOLINT(*-global-names-in-headers)
+using namespace std::literals; // NOLINT(*-global-names-in-headers)
 
 // NOLINTNEXTLINE(cert-err58-cpp)
 static inline auto const resources_dir = fs::path(TEST_RESOURCES_DIR);

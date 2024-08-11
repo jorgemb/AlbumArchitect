@@ -31,6 +31,22 @@ public:
   auto operator=(const Image& other) -> Image& = default;
   auto operator=(Image&& other) noexcept -> Image& = default;
 
+  /// Width of the image in pixels
+  /// @return
+  auto get_width() const -> std::uint32_t;
+
+  /// Height of the image in pixels
+  /// @return
+  auto get_height() const -> std::uint32_t;
+
+  /// Number of channels in the image
+  /// @return
+  auto get_channels() const -> std::uint32_t;
+
+  /// Path of the image
+  /// @return
+  auto get_path() const -> std::filesystem::path;
+
 private:
   std::shared_ptr<ImageImpl> m_impl;
 };

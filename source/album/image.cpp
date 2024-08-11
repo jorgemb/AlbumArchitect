@@ -17,9 +17,20 @@ public:
   std::filesystem::path path;
   OIIO::ImageBuf image;
 
-  ImageImpl(std::filesystem::path image_path, OIIO::ImageBuf image_buf)
-      : path(std::move(image_path))
-      , image(std::move(image_buf)) {}
+  std::uint32_t width, height, channels;
+
+  // NOLINTBEGIN(*-easily-swappable-parameters)
+  ImageImpl(std::filesystem::path path,
+            OIIO::ImageBuf image,
+            const std::uint32_t width,
+            const std::uint32_t height,
+            const std::uint32_t channels)
+      : path(std::move(path))
+      , image(std::move(image))
+      , width(width)
+      , height(height)
+      , channels(channels) {}
+  // NOLINTEND(*-easily-swappable-parameters)
 };
 
 auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
@@ -32,10 +43,25 @@ auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
     return {};
   }
 
-  auto implementation = std::make_shared<ImageImpl>(path, loaded_image);
+  // Get image information
+  auto spec = loaded_image.spec();
+
+  auto implementation = std::make_shared<ImageImpl>(
+      path, loaded_image, spec.width, spec.height, spec.nchannels);
   return std::make_optional<Image>(implementation);
-  return {};
 }
 Image::Image(std::shared_ptr<ImageImpl> impl)
     : m_impl(std::move(impl)) {}
+auto Image::get_width() const -> std::uint32_t {
+  return m_impl->width;
+}
+auto Image::get_height() const -> std::uint32_t {
+  return m_impl->height;
+}
+auto Image::get_channels() const -> std::uint32_t {
+  return m_impl->channels;
+}
+auto Image::get_path() const -> std::filesystem::path {
+  return m_impl->path;
+}
 }  // namespace albumarchitect::album
