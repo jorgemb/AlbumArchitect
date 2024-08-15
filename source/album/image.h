@@ -5,7 +5,9 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 #include <filesystem>
+#include <map>
 #include <optional>
+#include <string>
 
 namespace albumarchitect::album {
 
@@ -46,6 +48,10 @@ public:
   /// Path of the image
   /// @return
   auto get_path() const -> std::filesystem::path;
+
+  /// Returns the map of metadata
+  /// @return
+  auto get_metadata() const -> const std::map<std::string, std::string>&;
 
 private:
   std::shared_ptr<ImageImpl> m_impl;

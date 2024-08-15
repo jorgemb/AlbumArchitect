@@ -93,4 +93,20 @@ TEST_CASE("Image loading", "[album][image]") {
     REQUIRE(test_image->get_height() == expected_height);
     REQUIRE(test_image->get_channels() == expected_channels);
   }
+
+  SECTION("Metadata") {
+    // .. get metadata from an image
+    const auto test_image_path = images_dir / "Home" / "IMG_5690.JPG";
+    const auto test_image = album::Image::load(test_image_path);
+
+    REQUIRE(test_image);
+    const auto metadata = test_image->get_metadata();
+    // for (const auto& [k, v] : metadata) {
+    //   fmt::println("Metadata: {} -> {}", k, v);
+    // }
+    REQUIRE(metadata.at("Exif:LensMake"s) == "Apple"s);
+    REQUIRE(metadata.at("FNumber"s) == "2.2"s);
+    REQUIRE(metadata.at("IPTC:DateCreated"s) == "20150502"s);
+
+  }
 }
