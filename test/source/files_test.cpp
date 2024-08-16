@@ -16,10 +16,10 @@
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <fmt/core.h>
 
+#include "common.h"
 #include "files/graph.h"
 #include "files/helper.h"
 #include "files/tree.h"
-#include "common.h"
 
 // NOLINTNEXTLINE(*-build-using-namespace)
 using namespace album_architect;
