@@ -84,18 +84,14 @@ auto Image::get_path() const -> std::filesystem::path {
 auto Image::get_metadata() const -> const std::map<std::string, std::string>& {
   return m_impl->metadata;
 }
-auto Image::get_hash(const HashAlgorithm algorithm) const -> std::string {
+auto Image::get_hash(const HashAlgorithm algorithm) const
+    -> std::optional<std::string> {
   switch (algorithm) {
     using enum HashAlgorithm;
-    case md5: {
-      if (auto hash = hash::Hash::calculate_md5(m_impl->path)) {
-        return std::move(hash.value());
-      }
-      return {};
-    }
-    case sha256: {
-      return {};
-    }
+    case md5:
+      return hash::Hash::calculate_md5(m_impl->path);
+    case sha256:
+      return hash::Hash::calculate_sha256(m_impl->path);
     default:
       return {};
   }

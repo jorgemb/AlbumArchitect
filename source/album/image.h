@@ -8,6 +8,7 @@
 #include <map>
 #include <optional>
 #include <string>
+
 #include "hash.h"
 
 namespace albumarchitect::album {
@@ -64,7 +65,7 @@ public:
   /// algorithm
   /// @param algorithm
   /// @return
-  auto get_hash(HashAlgorithm algorithm) const -> std::string;
+  auto get_hash(HashAlgorithm algorithm) const -> std::optional<std::string>;
 
 private:
   std::shared_ptr<ImageImpl> m_impl;

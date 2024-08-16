@@ -119,15 +119,26 @@ TEST_CASE("Image loading", "[album][image]") {
     const auto test_images = std::vector<TestImageHash> {
         {images_dir / "Home" / "IMG_5515.JPG",
          "547e4396b2b30a7f52b3b30d008e54b8",
-         "b691e9c892b3f09b27390f9c88baa46d72fa9e93b3fd98821b580403826fbeca"}};
+         "b691e9c892b3f09b27390f9c88baa46d72fa9e93b3fd98821b580403826fbeca"},
+        {images_dir / "type" / "console.png",
+         "ef8d5406cfb4ac1d112a53fbc3a80dd4",
+         "6113bee9abb776277ea28d2f78511882ed4411276662790d52620b9ea740239e"},
+        {images_dir / "type" / "duke_nukem.bmp",
+         "182e8c7a4e4578c7ebe46a32bf3f95f7",
+         "6931c69e99d35499d91fd967a1acb59310f06134c9a866fb4944e3378627b8d6"}};
 
-    for (const auto& current : test_images) {
-      INFO(fmt::format("Hashing for: {}", current.path.string()));
-      const auto image = album::Image::load(current.path);
+    for (const auto& [path, expected_md5, expected_sha256] : test_images) {
+      INFO(fmt::format("Hashing for: {}", path.string()));
+      const auto image = album::Image::load(path);
       REQUIRE(image);
 
-      REQUIRE(image->get_hash(album::HashAlgorithm::md5) == current.md5);
-      REQUIRE(image->get_hash(album::HashAlgorithm::sha256) == current.sha256);
+      const auto md5 = image->get_hash(album::HashAlgorithm::md5);
+      REQUIRE(md5);
+      REQUIRE(md5.value() == expected_md5);
+
+      const auto sha256 = image->get_hash(album::HashAlgorithm::sha256);
+      REQUIRE(sha256);
+      REQUIRE(sha256.value() == expected_sha256);
     }
   }
 }
