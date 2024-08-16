@@ -43,7 +43,7 @@ auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
   // Try loading the image
   auto loaded_image = OIIO::ImageBuf(path.string());
   if (!loaded_image.initialized()) {
-    spdlog::error("Couldn´t load image at {}. Reason: {}",
+    spdlog::error("Couldn't load image at {}. Reason: {}",
                   path.string(),
                   loaded_image.geterror());
     return {};

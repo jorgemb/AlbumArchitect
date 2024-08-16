@@ -27,7 +27,7 @@ auto calculate_hash(const std::filesystem::path& path)
   // Load image
   auto image_file = std::ifstream(path, std::ios::binary);
   if (!image_file) {
-    spdlog::error("Couldn´t load image file in {}", path.string());
+    spdlog::error("Couldn't load image file in {}", path.string());
     return {};
   }
 
