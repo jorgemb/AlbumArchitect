@@ -107,6 +107,27 @@ TEST_CASE("Image loading", "[album][image]") {
     REQUIRE(metadata.at("Exif:LensMake"s) == "Apple"s);
     REQUIRE(metadata.at("FNumber"s) == "2.2"s);
     REQUIRE(metadata.at("IPTC:DateCreated"s) == "20150502"s);
+  }
 
+  SECTION("Hashing") {
+    struct TestImageHash {
+      std::filesystem::path path;
+      std::string md5;
+      std::string sha256;
+    };
+
+    const auto test_images = std::vector<TestImageHash> {
+        {images_dir / "Home" / "IMG_5515.JPG",
+         "547e4396b2b30a7f52b3b30d008e54b8",
+         "b691e9c892b3f09b27390f9c88baa46d72fa9e93b3fd98821b580403826fbeca"}};
+
+    for (const auto& current : test_images) {
+      INFO(fmt::format("Hashing for: {}", current.path.string()));
+      const auto image = album::Image::load(current.path);
+      REQUIRE(image);
+
+      REQUIRE(image->get_hash(album::HashAlgorithm::md5) == current.md5);
+      REQUIRE(image->get_hash(album::HashAlgorithm::sha256) == current.sha256);
+    }
   }
 }

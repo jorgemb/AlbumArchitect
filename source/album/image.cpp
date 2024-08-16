@@ -2,11 +2,13 @@
 // Created by jorge on 09/08/24.
 //
 
+#include <array>
 #include <utility>
 
 #include "image.h"
 
 #include <OpenImageIO/imagebuf.h>
+#include <hash-library/md5.h>
 #include <spdlog/spdlog.h>
 
 namespace albumarchitect::album {
@@ -53,8 +55,9 @@ auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
   // Get metadata
   auto metadata = std::map<std::string, std::string> {};
   std::ranges::for_each(spec.extra_attribs,
-                [&metadata](const auto& attrib)
-                { metadata.emplace(attrib.name(), attrib.get_string()); });
+                        [&metadata](const auto& attrib) {
+                          metadata.emplace(attrib.name(), attrib.get_string());
+                        });
 
   auto implementation = std::make_shared<ImageImpl>(path,
                                                     loaded_image,
@@ -80,5 +83,21 @@ auto Image::get_path() const -> std::filesystem::path {
 }
 auto Image::get_metadata() const -> const std::map<std::string, std::string>& {
   return m_impl->metadata;
+}
+auto Image::get_hash(const HashAlgorithm algorithm) const -> std::string {
+  switch (algorithm) {
+    using enum HashAlgorithm;
+    case md5: {
+      if (auto hash = hash::Hash::calculate_md5(m_impl->path)) {
+        return std::move(hash.value());
+      }
+      return {};
+    }
+    case sha256: {
+      return {};
+    }
+    default:
+      return {};
+  }
 }
 }  // namespace albumarchitect::album

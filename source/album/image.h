@@ -8,8 +8,15 @@
 #include <map>
 #include <optional>
 #include <string>
+#include "hash.h"
 
 namespace albumarchitect::album {
+
+/// Represents the different hashing algorighmts currently supported
+enum class HashAlgorithm : std::uint8_t {
+  md5,
+  sha256
+};
 
 // Forward declaration
 class ImageImpl;
@@ -52,6 +59,12 @@ public:
   /// Returns the map of metadata
   /// @return
   auto get_metadata() const -> const std::map<std::string, std::string>&;
+
+  /// Returns the encoded hash representation for the image according to the
+  /// algorithm
+  /// @param algorithm
+  /// @return
+  auto get_hash(HashAlgorithm algorithm) const -> std::string;
 
 private:
   std::shared_ptr<ImageImpl> m_impl;
