@@ -19,7 +19,7 @@ enum class HashAlgorithm : std::uint8_t {
   sha256
 };
 
-/// Represents hte different hashing algorithms for image
+/// Represents the different hashing algorithms for image
 enum class ImageHashAlgorightm: std::uint8_t {
   average_hash,
   p_hash,
