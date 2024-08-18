@@ -83,8 +83,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      CC: /usr/bin/clang-18
-      CXX: /usr/bin/clang++-18
+      CC: /usr/bin/clang-14
+      CXX: /usr/bin/clang++-14
 
     steps:
     - uses: actions/checkout@v4
@@ -127,7 +127,7 @@ jobs:
         
         sudo update-alternatives --install \
           /usr/bin/clang-tidy clang-tidy \
-          /usr/bin/clang-tidy-18 140
+          /usr/bin/clang-tidy-14 140
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1
