@@ -146,8 +146,5 @@ TEST_CASE("Hashing", "[album][image][hash]") {
     }
   }
 
-  SECTION("Image hashing") {
-
-
-  }
+  SECTION("Image hashing") {}
 }

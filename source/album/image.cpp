@@ -6,11 +6,12 @@
 #include <utility>
 
 #include "image.h"
-#include "hash.h"
 
 #include <OpenImageIO/imagebuf.h>
 #include <hash-library/md5.h>
 #include <spdlog/spdlog.h>
+
+#include "hash.h"
 
 namespace albumarchitect::album {
 
