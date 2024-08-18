@@ -96,8 +96,6 @@ jobs:
           cppcheck \
           curl \
           git \
-          gcc-14 \
-          g++-14 \
           libtool \
           libx11-dev \
           libxext-dev \
@@ -171,8 +169,6 @@ jobs:
           cppcheck \
           curl \
           git \
-          gcc-14 \
-          g++-14 \
           libtool \
           libx11-dev \
           libxext-dev \
