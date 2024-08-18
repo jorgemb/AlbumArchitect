@@ -86,25 +86,35 @@ jobs:
 
     - name: Install requirements
       run: |
-        sudo apt-get update && sudo apt-get install -y autoconf \
-        automake \
-        bison \
-        libtool \
-        libx11-dev \
-        libxext-dev \
-        libxft-dev \
-        libxi-dev \
-        libxrandr-dev \
-        libxtst-dev \
-        nasm \
-        ninja-build \
-        pkg-config \
-        python3 \
-        python3-setuptools \
-        python3-jinja2 \
-        tar \
-        unzip \
-        zip
+        apt-get update && apt-get install -y \
+          autoconf \
+          automake \
+          bison \
+          build-essential \
+          clang-tidy \
+          cmake \
+          cppcheck \
+          curl \
+          git \
+          gcc-14 \
+          g++-14 \
+          libtool \
+          libx11-dev \
+          libxext-dev \
+          libxft-dev \
+          libxi-dev \
+          libxrandr-dev \
+          libxtst-dev \
+          nasm \
+          ninja-build \
+          openimageio-tools \
+          pkg-config \
+          python3 \
+          python3-setuptools \
+          python3-jinja2 \
+          tar \
+          unzip \
+          zip 
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1
