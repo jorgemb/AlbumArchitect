@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "image.h"
+#include "hash.h"
 
 #include <OpenImageIO/imagebuf.h>
 #include <hash-library/md5.h>
@@ -95,5 +96,8 @@ auto Image::get_hash(const HashAlgorithm algorithm) const
     default:
       return {};
   }
+}
+auto Image::get_image_hash(ImageHashAlgorightm algorithm) const -> cv::Mat {
+  return {};
 }
 }  // namespace albumarchitect::album

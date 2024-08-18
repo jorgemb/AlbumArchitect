@@ -108,8 +108,12 @@ TEST_CASE("Image loading", "[album][image]") {
     REQUIRE(metadata.at("FNumber"s) == "2.2"s);
     REQUIRE(metadata.at("IPTC:DateCreated"s) == "20150502"s);
   }
+}
 
-  SECTION("Hashing") {
+TEST_CASE("Hashing", "[album][image][hash]") {
+  SECTION("Basic hashing") {
+    const auto images_dir = resources_dir / "images";
+
     struct TestImageHash {
       std::filesystem::path path;
       std::string md5;
@@ -140,5 +144,10 @@ TEST_CASE("Image loading", "[album][image]") {
       REQUIRE(sha256);
       REQUIRE(sha256.value() == expected_sha256);
     }
+  }
+
+  SECTION("Image hashing") {
+
+
   }
 }

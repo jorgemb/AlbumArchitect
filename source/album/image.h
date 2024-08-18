@@ -9,14 +9,20 @@
 #include <optional>
 #include <string>
 
-#include "hash.h"
+#include <opencv2/core/mat.hpp>
 
 namespace albumarchitect::album {
 
-/// Represents the different hashing algorighmts currently supported
+/// Represents the different hashing algorithms currently supported
 enum class HashAlgorithm : std::uint8_t {
   md5,
   sha256
+};
+
+/// Represents hte different hashing algorithms for image
+enum class ImageHashAlgorightm: std::uint8_t {
+  average_hash,
+  p_hash,
 };
 
 // Forward declaration
@@ -66,6 +72,11 @@ public:
   /// @param algorithm
   /// @return
   auto get_hash(HashAlgorithm algorithm) const -> std::optional<std::string>;
+
+  /// Returns the given algorithms as a CV2 mat
+  /// @param algorithm
+  /// @return
+  auto get_image_hash(ImageHashAlgorightm algorithm) const -> cv::Mat;
 
 private:
   std::shared_ptr<ImageImpl> m_impl;
