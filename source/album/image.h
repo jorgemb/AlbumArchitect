@@ -20,7 +20,7 @@ enum class HashAlgorithm : std::uint8_t {
 };
 
 /// Represents the different hashing algorithms for image
-enum class ImageHashAlgorightm: std::uint8_t {
+enum class ImageHashAlgorithm : std::uint8_t {
   average_hash,
   p_hash,
 };
@@ -76,7 +76,11 @@ public:
   /// Returns the given algorithms as a CV2 mat
   /// @param algorithm
   /// @return
-  auto get_image_hash(ImageHashAlgorightm algorithm) const -> cv::Mat;
+  auto get_image_hash(ImageHashAlgorithm algorithm) const -> cv::Mat;
+
+  /// Returns the loaded image as a
+  /// @return
+  auto get_image(cv::Mat& output) const -> bool;
 
 private:
   std::shared_ptr<ImageImpl> m_impl;

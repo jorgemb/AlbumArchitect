@@ -10,6 +10,8 @@
 
 #include <hash-library/md5.h>
 #include <hash-library/sha256.h>
+#include <opencv2/img_hash/average_hash.hpp>
+#include <opencv2/img_hash/phash.hpp>
 #include <spdlog/spdlog.h>
 
 namespace albumarchitect::hash {
@@ -50,5 +52,19 @@ auto Hash::calculate_md5(const std::filesystem::path& path)
 auto Hash::calculate_sha256(const std::filesystem::path& path)
     -> std::optional<std::string> {
   return calculate_hash<SHA256>(path);
+}
+auto Hash::calculate_average_hash(cv::InputArray input) -> cv::Mat {
+  auto hasher = cv::img_hash::AverageHash::create();
+
+  auto output = cv::Mat {};
+  hasher->compute(input, output);
+  return output;
+}
+auto Hash::calculate_p_hash(cv::InputArray input) -> cv::Mat {
+  auto hasher = cv::img_hash::PHash::create();
+
+  auto output = cv::Mat{};
+  hasher->compute(input, output);
+  return output;
 }
 }  // namespace albumarchitect::hash

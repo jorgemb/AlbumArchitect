@@ -10,6 +10,9 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
+#include <opencv2/img_hash/average_hash.hpp>
+#include <opencv2/img_hash/phash.hpp>
+#include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
 #include "album/image.h"
@@ -110,10 +113,38 @@ TEST_CASE("Image loading", "[album][image]") {
   }
 }
 
-TEST_CASE("Hashing", "[album][image][hash]") {
-  SECTION("Basic hashing") {
-    const auto images_dir = resources_dir / "images";
+/// Compares an image with the modified counterpart using each hash type
+/// @param image
+/// @param modified_image
+void compare_hashes(const album::Image& image, cv::InputArray modified_image) {
+  // Get original values
+  auto original_mat = cv::Mat {};
+  REQUIRE(image.get_image(original_mat));
+  auto original_average_hash =
+      image.get_image_hash(album::ImageHashAlgorithm::average_hash);
+  auto original_phash = image.get_image_hash(album::ImageHashAlgorithm::p_hash);
+  constexpr auto expected_max_difference = 5.0;
 
+  // Check each hash type
+  auto modified_hash = cv::Mat {};
+  auto average_hasher = cv::img_hash::AverageHash::create();
+  average_hasher->compute(modified_image, modified_hash);
+  auto avg_diff = average_hasher->compare(original_average_hash, modified_hash);
+  INFO(fmt::format("Average hash difference: {}", avg_diff));
+  REQUIRE(avg_diff < expected_max_difference);
+
+  auto p_hasher = cv::img_hash::PHash::create();
+  p_hasher->compute(modified_image, modified_hash);
+  auto p_diff = p_hasher->compare(original_phash, modified_hash);
+  INFO(fmt::format("pHash difference: {}", p_diff));
+  REQUIRE(p_diff < expected_max_difference);
+}
+
+// NOLINTNEXTLINE(*-function-cognitive-complexity)
+TEST_CASE("Hashing", "[album][image][hash]") {
+  const auto images_dir = resources_dir / "images";
+
+  SECTION("Basic hashing") {
     struct TestImageHash {
       std::filesystem::path path;
       std::string md5;
@@ -146,5 +177,30 @@ TEST_CASE("Hashing", "[album][image][hash]") {
     }
   }
 
-  SECTION("Image hashing") {}
+  SECTION("Image hashing") {
+    const auto test_image_dir = images_dir / "size" / "medium_size"
+        / "apollo-11-crew-in-raft-before-recovery_9457415403_o.jpg";
+
+    auto test_image = album::Image::load(test_image_dir);
+    REQUIRE(test_image);
+
+    auto original_mat = cv::Mat {};
+    REQUIRE(test_image->get_image(original_mat));
+    auto original_size = cv::Size {static_cast<int>(test_image->get_width()),
+                                   static_cast<int>(test_image->get_height())};
+    auto modified_mat = cv::Mat {};
+
+    {
+      INFO("Downscaling tests");
+      cv::resize(
+          original_mat, modified_mat, original_size / 4, cv::INTER_LINEAR);
+      compare_hashes(test_image.value(), modified_mat);
+    }
+
+    {
+      INFO("Decoloring tests");
+      cv::cvtColor(original_mat, modified_mat, cv::COLOR_BGR2GRAY);
+      compare_hashes(test_image.value(), modified_mat);
+    }
+  }
 }

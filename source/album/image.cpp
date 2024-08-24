@@ -8,6 +8,7 @@
 #include "image.h"
 
 #include <OpenImageIO/imagebuf.h>
+#include <OpenImageIO/imagebufalgo.h>
 #include <hash-library/md5.h>
 #include <spdlog/spdlog.h>
 
@@ -98,7 +99,29 @@ auto Image::get_hash(const HashAlgorithm algorithm) const
       return {};
   }
 }
-auto Image::get_image_hash(ImageHashAlgorightm algorithm) const -> cv::Mat {
-  return {};
+auto Image::get_image_hash(ImageHashAlgorithm algorithm) const -> cv::Mat {
+  auto mat = cv::Mat {};
+  get_image(mat);
+
+  switch (algorithm) {
+    using enum ImageHashAlgorithm;
+    case average_hash:
+      return hash::Hash::calculate_average_hash(mat);
+    case p_hash:
+      return hash::Hash::calculate_p_hash(mat);
+    default:
+      return {};
+  }
+}
+auto Image::get_image(cv::Mat& output) const -> bool {
+  if (OIIO::ImageBufAlgo::to_OpenCV(output, m_impl->image)) {
+    return true;
+  }
+
+  // Log error
+  spdlog::error("Error getting cv::Mat for image {}. Error: {}",
+                m_impl->path.string(),
+                OIIO::geterror());
+  return false;
 }
 }  // namespace albumarchitect::album
