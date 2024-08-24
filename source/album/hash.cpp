@@ -63,7 +63,7 @@ auto Hash::calculate_average_hash(cv::InputArray input) -> cv::Mat {
 auto Hash::calculate_p_hash(cv::InputArray input) -> cv::Mat {
   auto hasher = cv::img_hash::PHash::create();
 
-  auto output = cv::Mat{};
+  auto output = cv::Mat {};
   hasher->compute(input, output);
   return output;
 }
