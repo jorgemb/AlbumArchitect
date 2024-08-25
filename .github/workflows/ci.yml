@@ -25,6 +25,9 @@ jobs:
     - name: Install codespell
       run: pip3 install codespell
 
+    - name: Install linter
+      run: sudo apt-get install -y clang-format-14
+
     - name: Lint
       run: cmake -D FORMAT_COMMAND=clang-format-14 -P cmake/lint.cmake
 
@@ -74,27 +77,72 @@ jobs:
         file: build/coverage/coverage.info
         token: ${{ secrets.CODECOV_TOKEN }}
 
-  sanitize:
+  test:
     needs: [lint]
 
     runs-on: ubuntu-22.04
 
-    env: { CXX: clang++-14 }
+    env:
+      CC: /usr/bin/clang-14
+      CXX: /usr/bin/clang++-14
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Install requirements
+      run: |
+        sudo apt-get update && sudo apt-get install -y \
+          autoconf \
+          automake \
+          bison \
+          build-essential \
+          clang-tidy \
+          cmake \
+          cppcheck \
+          curl \
+          git \
+          clang-14 \
+          clang-tidy-14 \
+          clang-format-14 \
+          cppcheck \
+          libtool \
+          libx11-dev \
+          libxext-dev \
+          libxft-dev \
+          libxi-dev \
+          libxrandr-dev \
+          libxtst-dev \
+          nasm \
+          ninja-build \
+          openimageio-tools \
+          pkg-config \
+          python3 \
+          python3-setuptools \
+          python3-jinja2 \
+          libstdc++-12-dev \
+          tar \
+          unzip \
+          zip 
+        
+        
+        sudo update-alternatives --install \
+          /usr/bin/clang-tidy clang-tidy \
+          /usr/bin/clang-tidy-14 140
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1
       with: { committish: "${{ env.VCPKG_COMMIT }}" }
 
-    - name: Configure
+    - name: Sanitize_Configure
       run: cmake --preset=ci-sanitize
 
-    - name: Build
+    - name: Sanitize_Build
       run: cmake --build build/sanitize -j 2
 
-    - name: Test
+    - name: Sanitize_Test
       working-directory: build/sanitize
       env:
         ASAN_OPTIONS: "strict_string_checks=1:\
@@ -107,41 +155,9 @@ jobs:
           halt_on_error=1"
       run: ctest --output-on-failure --no-tests=error -j 2
 
-  test:
-    needs: [lint]
-
-    strategy:
-      matrix:
-#        os: [macos-12, ubuntu-22.04, windows-2022]
-        os: [ubuntu-22.04, windows-2022]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install static analyzers
-      if: matrix.os == 'ubuntu-22.04'
-      run: >-
-        sudo apt-get install clang-tidy-14 cppcheck -y -q
-
-        sudo update-alternatives --install
-        /usr/bin/clang-tidy clang-tidy
-        /usr/bin/clang-tidy-14 140
-
-    - name: Install vcpkg
-      uses: friendlyanon/setup-vcpkg@v1
-      with: { committish: "${{ env.VCPKG_COMMIT }}" }
-
-    - name: Setup MultiToolTask
-      if: matrix.os == 'windows-2022'
-      run: |
-        Add-Content "$env:GITHUB_ENV" 'UseMultiToolTask=true'
-        Add-Content "$env:GITHUB_ENV" 'EnforceProcessCountAcrossBuilds=true'
-
     - name: Configure
       shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
+      run: cmake --preset=ci-ubuntu
 
     - name: Build
       run: cmake --build build --config Release -j 2
@@ -155,7 +171,7 @@ jobs:
 
   docs:
     # Deploy docs only when builds succeed
-    needs: [sanitize, test]
+    needs: [test]
 
     runs-on: ubuntu-22.04
 

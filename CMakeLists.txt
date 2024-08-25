@@ -26,6 +26,10 @@ add_library(
         source/files/graph.h
         source/files/helper.cpp
         source/files/helper.h
+        source/album/image.cpp
+        source/album/image.h
+        source/album/hash.cpp
+        source/album/hash.h
 )
 
 target_include_directories(
@@ -34,22 +38,31 @@ target_include_directories(
         "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
 )
 
-target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
+target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Boost 1.83 REQUIRED COMPONENTS graph serialization filesystem)
 find_package(absl CONFIG REQUIRED)
+find_package(OpenCV 4.8 REQUIRED COMPONENTS opencv_img_hash)
+find_package(OpenImageIO 2.5 REQUIRED CONFIG)
+find_package(unofficial-hash-library CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
         Boost::headers
         absl::btree
-        absl::hash)
+        absl::hash
+        unofficial::hash-library)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         Boost::graph
         Boost::filesystem
-        Boost::serialization)
+        Boost::serialization
+        opencv_core
+        opencv_imgproc
+        opencv_imgcodecs
+        opencv_img_hash
+        OpenImageIO::OpenImageIO)
 
 # ---- Declare executable ----
 
