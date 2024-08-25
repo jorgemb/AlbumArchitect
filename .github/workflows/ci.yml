@@ -48,14 +48,17 @@ jobs:
       && false
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Install LCov
       run: sudo apt-get update -q
         && sudo apt-get install lcov -q -y
 
     - name: Install vcpkg
-      uses: friendlyanon/setup-vcpkg@v1
+      uses:
       with: { committish: "${{ env.VCPKG_COMMIT }}" }
 
     - name: Configure
