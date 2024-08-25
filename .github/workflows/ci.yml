@@ -58,7 +58,7 @@ jobs:
         && sudo apt-get install lcov -q -y
 
     - name: Install vcpkg
-      uses:
+      uses: friendlyanon/setup-vcpkg@v1
       with: { committish: "${{ env.VCPKG_COMMIT }}" }
 
     - name: Configure
