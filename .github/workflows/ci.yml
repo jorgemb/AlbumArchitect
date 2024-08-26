@@ -108,6 +108,8 @@ jobs:
           clang-tidy-14 \
           clang-format-14 \
           cppcheck \
+          libopencv-dev \
+          libopencv-contrib-dev \
           libtool \
           libx11-dev \
           libxext-dev \
