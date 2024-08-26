@@ -44,7 +44,7 @@ find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Boost 1.83 REQUIRED COMPONENTS graph serialization filesystem)
 find_package(absl CONFIG REQUIRED)
-find_package(OpenCV 4.8 REQUIRED COMPONENTS opencv_img_hash)
+find_package(OpenCV 4.5 REQUIRED COMPONENTS opencv_img_hash)
 find_package(OpenImageIO 2.5 REQUIRED CONFIG)
 find_package(unofficial-hash-library CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
