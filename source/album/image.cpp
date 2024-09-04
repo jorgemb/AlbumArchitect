@@ -57,10 +57,10 @@ auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
 
   // Get metadata
   auto metadata = std::map<std::string, std::string> {};
-  std::ranges::for_each(spec.extra_attribs,
-                        [&metadata](const auto& attrib) {
-                          metadata.emplace(attrib.name(), attrib.get_string());
-                        });
+  std::for_each(spec.extra_attribs.begin(),
+                spec.extra_attribs.end(),
+                [&metadata](const auto& attrib)
+                { metadata.emplace(attrib.name(), attrib.get_string()); });
 
   auto implementation = std::make_shared<ImageImpl>(path,
                                                     loaded_image,
@@ -90,10 +90,9 @@ auto Image::get_metadata() const -> const std::map<std::string, std::string>& {
 auto Image::get_hash(const HashAlgorithm algorithm) const
     -> std::optional<std::string> {
   switch (algorithm) {
-    using enum HashAlgorithm;
-    case md5:
+    case HashAlgorithm::md5:
       return hash::Hash::calculate_md5(m_impl->path);
-    case sha256:
+    case HashAlgorithm::sha256:
       return hash::Hash::calculate_sha256(m_impl->path);
     default:
       return {};
@@ -104,10 +103,9 @@ auto Image::get_image_hash(ImageHashAlgorithm algorithm) const -> cv::Mat {
   get_image(mat);
 
   switch (algorithm) {
-    using enum ImageHashAlgorithm;
-    case average_hash:
+    case ImageHashAlgorithm::average_hash:
       return hash::Hash::calculate_average_hash(mat);
-    case p_hash:
+    case ImageHashAlgorithm::p_hash:
       return hash::Hash::calculate_p_hash(mat);
     default:
       return {};
