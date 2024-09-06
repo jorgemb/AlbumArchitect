@@ -39,9 +39,6 @@ target_include_directories(
 )
 
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
-set_target_properties(AlbumArchitect_lib
-                        PROPERTIES
-                            CXX_EXTENSIONS NO)
 
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)

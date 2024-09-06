@@ -47,7 +47,8 @@ RUN update-alternatives --install \
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
 
-RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
+RUN --mount=type=cache,target=$VCPKG_ROOT/packages \
+    VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
     && git init . \
     && git remote add origin https://github.com/microsoft/vcpkg \
     && git fetch origin $VCPKG_BASELINE \
@@ -62,17 +63,19 @@ COPY source source
 COPY test test
 COPY CMakeLists.txt CMakePresets.json vcpkg.json ./
 
-RUN mkdir build \
-    && cmake -B build/ --preset=ci-ubuntu . \
+RUN --mount=type=cache,target=/app/build/ \
+    cmake -B build/ --preset=ci-ubuntu . \
     && cmake --build build --config Release -j 4
 
 # .. perform tests
 WORKDIR /app/build
-RUN ctest --output-on-failure --no-tests=error -C Release -j 2
+RUN --mount=type=cache,target=/app/build/ \
+    ctest --output-on-failure --no-tests=error -C Release -j 4
 
 # .. create distributable
 WORKDIR /app
-RUN cmake --install build --config Release --prefix dist
+RUN --mount=type=cache,target=/app/build/ \
+    cmake --install build --config Release --prefix dist
 #    && for file in $(ldd dist/bin/AlbumArchitect | grep "=>" | cut -d" " -f3); do cp $file dist/bin/ ; done
 
 
