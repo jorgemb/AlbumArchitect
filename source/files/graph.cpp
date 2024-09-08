@@ -22,8 +22,7 @@ namespace album_architect::files {
 FileGraph::FileGraph(bool create_root) {
   if (create_root) {
     m_root_node = boost::add_vertex(m_graph);
-    const auto color = boost::get(boost::vertex_color_t(), m_graph);
-    boost::put(color, m_root_node, NodeType::directory);
+    m_graph[m_root_node].type = NodeType::directory;
   }
 }
 void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
@@ -41,16 +40,17 @@ void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
 
   // Create the new NodeId
   // TODO: Check if NodeId already exists
-  const auto new_node = boost::add_vertex(type, m_graph);
+  const auto new_node = boost::add_vertex({type}, m_graph);
   boost::add_edge(previous_node, new_node, path_list.back(), m_graph);
 }
 void FileGraph::to_graphviz(std::ostream& ostream) const {
-  const auto vertex_property = boost::get(boost::vertex_color_t(), m_graph);
   const auto edge_property = boost::get(boost::edge_name_t(), m_graph);
-  boost::write_graphviz(ostream,
-                        m_graph,
-                        boost::make_label_writer(vertex_property),
-                        boost::make_label_writer(edge_property));
+  boost::write_graphviz(
+      ostream,
+      m_graph,
+      [this](std::ostream& out, const auto& vertex)
+      { out << m_graph[vertex].type; },
+      boost::make_label_writer(edge_property));
 }
 auto FileGraph::rename_node(boost::span<std::string> path_list,
                             const std::string& new_name) -> bool {
@@ -152,7 +152,7 @@ auto FileGraph::get_or_create_nodes(boost::span<const std::string> path_list)
     }
 
     // Create the new NodeId
-    const auto new_node = boost::add_vertex(NodeType::directory, m_graph);
+    const auto new_node = boost::add_vertex({NodeType::directory}, m_graph);
     boost::add_edge(current_node, new_node, current_path, m_graph);
     current_node = new_node;
 
@@ -173,12 +173,10 @@ auto FileGraph::operator==(const FileGraph& rhs) const -> bool {
   }
 
   // TODO: Provide isomorphism equality. Right now is exact equality.
-  const auto lhs_type = boost::get(boost::vertex_color_t(), m_graph);
-  const auto rhs_type = boost::get(boost::vertex_color_t(), rhs.m_graph);
   auto [lhs_iter, lhs_e] = boost::vertices(m_graph);
   auto [rhs_iter, rhs_e] = boost::vertices(rhs.m_graph);
   for (; lhs_iter != lhs_e && rhs_iter != rhs_e; ++lhs_iter, ++rhs_iter) {
-    if (boost::get(lhs_type, *lhs_iter) != boost::get(rhs_type, *rhs_iter)) {
+    if (m_graph[*lhs_iter] != rhs.m_graph[*rhs_iter]) {
       return false;
     }
   }
@@ -209,8 +207,7 @@ auto FileGraph::get_node(boost::span<const std::string> path_list)
   return std::make_optional<NodeId>(vertex);
 }
 auto FileGraph::get_node_type(FileGraph::NodeId node) -> NodeType {
-  const auto type_property = boost::get(boost::vertex_color_t(), m_graph);
-  return boost::get(type_property, node);
+  return m_graph[node].type;
 }
 auto FileGraph::get_node_children(FileGraph::NodeId node_id)
     -> std::vector<NodeId> {

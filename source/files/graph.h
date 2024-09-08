@@ -32,15 +32,29 @@ enum class NodeType : std::uint8_t {
 /// \return
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream&;
 
+/// Represents Vertex data that is stored next to the graph
+class VertexData {
+public:
+  NodeType type;
+
+  /// Allow for default comparison
+  auto operator<=>(const VertexData& rhs) const = default;
+
+  /// Serialize object
+  template <class Archive>
+  void serialize(Archive& archive, const unsigned int  /*version*/){
+    archive & type;
+  }
+};
+
 // Type used for representing the internal graph
-using VertexProperty = boost::property<boost::vertex_color_t, NodeType>;
 using EdgeProperty = boost::property<boost::edge_name_t, std::string>;
 
 using GraphType = boost::adjacency_list<boost::vecS,
-                                         boost::vecS,
-                                         boost::bidirectionalS,
-                                         VertexProperty,
-                                         EdgeProperty>;
+                                        boost::vecS,
+                                        boost::bidirectionalS,
+                                        VertexData,
+                                        EdgeProperty>;
 
 /// Represent a filesystem with graphs
 class FileGraph {
@@ -63,7 +77,8 @@ public:
   /// Returns the ID of the node in the given path
   /// \param path_list
   /// \return
-  auto get_node(boost::span<const std::string> path_list) -> std::optional<NodeId>;
+  auto get_node(boost::span<const std::string> path_list)
+      -> std::optional<NodeId>;
 
   /// Returns the children of the given node
   /// \param node_id
@@ -121,7 +136,8 @@ private:
   /// \param path_list
   /// \return
   auto get_node_data(boost::span<const std::string> path_list)
-      -> std::optional<std::pair<GraphType::edge_descriptor, GraphType::vertex_descriptor>>;
+      -> std::optional<
+          std::pair<GraphType::edge_descriptor, GraphType::vertex_descriptor>>;
 
   /// Gets or creates the nodes in the path_list, and returns the last one
   /// \param path_list

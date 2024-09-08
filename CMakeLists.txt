@@ -38,7 +38,7 @@ target_include_directories(
         "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
 )
 
-target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
+target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
 
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
