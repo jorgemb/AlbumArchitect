@@ -3,16 +3,16 @@
   "version-semver": "0.1.0",
   "dependencies": [
     {
+      "name": "abseil",
+      "version>=": "20240722.0"
+    },
+    {
       "name": "fmt",
       "version>=": "10.2.1#2"
     },
     {
       "name": "spdlog",
       "version>=": "1.14.1"
-    },
-    {
-      "name": "abseil",
-      "version>=": "20240116.2#3"
     },
     {
       "name": "boost-core",
@@ -63,5 +63,5 @@
       ]
     }
   },
-  "builtin-baseline": "1de2026f28ead93ff1773e6e680387643e914ea1"
+  "builtin-baseline": "0f88ecb8528605f91980b90a2c5bad88e3cb565f"
 }
