@@ -248,18 +248,36 @@ auto FileGraph::get_node_path(FileGraph::NodeId node_id)
   return ret;
 }
 auto FileGraph::set_node_metadata(FileGraph::NodeId node,
-                                  std::string_view key,
-                                  const VertexAttribute& attribute) -> std::optional<VertexAttribute> {
-  return {};
-                                  }
-auto FileGraph::get_node_metadata(FileGraph::NodeId node, std::string_view key)
+                                  const std::string& key,
+                                  const VertexAttribute& attribute)
     -> std::optional<VertexAttribute> {
-  return {};
+  // Try removing first
+  auto previous = remove_node_metadata(node, key);
+
+  // Add new key
+  m_graph[node].attributes[key] = attribute;
+  return previous;
+}
+auto FileGraph::get_node_metadata(FileGraph::NodeId node,
+                                  const std::string& key)
+    -> std::optional<VertexAttribute> {
+  auto position = m_graph[node].attributes.find(key);
+  if (position == m_graph[node].attributes.end()) {
+    return {};
+  }
+  return position->second;
 }
 auto FileGraph::remove_node_metadata(FileGraph::NodeId node,
-                                     std::string_view key)
+                                     const std::string& key)
     -> std::optional<VertexAttribute> {
-  return {};
+  auto position = m_graph[node].attributes.find(key);
+  if (position == m_graph[node].attributes.end()) {
+    return {};
+  }
+
+  auto previous_element = std::make_optional(std::move(position->second));
+  m_graph[node].attributes.erase(position);
+  return previous_element;
 }
 
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {

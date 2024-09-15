@@ -250,8 +250,8 @@ TEST_CASE("Graph for directories", "[files][graph]") {
     REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key2));
 
     // Add metadata
-    tree_graph.set_node_metadata(test_node, key1, value1);
-    tree_graph.set_node_metadata(test_node, key2, value2);
+    REQUIRE_FALSE(tree_graph.set_node_metadata(test_node, key1, value1));
+    REQUIRE_FALSE(tree_graph.set_node_metadata(test_node, key2, value2));
 
     // Retrieve metadata
     auto metadata1 = tree_graph.get_node_metadata(test_node, key1);

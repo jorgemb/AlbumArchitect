@@ -118,19 +118,20 @@ public:
   /// \param key Key to store the attribute with
   /// \param attribute Attribute to add to the node
   /// \return Previous attribute if any
-  auto set_node_metadata(NodeId node, std::string_view key, const VertexAttribute& attribute) -> std::optional<VertexAttribute>;
+  auto set_node_metadata(FileGraph::NodeId node,
+                         const std::string& key, const VertexAttribute& attribute) -> std::optional<VertexAttribute>;
 
   /// Returns the metadata for the given node, if any
   /// \param node
   /// \param key Key to get the value from
   /// \return Optional with a copy of the attribute
-  auto get_node_metadata(NodeId node, std::string_view key) -> std::optional<VertexAttribute>;
+  auto get_node_metadata(FileGraph::NodeId node, const std::string& key) -> std::optional<VertexAttribute>;
 
   /// Removes the metadata from the node with the given key
   /// \param node
   /// \param key Key to get the value from
   /// \return Optional with the removed attribute
-  auto remove_node_metadata(NodeId node, std::string_view key) -> std::optional<VertexAttribute>;
+  auto remove_node_metadata(FileGraph::NodeId node, const std::string& key) -> std::optional<VertexAttribute>;
 
   /// Returns the children of the given node
   /// \param node_id
