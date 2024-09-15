@@ -30,6 +30,7 @@ add_library(
         source/album/image.h
         source/album/hash.cpp
         source/album/hash.h
+        source/helper/boost_serialization_cvmat.h
 )
 
 target_include_directories(
@@ -38,7 +39,7 @@ target_include_directories(
         "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
 )
 
-target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_20)
+target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)

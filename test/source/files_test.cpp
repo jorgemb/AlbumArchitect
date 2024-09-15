@@ -15,6 +15,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <fmt/core.h>
+#include <opencv2/core/mat.hpp>
 
 #include "common.h"
 #include "files/graph.h"
@@ -35,6 +36,9 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   auto directory_tree = files::FileTree::build(resources_dir);
   REQUIRE(directory_tree);
 
+  // Element paths
+  const auto album_one_path = resources_dir / "album_one";
+
   SECTION("Basic path discovery and checks") {
     // Check that some paths are available
     const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
@@ -45,7 +49,6 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     REQUIRE(root_element.get_path() == resources_dir);
 
     // Get other element
-    const auto album_one_path = resources_dir / "album_one";
     const auto album_one_element = directory_tree->get_element(album_one_path);
     REQUIRE(album_one_element);
     REQUIRE(album_one_element->get_path() == album_one_path);
@@ -58,6 +61,15 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     REQUIRE(album_three_one_1_element);
     REQUIRE(album_three_one_1_element->get_path() == album_three_one_1_path);
     REQUIRE(album_three_one_1_element->get_type() == files::PathType::file);
+  }
+
+  SECTION("Add metadata") {
+    // Add metadata elements
+    auto album_one = directory_tree->get_element(album_one_path);
+
+    const auto key1 = "FirstKey"s;
+    const auto key2 = "SecondKey"s;
+    // TODO: Add indirection from tree element
   }
 
   SECTION("Serialization") {
@@ -224,6 +236,42 @@ TEST_CASE("Graph for directories", "[files][graph]") {
 
     // ... renaming the root should fail
     REQUIRE_FALSE(tree_graph.rename_node({}, "new_root_name"));
+  }
+
+  SECTION("Node metadata") {
+    const auto key1 = "GraphKey1"s;
+    const auto value1 = "GraphValue1"s;
+    const auto key2 = "GraphKey2"s;
+    const auto value2 = cv::Mat{0, 1, 2 ,3 ,4, 5};
+
+    // Check no metadata exists
+    const auto test_node = tree_graph.get_node(path1).value();
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key1));
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key2));
+
+    // Add metadata
+    tree_graph.set_node_metadata(test_node, key1, value1);
+    tree_graph.set_node_metadata(test_node, key2, value2);
+
+    // Retrieve metadata
+    auto metadata1 = tree_graph.get_node_metadata(test_node, key1);
+    REQUIRE(metadata1);
+    REQUIRE(std::get<std::string>(metadata1.value()) == value1);
+
+    auto metadata2 = tree_graph.get_node_metadata(test_node, key2);
+    REQUIRE(metadata2);
+    auto metadata2_value = std::get<cv::Mat>(metadata2.value());
+
+    auto compare_result = cv::Mat{};
+    cv::bitwise_xor(value2, metadata2_value, compare_result);
+    REQUIRE(cv::countNonZero(compare_result) == 0);
+
+    // Remove metadata
+    auto remove_metadata1 = tree_graph.remove_node_metadata(test_node, key1);
+    REQUIRE(remove_metadata1);
+    REQUIRE(std::get<std::string>(remove_metadata1.value()) == value1);
+
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key1));
   }
 
   // DEBUG: Show graph representation
