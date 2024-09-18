@@ -6,20 +6,19 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <iterator>
-#include <memory>
 #include <thread>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
-#include <fmt/core.h>
+#include <opencv2/core/mat.hpp>
 
 #include "common.h"
 #include "files/graph.h"
 #include "files/helper.h"
 #include "files/tree.h"
+#include "helper/cv_mat_operations.h"
 
 // NOLINTNEXTLINE(*-build-using-namespace)
 using namespace album_architect;
@@ -35,6 +34,9 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   auto directory_tree = files::FileTree::build(resources_dir);
   REQUIRE(directory_tree);
 
+  // Element paths
+  const auto album_one_path = resources_dir / "album_one";
+
   SECTION("Basic path discovery and checks") {
     // Check that some paths are available
     const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
@@ -45,7 +47,6 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     REQUIRE(root_element.get_path() == resources_dir);
 
     // Get other element
-    const auto album_one_path = resources_dir / "album_one";
     const auto album_one_element = directory_tree->get_element(album_one_path);
     REQUIRE(album_one_element);
     REQUIRE(album_one_element->get_path() == album_one_path);
@@ -60,7 +61,55 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     REQUIRE(album_three_one_1_element->get_type() == files::PathType::file);
   }
 
+  // Values for metadata testing
+  const auto key1 = "KEY1"s;
+  const auto val1 = "VALUE1"s;
+  const auto key2 = "KEY2"s;
+  const auto val2 = cv::Mat::eye(10, 10, CV_8U);
+
+  SECTION("Add metadata") {
+    auto album_one = directory_tree->get_element(album_one_path);
+
+    // Not metadata exists
+    REQUIRE_FALSE(album_one->get_metadata(key1));
+    REQUIRE_FALSE(album_one->get_metadata(key2));
+
+    // Add metadata
+    REQUIRE_FALSE(album_one->set_metadata(key1, val1));
+    REQUIRE(std::get<std::string>(album_one->set_metadata(key1, val1).value())
+            == val1);
+
+    REQUIRE_FALSE(album_one->set_metadata(key2, val2));
+
+    // Check metadata contents
+    auto retrieved1 = album_one->get_metadata(key1);
+    REQUIRE(retrieved1);
+    REQUIRE(std::get<std::string>(retrieved1.value()) == val1);
+
+    auto retrieved2 = album_one->get_metadata(key2);
+    REQUIRE(retrieved2);
+    REQUIRE(album_architect::cvmat::compare_mat(std::get<cv::Mat>(*retrieved2),
+                                                val2));
+
+    // Remove metadata
+    auto removed1 = album_one->remove_metadata(key1);
+    REQUIRE(removed1);
+    REQUIRE(std::get<std::string>(removed1.value()) == val1);
+    REQUIRE_FALSE(album_one->get_metadata(key1));
+
+    auto removed2 = album_one->remove_metadata(key2);
+    REQUIRE(removed2);
+    REQUIRE(album_architect::cvmat::compare_mat(std::get<cv::Mat>(*removed2),
+                                                val2));
+    REQUIRE_FALSE(album_one->get_metadata(key2));
+  }
+
   SECTION("Serialization") {
+    // Add metadata to the tree
+    auto album_one = directory_tree->get_element(album_one_path);
+    album_one->set_metadata(key1, val1);
+    album_one->set_metadata(key2, val2);
+
     // Check that the tree can be serialized
     auto temp_file = files::TemporaryFile {};
     {
@@ -73,6 +122,18 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     auto new_tree = files::FileTree::from_stream(in_file);
     REQUIRE(new_tree);
     REQUIRE(directory_tree == new_tree);
+
+    // Check that metadata was kept
+    auto new_album_one = new_tree->get_element(album_one_path);
+    REQUIRE(new_album_one);
+
+    auto retrieved1 = new_album_one->get_metadata(key1);
+    REQUIRE(retrieved1);
+    REQUIRE(std::get<std::string>(*retrieved1) == val1);
+
+    auto retrieved2 = new_album_one->get_metadata(key2);
+    REQUIRE(retrieved2);
+    REQUIRE(cvmat::compare_mat(std::get<cv::Mat>(*retrieved2), val2));
   }
 
   auto expected_root_children = std::vector {resources_dir / "album_one",
@@ -224,6 +285,42 @@ TEST_CASE("Graph for directories", "[files][graph]") {
 
     // ... renaming the root should fail
     REQUIRE_FALSE(tree_graph.rename_node({}, "new_root_name"));
+  }
+
+  SECTION("Node metadata") {
+    const auto key1 = "GraphKey1"s;
+    const auto value1 = "GraphValue1"s;
+    const auto key2 = "GraphKey2"s;
+    const auto value2 = cv::Mat {0, 1, 2, 3, 4, 5};
+
+    // Check no metadata exists
+    const auto test_node = tree_graph.get_node(path1).value();
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key1));
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key2));
+
+    // Add metadata
+    REQUIRE_FALSE(tree_graph.set_node_metadata(test_node, key1, value1));
+    REQUIRE_FALSE(tree_graph.set_node_metadata(test_node, key2, value2));
+
+    // Retrieve metadata
+    auto metadata1 = tree_graph.get_node_metadata(test_node, key1);
+    REQUIRE(metadata1);
+    REQUIRE(std::get<std::string>(metadata1.value()) == value1);
+
+    auto metadata2 = tree_graph.get_node_metadata(test_node, key2);
+    REQUIRE(metadata2);
+    auto metadata2_value = std::get<cv::Mat>(metadata2.value());
+
+    auto compare_result = cv::Mat {};
+    cv::bitwise_xor(value2, metadata2_value, compare_result);
+    REQUIRE(cv::countNonZero(compare_result) == 0);
+
+    // Remove metadata
+    auto remove_metadata1 = tree_graph.remove_node_metadata(test_node, key1);
+    REQUIRE(remove_metadata1);
+    REQUIRE(std::get<std::string>(remove_metadata1.value()) == value1);
+
+    REQUIRE_FALSE(tree_graph.get_node_metadata(test_node, key1));
   }
 
   // DEBUG: Show graph representation

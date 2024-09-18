@@ -17,30 +17,67 @@
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_selectors.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/variant.hpp>
+#include <helper/boost_serialization_cvmat.h>
+#include <opencv2/core.hpp>
+
+#include "files/common.h"
 
 namespace album_architect::files {
 
-/// Represents the type of NodeId
-enum class NodeType : std::uint8_t {
-  directory,
-  file
+
+/// Represents Vertex data that is stored next to the graph
+class VertexData {
+public:
+  /// Initialization constructor
+  explicit VertexData(NodeType type,
+                      std::map<std::string, VertexAttribute> attributes = {})
+      : type(type)
+      , attributes(std::move(attributes)) {}
+
+  /// Default constructor for auto insertion
+  VertexData() = default;
+
+  NodeType type = NodeType::directory;
+  std::map<std::string, VertexAttribute> attributes;
+
+  /// Serialize object
+  template<class Archive>
+  void serialize(Archive& archive, const unsigned int /*version*/) {
+    archive & type;
+    archive & attributes;
+  }
+
+  auto operator==(const VertexData& rhs) const -> bool;
+  auto operator!=(const VertexData& rhs) const -> bool;
 };
 
-/// Print the NodeId type to standard output
-/// \param ostream
-/// \param node
-/// \return
-auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream&;
+/// Represents elements associated to edges
+class EdgeData {
+public:
+  std::string name;
+
+  /// Initialization constructor
+  explicit EdgeData(std::string name);
+
+  /// Default constructor
+  EdgeData() = default;
+
+  /// Serialize object
+  template<class Archive>
+  void serialize(Archive& archive, const unsigned int /*version*/) {
+    archive & name;
+  }
+};
 
 // Type used for representing the internal graph
-using VertexProperty = boost::property<boost::vertex_color_t, NodeType>;
-using EdgeProperty = boost::property<boost::edge_name_t, std::string>;
-
 using GraphType = boost::adjacency_list<boost::vecS,
-                                         boost::vecS,
-                                         boost::bidirectionalS,
-                                         VertexProperty,
-                                         EdgeProperty>;
+                                        boost::vecS,
+                                        boost::bidirectionalS,
+                                        VertexData,
+                                        EdgeData>;
 
 /// Represent a filesystem with graphs
 class FileGraph {
@@ -63,7 +100,32 @@ public:
   /// Returns the ID of the node in the given path
   /// \param path_list
   /// \return
-  auto get_node(boost::span<const std::string> path_list) -> std::optional<NodeId>;
+  auto get_node(boost::span<const std::string> path_list)
+      -> std::optional<NodeId>;
+
+  /// Sets metadata for the given node
+  /// \param node
+  /// \param key Key to store the attribute with
+  /// \param attribute Attribute to add to the node
+  /// \return Previous attribute if any
+  auto set_node_metadata(FileGraph::NodeId node,
+                         const std::string& key,
+                         const VertexAttribute& attribute)
+      -> std::optional<VertexAttribute>;
+
+  /// Returns the metadata for the given node, if any
+  /// \param node
+  /// \param key Key to get the value from
+  /// \return Optional with a copy of the attribute
+  auto get_node_metadata(FileGraph::NodeId node, const std::string& key)
+      -> std::optional<VertexAttribute>;
+
+  /// Removes the metadata from the node with the given key
+  /// \param node
+  /// \param key Key to get the value from
+  /// \return Optional with the removed attribute
+  auto remove_node_metadata(FileGraph::NodeId node, const std::string& key)
+      -> std::optional<VertexAttribute>;
 
   /// Returns the children of the given node
   /// \param node_id
@@ -121,7 +183,8 @@ private:
   /// \param path_list
   /// \return
   auto get_node_data(boost::span<const std::string> path_list)
-      -> std::optional<std::pair<GraphType::edge_descriptor, GraphType::vertex_descriptor>>;
+      -> std::optional<
+          std::pair<GraphType::edge_descriptor, GraphType::vertex_descriptor>>;
 
   /// Gets or creates the nodes in the path_list, and returns the last one
   /// \param path_list

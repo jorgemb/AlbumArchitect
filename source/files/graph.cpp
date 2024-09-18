@@ -7,6 +7,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "graph.h"
@@ -21,9 +22,7 @@
 namespace album_architect::files {
 FileGraph::FileGraph(bool create_root) {
   if (create_root) {
-    m_root_node = boost::add_vertex(m_graph);
-    const auto color = boost::get(boost::vertex_color_t(), m_graph);
-    boost::put(color, m_root_node, NodeType::directory);
+    m_root_node = boost::add_vertex(VertexData {NodeType::directory}, m_graph);
   }
 }
 void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
@@ -41,16 +40,17 @@ void FileGraph::add_node(boost::span<std::string> path_list, NodeType type) {
 
   // Create the new NodeId
   // TODO: Check if NodeId already exists
-  const auto new_node = boost::add_vertex(type, m_graph);
-  boost::add_edge(previous_node, new_node, path_list.back(), m_graph);
+  const auto new_node = boost::add_vertex(VertexData {type}, m_graph);
+  boost::add_edge(previous_node, new_node, EdgeData(path_list.back()), m_graph);
 }
 void FileGraph::to_graphviz(std::ostream& ostream) const {
-  const auto vertex_property = boost::get(boost::vertex_color_t(), m_graph);
-  const auto edge_property = boost::get(boost::edge_name_t(), m_graph);
-  boost::write_graphviz(ostream,
-                        m_graph,
-                        boost::make_label_writer(vertex_property),
-                        boost::make_label_writer(edge_property));
+  boost::write_graphviz(
+      ostream,
+      m_graph,
+      [this](std::ostream& out, const auto& vertex)
+      { out << m_graph[vertex].type; },
+      [this](std::ostream& out, const auto& edge)
+      { out << m_graph[edge].name; });
 }
 auto FileGraph::rename_node(boost::span<std::string> path_list,
                             const std::string& new_name) -> bool {
@@ -70,8 +70,7 @@ auto FileGraph::rename_node(boost::span<std::string> path_list,
   }
 
   auto [edge, node] = *node_data;
-  const auto name_property = boost::get(boost::edge_name_t(), m_graph);
-  boost::put(name_property, edge, new_name);
+  m_graph[edge].name = new_name;
   return true;
 }
 auto FileGraph::get_node_data(boost::span<const std::string> path_list)
@@ -80,15 +79,14 @@ auto FileGraph::get_node_data(boost::span<const std::string> path_list)
   // Search for the NodeId
   auto current_node = m_root_node;
   auto current_edge = GraphType::edge_descriptor {};
-  auto name_property = boost::get(boost::edge_name_t(), m_graph);
 
   for (const auto& current_path : path_list) {
     auto [start, end] = boost::out_edges(current_node, m_graph);
-    auto edge_iter = std::find_if(
-        start,
-        end,
-        [&name_property, &current_path](auto iter)
-        { return boost::get(name_property, iter) == current_path; });
+    auto edge_iter = std::find_if(start,
+                                  end,
+                                  [this, &current_path](auto iter) {
+                                    return m_graph[iter].name == current_path;
+                                  });
 
     if (edge_iter == end) {
       // The path was not found
@@ -130,18 +128,17 @@ auto FileGraph::get_or_create_nodes(boost::span<const std::string> path_list)
   bool last_was_created =
       false;  // Set to true on the first edge that is created. Afterward every
               // edge should be created.
-  auto name_property = boost::get(boost::edge_name_t(), m_graph);
 
   // Iterate through every member of the path list
   for (const auto& current_path : path_list) {
     if (!last_was_created) {
       // Find among the nodes
       auto [start, end] = boost::out_edges(current_node, m_graph);
-      auto found_edge = std::find_if(
-          start,
-          end,
-          [&name_property, &current_path](auto iter)
-          { return boost::get(name_property, iter) == current_path; });
+      auto found_edge =
+          std::find_if(start,
+                       end,
+                       [this, &current_path](auto iter)
+                       { return m_graph[iter].name == current_path; });
 
       if (found_edge == end) {
         last_was_created = true;
@@ -152,8 +149,9 @@ auto FileGraph::get_or_create_nodes(boost::span<const std::string> path_list)
     }
 
     // Create the new NodeId
-    const auto new_node = boost::add_vertex(NodeType::directory, m_graph);
-    boost::add_edge(current_node, new_node, current_path, m_graph);
+    const auto new_node =
+        boost::add_vertex(VertexData {NodeType::directory}, m_graph);
+    boost::add_edge(current_node, new_node, EdgeData {current_path}, m_graph);
     current_node = new_node;
 
     // Add the NodeId to the cache
@@ -173,12 +171,10 @@ auto FileGraph::operator==(const FileGraph& rhs) const -> bool {
   }
 
   // TODO: Provide isomorphism equality. Right now is exact equality.
-  const auto lhs_type = boost::get(boost::vertex_color_t(), m_graph);
-  const auto rhs_type = boost::get(boost::vertex_color_t(), rhs.m_graph);
   auto [lhs_iter, lhs_e] = boost::vertices(m_graph);
   auto [rhs_iter, rhs_e] = boost::vertices(rhs.m_graph);
   for (; lhs_iter != lhs_e && rhs_iter != rhs_e; ++lhs_iter, ++rhs_iter) {
-    if (boost::get(lhs_type, *lhs_iter) != boost::get(rhs_type, *rhs_iter)) {
+    if (m_graph[*lhs_iter] != rhs.m_graph[*rhs_iter]) {
       return false;
     }
   }
@@ -209,8 +205,7 @@ auto FileGraph::get_node(boost::span<const std::string> path_list)
   return std::make_optional<NodeId>(vertex);
 }
 auto FileGraph::get_node_type(FileGraph::NodeId node) -> NodeType {
-  const auto type_property = boost::get(boost::vertex_color_t(), m_graph);
-  return boost::get(type_property, node);
+  return m_graph[node].type;
 }
 auto FileGraph::get_node_children(FileGraph::NodeId node_id)
     -> std::vector<NodeId> {
@@ -230,7 +225,6 @@ auto FileGraph::get_node_path(FileGraph::NodeId node_id)
   auto ret = std::vector<std::string> {};
 
   auto current_node = node_id;
-  const auto name_property = boost::get(boost::edge_name_t(), m_graph);
   while (current_node != m_root_node) {
     auto [edges_b, edges_e] = boost::in_edges(current_node, m_graph);
 
@@ -244,7 +238,7 @@ auto FileGraph::get_node_path(FileGraph::NodeId node_id)
     }
 
     auto edge = *edges_b;
-    ret.push_back(boost::get(name_property, edge));
+    ret.push_back(m_graph[edge].name);
     current_node = boost::source(edge, m_graph);
   }
 
@@ -252,6 +246,38 @@ auto FileGraph::get_node_path(FileGraph::NodeId node_id)
   std::reverse(ret.begin(), ret.end());
 
   return ret;
+}
+auto FileGraph::set_node_metadata(FileGraph::NodeId node,
+                                  const std::string& key,
+                                  const VertexAttribute& attribute)
+    -> std::optional<VertexAttribute> {
+  // Try removing first
+  auto previous = remove_node_metadata(node, key);
+
+  // Add new key
+  m_graph[node].attributes[key] = attribute;
+  return previous;
+}
+auto FileGraph::get_node_metadata(FileGraph::NodeId node,
+                                  const std::string& key)
+    -> std::optional<VertexAttribute> {
+  auto position = m_graph[node].attributes.find(key);
+  if (position == m_graph[node].attributes.end()) {
+    return {};
+  }
+  return position->second;
+}
+auto FileGraph::remove_node_metadata(FileGraph::NodeId node,
+                                     const std::string& key)
+    -> std::optional<VertexAttribute> {
+  auto position = m_graph[node].attributes.find(key);
+  if (position == m_graph[node].attributes.end()) {
+    return {};
+  }
+
+  auto previous_element = std::make_optional(std::move(position->second));
+  m_graph[node].attributes.erase(position);
+  return previous_element;
 }
 
 auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
@@ -265,5 +291,14 @@ auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
   }
 
   return ostream;
+}
+EdgeData::EdgeData(std::string name)
+    : name(std::move(name)) {}
+auto VertexData::operator==(const VertexData& rhs) const -> bool {
+  //  return type == rhs.type && attributes == rhs.attributes;
+  return type == rhs.type;
+}
+auto VertexData::operator!=(const VertexData& rhs) const -> bool {
+  return !(rhs == *this);
 }
 }  // namespace album_architect::files

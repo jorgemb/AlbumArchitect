@@ -30,6 +30,9 @@ add_library(
         source/album/image.h
         source/album/hash.cpp
         source/album/hash.h
+        source/helper/boost_serialization_cvmat.h
+        source/files/common.h
+        source/helper/cv_mat_operations.h
 )
 
 target_include_directories(

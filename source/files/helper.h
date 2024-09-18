@@ -2,8 +2,8 @@
 // Created by Jorge on 14/05/2024.
 //
 
-#ifndef ALBUMARCHITECT_HELPER_H
-#define ALBUMARCHITECT_HELPER_H
+#ifndef ALBUMARCHITECT_FILES_HELPER_H
+#define ALBUMARCHITECT_FILES_HELPER_H
 
 #include <filesystem>
 #include <string>
@@ -62,4 +62,4 @@ private:
 
 }  // namespace album_architect::files
 
-#endif  // ALBUMARCHITECT_HELPER_H
+#endif  // ALBUMARCHITECT_FILES_HELPER_H

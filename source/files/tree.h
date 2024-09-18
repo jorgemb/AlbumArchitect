@@ -17,6 +17,7 @@
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 
+#include "files/common.h"
 #include "files/graph.h"
 
 namespace album_architect::files {
@@ -25,13 +26,6 @@ namespace album_architect::files {
 class FileTree;
 class FileGraph;
 enum class NodeType : std::uint8_t;
-
-/// Represents the type of path
-enum class PathType : std::uint8_t {
-  invalid = 0,
-  file,
-  directory
-};
 
 /// Converts a NodeType into a PathType
 /// \param path_type
@@ -47,7 +41,7 @@ public:
   /// \param type
   /// \param path
   /// \param parent
-  Element(PathType type, std::filesystem::path  path, FileTree* parent);
+  Element(PathType type, std::filesystem::path path, FileTree* parent);
 
   // Getters
   auto get_type() const -> PathType;
@@ -71,6 +65,24 @@ public:
   /// Returns the parent of this element. The root object doesn't have a parent.
   /// \return
   auto get_parent() const -> std::optional<Element>;
+
+  /// Sets metadata for the given node
+  /// \param key Key to store the attribute with
+  /// \param attribute Attribute to add to the node
+  /// \return Previous attribute if any
+  auto set_metadata(const std::string& key, const PathAttribute& attribute)
+      -> std::optional<PathAttribute>;
+
+  /// Returns the metadata for the given node, if any
+  /// \param key Key to get the value from
+  /// \return Optional with a copy of the attribute
+  auto get_metadata(const std::string& key) -> std::optional<PathAttribute>;
+
+  /// Removes the metadata from the node with the given key
+  /// \param node
+  /// \param key Key to get the value from
+  /// \return Optional with the removed attribute
+  auto remove_metadata(const std::string& key) -> std::optional<PathAttribute>;
 
 private:
   PathType m_type;
@@ -123,6 +135,28 @@ public:
   /// \return True if the path is within the tree, false otherwise
   auto get_elements_under_path(const std::filesystem::path& path,
                                std::vector<Element>& output) -> bool;
+
+  /// Sets metadata for the given path
+  /// \param key Key to store the attribute with
+  /// \param attribute Attribute to add to the node
+  /// \return Previous attribute if any
+  auto set_metadata(const std::filesystem::path& path,
+                    const std::string& key,
+                    const PathAttribute& attribute)
+      -> std::optional<PathAttribute>;
+
+  /// Returns the metadata for the given path, if any
+  /// \param key Key to get the value from
+  /// \return Optional with a copy of the attribute
+  auto get_metadata(const std::filesystem::path& path,
+                    const std::string& key) -> std::optional<PathAttribute>;
+
+  /// Removes the metadata from the path with the given key
+  /// \param node
+  /// \param key Key to get the value from
+  /// \return Optional with the removed attribute
+  auto remove_metadata(const std::filesystem::path& path,
+                       const std::string& key) -> std::optional<PathAttribute>;
 
   /// Outputs a graphviz representation to the given stream
   /// \param ostream
