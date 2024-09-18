@@ -295,8 +295,7 @@ auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
 EdgeData::EdgeData(std::string name)
     : name(std::move(name)) {}
 auto VertexData::operator==(const VertexData& rhs) const -> bool {
-
-//  return type == rhs.type && attributes == rhs.attributes;
+  //  return type == rhs.type && attributes == rhs.attributes;
   return type == rhs.type;
 }
 auto VertexData::operator!=(const VertexData& rhs) const -> bool {
