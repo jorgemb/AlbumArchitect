@@ -6,15 +6,12 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <iterator>
-#include <memory>
 #include <thread>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
-#include <fmt/core.h>
 #include <opencv2/core/mat.hpp>
 
 #include "common.h"
@@ -108,6 +105,11 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   }
 
   SECTION("Serialization") {
+    // Add metadata to the tree
+    auto album_one = directory_tree->get_element(album_one_path);
+    album_one->set_metadata(key1, val1);
+    album_one->set_metadata(key2, val2);
+
     // Check that the tree can be serialized
     auto temp_file = files::TemporaryFile {};
     {
@@ -120,6 +122,18 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     auto new_tree = files::FileTree::from_stream(in_file);
     REQUIRE(new_tree);
     REQUIRE(directory_tree == new_tree);
+
+    // Check that metadata was kept
+    auto new_album_one = new_tree->get_element(album_one_path);
+    REQUIRE(new_album_one);
+
+    auto retrieved1 = new_album_one->get_metadata(key1);
+    REQUIRE(retrieved1);
+    REQUIRE(std::get<std::string>(*retrieved1) == val1);
+
+    auto retrieved2 = new_album_one->get_metadata(key2);
+    REQUIRE(retrieved2);
+    REQUIRE(cvmat::compare_mat(std::get<cv::Mat>(*retrieved2), val2));
   }
 
   auto expected_root_children = std::vector {resources_dir / "album_one",
