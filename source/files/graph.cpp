@@ -174,7 +174,7 @@ auto FileGraph::operator==(const FileGraph& rhs) const -> bool {
   auto [lhs_iter, lhs_e] = boost::vertices(m_graph);
   auto [rhs_iter, rhs_e] = boost::vertices(rhs.m_graph);
   for (; lhs_iter != lhs_e && rhs_iter != rhs_e; ++lhs_iter, ++rhs_iter) {
-    if (m_graph[*lhs_iter].type != rhs.m_graph[*rhs_iter].type) {
+    if (m_graph[*lhs_iter] != rhs.m_graph[*rhs_iter]) {
       return false;
     }
   }
@@ -294,4 +294,12 @@ auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream& {
 }
 EdgeData::EdgeData(std::string name)
     : name(std::move(name)) {}
+auto VertexData::operator==(const VertexData& rhs) const -> bool {
+
+//  return type == rhs.type && attributes == rhs.attributes;
+  return type == rhs.type;
+}
+auto VertexData::operator!=(const VertexData& rhs) const -> bool {
+  return !(rhs == *this);
+}
 }  // namespace album_architect::files

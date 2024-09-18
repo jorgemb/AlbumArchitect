@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "tree.h"
+#include "files/tree.h"
 
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -19,8 +19,9 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
-#include "graph.h"
-#include "helper.h"
+#include "files/common.h"
+#include "files/graph.h"
+#include "files/helper.h"
 
 namespace fs = std::filesystem;
 
@@ -232,6 +233,56 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
 auto FileTree::get_root_element() -> Element {
   return {PathType::directory, m_root_path, this};
 }
+auto FileTree::set_metadata(const std::filesystem::path& path,
+                            const std::string& key,
+                            const PathAttribute& attribute)
+    -> std::optional<PathAttribute> {
+  // Check if path belongs to the tree
+  if (!is_subpath(path)) {
+    return {};
+  }
+  auto relative_path = fs::relative(path, m_root_path);
+  auto path_list = to_path_list(relative_path);
+  auto node = m_graph->get_node(path_list);
+  if (!node) {
+    return {};
+  }
+
+  return m_graph->set_node_metadata(node.value(), key, attribute);
+}
+auto FileTree::get_metadata(const std::filesystem::path& path,
+                            const std::string& key)
+    -> std::optional<PathAttribute> {
+  // Check if path belongs to the tree
+  if (!is_subpath(path)) {
+    return {};
+  }
+  auto relative_path = fs::relative(path, m_root_path);
+  auto path_list = to_path_list(relative_path);
+  auto node = m_graph->get_node(path_list);
+  if (!node) {
+    return {};
+  }
+
+  // Retrieve the node metadata
+  return m_graph->get_node_metadata(node.value(), key);
+}
+auto FileTree::remove_metadata(const std::filesystem::path& path,
+                               const std::string& key)
+    -> std::optional<PathAttribute> {
+  // Check if path belongs to the tree
+  if (!is_subpath(path)) {
+    return {};
+  }
+  auto relative_path = fs::relative(path, m_root_path);
+  auto path_list = to_path_list(relative_path);
+  auto node = m_graph->get_node(path_list);
+  if (!node) {
+    return {};
+  }
+
+  return m_graph->remove_node_metadata(node.value(), key);
+}
 Element::Element(PathType type, std::filesystem::path path, FileTree* parent)
     : m_type(type)
     , m_path(std::move(path))
@@ -284,6 +335,19 @@ auto Element::get_siblings() const -> Element::ElementList {
                { return element.get_path() != own_path; });
 
   return siblings;
+}
+auto Element::set_metadata(const std::string& key,
+                           const PathAttribute& attribute)
+    -> std::optional<PathAttribute> {
+  return m_parent->set_metadata(m_path, key, attribute);
+}
+auto Element::get_metadata(const std::string& key)
+    -> std::optional<PathAttribute> {
+  return m_parent->get_metadata(m_path, key);
+}
+auto Element::remove_metadata(const std::string& key)
+    -> std::optional<PathAttribute> {
+  return m_parent->remove_metadata(m_path, key);
 }
 auto from_node_type(const NodeType& path_type) -> PathType {
   switch (path_type) {

@@ -23,30 +23,17 @@
 #include <helper/boost_serialization_cvmat.h>
 #include <opencv2/core.hpp>
 
+#include "files/common.h"
+
 namespace album_architect::files {
 
-/// Represents the type of NodeId
-enum class NodeType : std::uint8_t {
-  directory,
-  file
-};
-
-/// Print the NodeId type to standard output
-/// \param ostream
-/// \param node
-/// \return
-auto operator<<(std::ostream& ostream, const NodeType& node) -> std::ostream&;
-
-/// Represents a vertex attribute that can be stored along with each vertex
-using VertexAttribute = std::variant<std::string, cv::Mat>;
 
 /// Represents Vertex data that is stored next to the graph
 class VertexData {
 public:
   /// Initialization constructor
-  explicit VertexData(
-      NodeType type,
-      std::map<std::string, VertexAttribute> attributes = {})
+  explicit VertexData(NodeType type,
+                      std::map<std::string, VertexAttribute> attributes = {})
       : type(type)
       , attributes(std::move(attributes)) {}
 
@@ -62,6 +49,9 @@ public:
     archive & type;
     archive & attributes;
   }
+
+  auto operator==(const VertexData& rhs) const -> bool;
+  auto operator!=(const VertexData& rhs) const -> bool;
 };
 
 /// Represents elements associated to edges
@@ -119,19 +109,23 @@ public:
   /// \param attribute Attribute to add to the node
   /// \return Previous attribute if any
   auto set_node_metadata(FileGraph::NodeId node,
-                         const std::string& key, const VertexAttribute& attribute) -> std::optional<VertexAttribute>;
+                         const std::string& key,
+                         const VertexAttribute& attribute)
+      -> std::optional<VertexAttribute>;
 
   /// Returns the metadata for the given node, if any
   /// \param node
   /// \param key Key to get the value from
   /// \return Optional with a copy of the attribute
-  auto get_node_metadata(FileGraph::NodeId node, const std::string& key) -> std::optional<VertexAttribute>;
+  auto get_node_metadata(FileGraph::NodeId node, const std::string& key)
+      -> std::optional<VertexAttribute>;
 
   /// Removes the metadata from the node with the given key
   /// \param node
   /// \param key Key to get the value from
   /// \return Optional with the removed attribute
-  auto remove_node_metadata(FileGraph::NodeId node, const std::string& key) -> std::optional<VertexAttribute>;
+  auto remove_node_metadata(FileGraph::NodeId node, const std::string& key)
+      -> std::optional<VertexAttribute>;
 
   /// Returns the children of the given node
   /// \param node_id
