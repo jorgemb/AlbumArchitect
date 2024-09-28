@@ -14,7 +14,7 @@
 #include <opencv2/img_hash/phash.hpp>
 #include <spdlog/spdlog.h>
 
-namespace albumarchitect::hash {
+namespace album_architect::hash {
 
 /// Size of the buffer for image loading
 constexpr auto image_load_buffer_size = std::size_t {4096U};
@@ -67,4 +67,4 @@ auto Hash::calculate_p_hash(cv::InputArray input) -> cv::Mat {
   hasher->compute(input, output);
   return output;
 }
-}  // namespace albumarchitect::hash
+}  // namespace album_architect::hash

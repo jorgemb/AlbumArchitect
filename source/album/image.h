@@ -6,12 +6,13 @@
 #define IMAGE_H
 #include <filesystem>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 
 #include <opencv2/core/mat.hpp>
 
-namespace albumarchitect::album {
+namespace album_architect::album {
 
 /// Represents the different hashing algorithms currently supported
 enum class HashAlgorithm : std::uint8_t {
@@ -86,6 +87,6 @@ private:
   std::shared_ptr<ImageImpl> m_impl;
 };
 
-}  // namespace albumarchitect::album
+}  // namespace album_architect::album
 
 #endif  // IMAGE_H

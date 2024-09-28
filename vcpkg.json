@@ -35,6 +35,10 @@
       "version>=": "8#3"
     },
     {
+      "name": "magic-enum",
+      "version>=": "0.9.6#1"
+    },
+    {
       "name": "opencv",
       "version>=": "4.8.0#1",
       "features": [

@@ -7,7 +7,7 @@
 #include <string>
 #include <opencv2/core/mat.hpp>
 
-namespace albumarchitect::hash {
+namespace album_architect::hash {
 
 /// Supports the creation of several hashes out of files or data
 class Hash {
@@ -35,6 +35,6 @@ public:
   static auto calculate_p_hash(cv::InputArray input) -> cv::Mat;
 };
 
-}  // namespace albumarchitect::hash
+}  // namespace album_architect::hash
 
 #endif  // HASH_H

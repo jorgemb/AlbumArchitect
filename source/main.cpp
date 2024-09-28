@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 auto main(int argc, char* argv[]) -> int {
   // Check usage
   if (argc != 2) {
-    fmt::println("Usage: albumarchitect <FOLDER>");
+    fmt::println("Usage: album_architect <FOLDER>");
     return -1;
   }
 

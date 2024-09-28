@@ -2,23 +2,27 @@
 // Created by jorge on 09/08/24.
 //
 
+#include <filesystem>
 #include <map>
 #include <numeric>
 #include <optional>
 #include <set>
+#include <string>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
+#include <opencv2/core.hpp>
 #include <opencv2/img_hash/average_hash.hpp>
 #include <opencv2/img_hash/phash.hpp>
-#include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
 #include "album/image.h"
+#include "album/photo.h"
 #include "common.h"
+#include <magic_enum.hpp>
 
-using namespace albumarchitect;  // NOLINT(*-build-using-namespace)
+using namespace album_architect;  // NOLINT(*-build-using-namespace)
 
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 TEST_CASE("Image loading", "[album][image]") {
@@ -201,6 +205,40 @@ TEST_CASE("Hashing", "[album][image][hash]") {
       INFO("Decoloring tests");
       cv::cvtColor(original_mat, modified_mat, cv::COLOR_BGR2GRAY);
       compare_hashes(test_image.value(), modified_mat);
+    }
+  }
+}
+
+TEST_CASE("Photo Basics", "[album][photo]") {
+  const auto images_dir = resources_dir / "images";
+  auto file_tree = files::FileTree::build(images_dir);
+  REQUIRE(file_tree);
+
+  const auto test_elements = std::vector {
+      file_tree->get_element(images_dir / "Home" / "IMG_5515.JPG"),
+      file_tree->get_element(images_dir / "type" / "console.png"),
+      file_tree->get_element(images_dir / "type" / "duke_nukem.bmp"),
+  };
+
+  for(const auto& current: test_elements){
+    DYNAMIC_SECTION("Load photo - " << current->get_path().filename().string()){
+      REQUIRE(current);
+
+      auto photo = album::Photo::load(*current);
+      REQUIRE(photo);
+
+      for(auto [hash_type, hash_name]: magic_enum::enum_entries<album::ImageHashAlgorithm>()) {
+        DYNAMIC_SECTION("Testing hash - " << hash_name) {
+          REQUIRE_FALSE(photo->is_image_hash_in_cache(hash_type));
+          auto hash = photo->get_image_hash(hash_type);
+
+          // Check that hash is not only zeroes
+          REQUIRE(cv::countNonZero(hash) > 0);
+
+          // Check that hash is now in cache
+          REQUIRE(photo->is_image_hash_in_cache(hash_type));
+        }
+      }
     }
   }
 }
