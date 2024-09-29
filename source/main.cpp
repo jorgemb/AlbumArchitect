@@ -68,10 +68,10 @@ auto main(int argc, char* argv[]) -> int {
       auto photo = album_architect::album::Photo::load(current_element);
       if (photo) {
         // Try to calculate hashes
-//        photo->get_image_hash(
-//            album_architect::album::ImageHashAlgorithm::average_hash);
-//        photo->get_image_hash(
-//            album_architect::album::ImageHashAlgorithm::p_hash);
+        photo->get_image_hash(
+            album_architect::album::ImageHashAlgorithm::average_hash);
+        photo->get_image_hash(
+            album_architect::album::ImageHashAlgorithm::p_hash);
       }
     }
 

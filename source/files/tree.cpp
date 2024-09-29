@@ -251,7 +251,7 @@ auto FileTree::set_metadata(const std::filesystem::path& path,
   return m_graph->set_node_metadata(node.value(), key, attribute);
 }
 auto FileTree::get_metadata(const std::filesystem::path& path,
-                            const std::string& key)
+                            const std::string& key) const
     -> std::optional<PathAttribute> {
   // Check if path belongs to the tree
   if (!is_subpath(path)) {
@@ -341,7 +341,7 @@ auto Element::set_metadata(const std::string& key,
     -> std::optional<PathAttribute> {
   return m_parent->set_metadata(m_path, key, attribute);
 }
-auto Element::get_metadata(const std::string& key)
+auto Element::get_metadata(const std::string& key) const
     -> std::optional<PathAttribute> {
   return m_parent->get_metadata(m_path, key);
 }

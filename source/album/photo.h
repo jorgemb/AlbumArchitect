@@ -6,20 +6,27 @@
 #define ALBUMARCHITECT_PHOTO_H
 
 #include <optional>
+#include <string>
+
+#include <opencv2/core/mat.hpp>
+
 #include "album/image.h"
 #include "files/tree.h"
-#include <opencv2/core/mat.hpp>
 
 namespace album_architect::album {
 
 /// Helps managing the metadata of a Photo that is stored in the File
 /// element
-class PhotoMetadata{
+class PhotoMetadata {
 public:
   /// Returns the hash key for the given hash algorithm
   /// \param algorithm Algorithm to check
   /// \return String with the hash value
   static auto get_hash_key(ImageHashAlgorithm algorithm) -> std::string;
+
+  /// Checks if the given hash is stored in metadata of the Photo
+  static auto has_hash_stored(const files::Element& file_element,
+                              ImageHashAlgorithm algorithm)  -> bool;
 };
 
 /// A Photo represents the union of a file with an Image.
@@ -41,7 +48,7 @@ public:
 
   /// Returns True if the given hash is stored in the cache.
   /// \return true if hash in cache.
-  auto is_image_hash_in_cache(ImageHashAlgorithm algorithm) -> bool;
+  auto is_image_hash_in_cache(ImageHashAlgorithm algorithm) const -> bool;
 
 private:
   /// Default constructor.

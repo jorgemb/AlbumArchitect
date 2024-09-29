@@ -76,7 +76,8 @@ public:
   /// Returns the metadata for the given node, if any
   /// \param key Key to get the value from
   /// \return Optional with a copy of the attribute
-  auto get_metadata(const std::string& key) -> std::optional<PathAttribute>;
+  auto get_metadata(const std::string& key) const
+      -> std::optional<PathAttribute>;
 
   /// Removes the metadata from the node with the given key
   /// \param node
@@ -149,7 +150,8 @@ public:
   /// \param key Key to get the value from
   /// \return Optional with a copy of the attribute
   auto get_metadata(const std::filesystem::path& path,
-                    const std::string& key) -> std::optional<PathAttribute>;
+                    const std::string& key)
+      const -> std::optional<PathAttribute>;
 
   /// Removes the metadata from the path with the given key
   /// \param node

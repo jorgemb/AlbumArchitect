@@ -5,10 +5,10 @@
 #include <optional>
 #include <utility>
 #include <variant>
-#include <fmt/format.h>
 
 #include "album/photo.h"
 
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <opencv2/core/mat.hpp>
 
@@ -49,13 +49,18 @@ auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
   m_file_element.set_metadata(hash_store_key, image_hash);
   return image_hash;
 }
-auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) -> bool {
-  // TODO: Add a function to only check if exists, so a copy is avoided on get_metadata
-  auto hash_value = m_file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
-  return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
+auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) const -> bool {
+  return PhotoMetadata::has_hash_stored(m_file_element, algorithm);
 }
 auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
   return fmt::format("HASH_{}", magic_enum::enum_name(algorithm));
-  return std::string();
+}
+auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
+                                    ImageHashAlgorithm algorithm) -> bool {
+  // TODO: Add a function to only check if exists, so a copy is avoided on
+  // get_metadata
+  auto hash_value =
+      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
+  return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
 }
 }  // namespace album_architect::album
