@@ -63,4 +63,15 @@ auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
       file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
   return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
 }
+auto PhotoMetadata::get_stored_hash(const files::Element& file_element,
+                                    ImageHashAlgorithm algorithm)
+    -> std::optional<cv::Mat> {
+  auto hash_value =
+      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
+  if (!hash_value || !std::holds_alternative<cv::Mat>(*hash_value)) {
+    return {};
+  }
+
+  return {std::move(std::get<cv::Mat>(*hash_value))};
+}
 }  // namespace album_architect::album

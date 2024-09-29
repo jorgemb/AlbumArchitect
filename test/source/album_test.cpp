@@ -229,7 +229,11 @@ TEST_CASE("Photo Basics", "[album][photo]") {
 
       for(auto [hash_type, hash_name]: magic_enum::enum_entries<album::ImageHashAlgorithm>()) {
         DYNAMIC_SECTION("Testing hash - " << hash_name) {
+          REQUIRE_FALSE(album::PhotoMetadata::has_hash_stored(*current, hash_type));
+          REQUIRE_FALSE(album::PhotoMetadata::get_stored_hash(*current, hash_type));
           REQUIRE_FALSE(photo->is_image_hash_in_cache(hash_type));
+
+          // Load the photo and load the hash
           auto hash = photo->get_image_hash(hash_type);
 
           // Check that hash is not only zeroes
@@ -237,6 +241,8 @@ TEST_CASE("Photo Basics", "[album][photo]") {
 
           // Check that hash is now in cache
           REQUIRE(photo->is_image_hash_in_cache(hash_type));
+          REQUIRE(album::PhotoMetadata::has_hash_stored(*current, hash_type));
+          REQUIRE(album::PhotoMetadata::get_stored_hash(*current, hash_type));
         }
       }
     }

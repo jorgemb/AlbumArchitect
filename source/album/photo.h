@@ -26,7 +26,11 @@ public:
 
   /// Checks if the given hash is stored in metadata of the Photo
   static auto has_hash_stored(const files::Element& file_element,
-                              ImageHashAlgorithm algorithm)  -> bool;
+                              ImageHashAlgorithm algorithm) -> bool;
+
+  /// Returns the stored hash of the photo, if any
+  static auto get_stored_hash(const files::Element& file_element,
+                              ImageHashAlgorithm algorithm) -> std::optional<cv::Mat>;
 };
 
 /// A Photo represents the union of a file with an Image.
