@@ -72,7 +72,7 @@ auto main(int argc, char* argv[]) -> int {
           && album_architect::album::PhotoMetadata::has_hash_stored(
               current_element, ImageHashAlgorithm::average_hash);
 
-      if(!metadata_calculated) {
+      if (!metadata_calculated) {
         auto photo = album_architect::album::Photo::load(current_element);
         if (photo) {
           // Try to calculate hashes
