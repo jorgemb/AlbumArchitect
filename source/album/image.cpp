@@ -14,7 +14,7 @@
 
 #include "hash.h"
 
-namespace albumarchitect::album {
+namespace album_architect::album {
 
 /// Implementation for image
 class ImageImpl {
@@ -122,4 +122,4 @@ auto Image::get_image(cv::Mat& output) const -> bool {
                 OIIO::geterror());
   return false;
 }
-}  // namespace albumarchitect::album
+}  // namespace album_architect::album

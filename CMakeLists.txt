@@ -33,6 +33,8 @@ add_library(
         source/helper/boost_serialization_cvmat.h
         source/files/common.h
         source/helper/cv_mat_operations.h
+        source/album/photo.cpp
+        source/album/photo.h
 )
 
 target_include_directories(
@@ -50,13 +52,15 @@ find_package(absl CONFIG REQUIRED)
 find_package(OpenCV 4.8 REQUIRED COMPONENTS opencv_img_hash)
 find_package(OpenImageIO 2.5 REQUIRED CONFIG)
 find_package(unofficial-hash-library CONFIG REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
         Boost::headers
         absl::btree
         absl::hash
-        unofficial::hash-library)
+        unofficial::hash-library
+        magic_enum::magic_enum)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         Boost::graph
         Boost::filesystem

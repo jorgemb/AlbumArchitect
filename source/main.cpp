@@ -8,14 +8,16 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+#include "album/photo.h"
 #include "files/tree.h"
 
 namespace fs = std::filesystem;
+using album_architect::album::ImageHashAlgorithm;
 
 auto main(int argc, char* argv[]) -> int {
   // Check usage
   if (argc != 2) {
-    fmt::println("Usage: albumarchitect <FOLDER>");
+    fmt::println("Usage: album_architect <FOLDER>");
     return -1;
   }
 
@@ -62,11 +64,29 @@ auto main(int argc, char* argv[]) -> int {
     }
     std::cout << current_element.get_path().filename() << '\n';
 
+    // Load photo and hash of current element
+    if (current_element.get_type() == album_architect::files::PathType::file) {
+      auto metadata_calculated =
+          album_architect::album::PhotoMetadata::has_hash_stored(
+              current_element, ImageHashAlgorithm::p_hash)
+          && album_architect::album::PhotoMetadata::has_hash_stored(
+              current_element, ImageHashAlgorithm::average_hash);
+
+      if (!metadata_calculated) {
+        auto photo = album_architect::album::Photo::load(current_element);
+        if (photo) {
+          // Try to calculate hashes
+          photo->get_image_hash(
+              album_architect::album::ImageHashAlgorithm::average_hash);
+          photo->get_image_hash(
+              album_architect::album::ImageHashAlgorithm::p_hash);
+        }
+      }
+    }
+
     // Add all the directories from the current element
     for (auto&& child : current_element.get_children()) {
-      if (child.get_type() == album_architect::files::PathType::directory) {
-        directory_stack.emplace_front(level + 1, std::move(child));
-      }
+      directory_stack.emplace_front(level + 1, std::move(child));
     }
   }
 
