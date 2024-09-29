@@ -36,7 +36,7 @@ auto Photo::get_image() -> cv::Mat {
   return out;
 }
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
-  auto hash_store_key = fmt::format("HASH_%s", magic_enum::enum_name(algorithm));
+  auto hash_store_key = PhotoMetadata::get_hash_key(algorithm);
 
   // Check if hash is stored
   auto hash_value = m_file_element.get_metadata(hash_store_key);
@@ -51,8 +51,11 @@ auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
 }
 auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) -> bool {
   // TODO: Add a function to only check if exists, so a copy is avoided on get_metadata
-  auto hash_store_key = fmt::format("HASH_%s", magic_enum::enum_name(algorithm));
-  auto hash_value = m_file_element.get_metadata(hash_store_key);
+  auto hash_value = m_file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
   return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
+}
+auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
+  return fmt::format("HASH_{}", magic_enum::enum_name(algorithm));
+  return std::string();
 }
 }  // namespace album_architect::album

@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "files/tree.h"
+#include "album/photo.h"
 
 namespace fs = std::filesystem;
 
@@ -62,11 +63,21 @@ auto main(int argc, char* argv[]) -> int {
     }
     std::cout << current_element.get_path().filename() << '\n';
 
+    // Load photo and hash of current element
+    if(current_element.get_type() == album_architect::files::PathType::file) {
+      auto photo = album_architect::album::Photo::load(current_element);
+      if (photo) {
+        // Try to calculate hashes
+//        photo->get_image_hash(
+//            album_architect::album::ImageHashAlgorithm::average_hash);
+//        photo->get_image_hash(
+//            album_architect::album::ImageHashAlgorithm::p_hash);
+      }
+    }
+
     // Add all the directories from the current element
     for (auto&& child : current_element.get_children()) {
-      if (child.get_type() == album_architect::files::PathType::directory) {
         directory_stack.emplace_front(level + 1, std::move(child));
-      }
     }
   }
 
