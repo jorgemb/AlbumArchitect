@@ -20,6 +20,7 @@
 
 #include "album/image.h"
 #include "album/photo.h"
+#include "album/photo_metadata.h"
 #include "common.h"
 
 using namespace album_architect;  // NOLINT(*-build-using-namespace)

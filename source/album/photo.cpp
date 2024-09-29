@@ -13,6 +13,7 @@
 #include <opencv2/core/mat.hpp>
 
 #include "album/image.h"
+#include "album/photo_metadata.h"
 #include "files/tree.h"
 
 namespace album_architect::album {
@@ -36,42 +37,19 @@ auto Photo::get_image() -> cv::Mat {
   return out;
 }
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
-  auto hash_store_key = PhotoMetadata::get_hash_key(algorithm);
-
-  // Check if hash is stored
-  auto hash_value = m_file_element.get_metadata(hash_store_key);
-  if (hash_value && std::holds_alternative<cv::Mat>(*hash_value)) {
-    return std::get<cv::Mat>(*hash_value);
+  // Check if hash is already stored
+  auto stored_hash = PhotoMetadata::get_stored_hash(m_file_element, algorithm);
+  if(stored_hash){
+    return *stored_hash;
   }
 
   // Calculate hash and store
   auto image_hash = m_image.get_image_hash(algorithm);
-  m_file_element.set_metadata(hash_store_key, image_hash);
+  PhotoMetadata::store_hash(m_file_element, algorithm, image_hash);
   return image_hash;
 }
 auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) const -> bool {
   return PhotoMetadata::has_hash_stored(m_file_element, algorithm);
 }
-auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
-  return fmt::format("HASH_{}", magic_enum::enum_name(algorithm));
-}
-auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
-                                    ImageHashAlgorithm algorithm) -> bool {
-  // TODO: Add a function to only check if exists, so a copy is avoided on
-  // get_metadata
-  auto hash_value =
-      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
-  return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
-}
-auto PhotoMetadata::get_stored_hash(const files::Element& file_element,
-                                    ImageHashAlgorithm algorithm)
-    -> std::optional<cv::Mat> {
-  auto hash_value =
-      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
-  if (!hash_value || !std::holds_alternative<cv::Mat>(*hash_value)) {
-    return {};
-  }
 
-  return {std::move(std::get<cv::Mat>(*hash_value))};
-}
 }  // namespace album_architect::album

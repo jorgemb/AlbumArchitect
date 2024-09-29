@@ -35,6 +35,8 @@ add_library(
         source/helper/cv_mat_operations.h
         source/album/photo.cpp
         source/album/photo.h
+        source/album/photo_metadata.cpp
+        source/album/photo_metadata.h
 )
 
 target_include_directories(
