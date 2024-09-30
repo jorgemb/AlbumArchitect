@@ -26,7 +26,7 @@ public:
 
   /// Returns a cv::Mat with the image information.
   /// \return cv::Mat with image information
-  auto get_image() -> cv::Mat;
+  auto get_image() const -> cv::Mat;
 
   /// Returns a cv::Mat with the specified image hash. The value is
   /// cached and stored for future reference.

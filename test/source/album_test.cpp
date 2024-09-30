@@ -253,4 +253,29 @@ TEST_CASE("Photo Basics", "[album][photo]") {
       }
     }
   }
+
+  SECTION("Metadata") {
+    // Test with normal photos
+    for (const auto& current : test_elements) {
+      REQUIRE(current);
+      REQUIRE(album::PhotoMetadata::get_photo_state(*current)
+              == album::PhotoState::no_info);
+
+      // After loading, it should be marked as loaded
+      auto photo = album::Photo::load(*current);
+      REQUIRE(album::PhotoMetadata::get_photo_state(*current)
+              == album::PhotoState::ok);
+    }
+
+    // Test with an invalid photo
+    auto invalid_element =
+        file_tree->get_element(images_dir / "type" / "not-an-image.pdf");
+    REQUIRE(invalid_element);
+    REQUIRE(album::PhotoMetadata::get_photo_state(*invalid_element)
+            == album::PhotoState::no_info);
+    auto photo = album::Photo::load(*invalid_element);
+    REQUIRE_FALSE(photo);
+    REQUIRE(album::PhotoMetadata::get_photo_state(*invalid_element)
+            == album::PhotoState::error);
+  }
 }

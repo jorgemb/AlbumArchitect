@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "album/photo.h"
+#include "album/photo_metadata.h"
 #include "files/tree.h"
 
 namespace fs = std::filesystem;
@@ -72,9 +73,15 @@ auto main(int argc, char* argv[]) -> int {
           && album_architect::album::PhotoMetadata::has_hash_stored(
               current_element, ImageHashAlgorithm::average_hash);
 
-      if (!metadata_calculated) {
-        auto photo = album_architect::album::Photo::load(current_element);
-        if (photo) {
+      // Get current state
+      const auto photo_state =
+          album_architect::album::PhotoMetadata::get_photo_state(
+              current_element);
+
+      if (photo_state != album_architect::album::PhotoState::error
+          && !metadata_calculated)
+      {
+        if (auto photo = album_architect::album::Photo::load(current_element)) {
           // Try to calculate hashes
           photo->get_image_hash(
               album_architect::album::ImageHashAlgorithm::average_hash);

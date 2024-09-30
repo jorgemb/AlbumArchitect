@@ -4,12 +4,10 @@
 
 #include <optional>
 #include <utility>
-#include <variant>
 
 #include "album/photo.h"
 
 #include <fmt/format.h>
-#include <magic_enum.hpp>
 #include <opencv2/core/mat.hpp>
 
 #include "album/image.h"
@@ -23,23 +21,28 @@ using namespace std::string_literals;
 auto Photo::load(files::Element file_element) -> std::optional<Photo> {
   auto loaded_image = Image::load(file_element.get_path());
   if (!loaded_image) {
+    // Set metadata
+    PhotoMetadata::set_photo_state(file_element, PhotoState::error);
+
     return {};
   }
 
+  // Set metadata
+  PhotoMetadata::set_photo_state(file_element, PhotoState::ok);
   return Photo {std::move(file_element), std::move(loaded_image.value())};
 }
 Photo::Photo(files::Element&& file_element, Image&& image)
     : m_file_element(std::move(file_element))
     , m_image(std::move(image)) {}
-auto Photo::get_image() -> cv::Mat {
+auto Photo::get_image() const -> cv::Mat {
   auto out = cv::Mat {};
   m_image.get_image(out);
   return out;
 }
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
   // Check if hash is already stored
-  auto stored_hash = PhotoMetadata::get_stored_hash(m_file_element, algorithm);
-  if(stored_hash){
+  if (auto stored_hash =
+          PhotoMetadata::get_stored_hash(m_file_element, algorithm)) {
     return *stored_hash;
   }
 
