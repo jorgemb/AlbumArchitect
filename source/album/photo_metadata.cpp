@@ -7,8 +7,7 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
-namespace album_architect {
-namespace album {
+namespace album_architect::album {
 auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
   return fmt::format("HASH_{}", magic_enum::enum_name(algorithm));
 }
@@ -16,7 +15,7 @@ auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
                                     ImageHashAlgorithm algorithm) -> bool {
   // TODO: Add a function to only check if exists, so a copy is avoided on
   // get_metadata
-  auto hash_value =
+  const auto hash_value =
       file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
   return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
 }
@@ -31,5 +30,10 @@ auto PhotoMetadata::get_stored_hash(const files::Element& file_element,
 
   return {std::move(std::get<cv::Mat>(*hash_value))};
 }
-}  // namespace album
-}  // namespace album_architect
+void PhotoMetadata::store_hash(files::Element& file_element,
+                               ImageHashAlgorithm algorithm,
+                               cv::Mat hash) {
+  const auto hash_key = PhotoMetadata::get_hash_key(algorithm);
+  file_element.set_metadata(hash_key, hash);
+}
+}  // namespace album_architect::album
