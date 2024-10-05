@@ -9,7 +9,7 @@ namespace album_architect::cvmat {
 /// \param lhs
 /// \param rhs
 /// \return
-inline bool compare_mat(cv::InputArray lhs, cv::InputArray rhs) {
+inline auto compare_mat(cv::InputArray lhs, cv::InputArray rhs) -> bool {
   // Check basic params
   if (lhs.size() != rhs.size()) {
     return false;

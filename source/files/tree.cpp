@@ -27,6 +27,26 @@ namespace fs = std::filesystem;
 
 namespace album_architect::files {
 
+FileTree::FileTree(FileTree&& other) noexcept {
+  auto guard = std::lock_guard(other.m_graph_mutex);
+
+  // NOLINTBEGIN(*-prefer-member-initializer)
+  // The values are default initialized and then move assigned to allow
+  // the mutex to lock
+  m_root_path = std::move(other.m_root_path);
+  m_graph = std::move(other.m_graph);
+  // NOLINTEND(*-prefer-member-initializer)
+}
+auto FileTree::operator=(FileTree&& other) noexcept -> FileTree& {
+  if (this != &other) {
+    auto lhs_lock = std::unique_lock(m_graph_mutex, std::defer_lock);
+    auto rhs_lock = std::unique_lock(other.m_graph_mutex, std::defer_lock);
+    std::lock(lhs_lock, rhs_lock);
+    m_root_path = std::move(other.m_root_path);
+    m_graph = std::move(other.m_graph);
+  }
+  return *this;
+}
 auto FileTree::build(const std::filesystem::path& path)
     -> std::optional<FileTree> {
   // Check if path is directory or file
@@ -77,6 +97,8 @@ auto FileTree::get_element(const std::filesystem::path& path)
 
   auto relative_path = std::filesystem::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
+
+  auto guard = std::unique_lock(m_graph_mutex);
   auto node = m_graph->get_node(path_list);
 
   if (!node) {
@@ -112,6 +134,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   auto relative_path = std::filesystem::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
   if (path != m_root_path) {
+    auto guard = std::unique_lock(m_graph_mutex);
     m_graph->add_node(path_list, NodeType::directory);
   } else {
     // Clear the path list to not include "."
@@ -128,6 +151,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
       add_directory(directory_iterator->path(), add_files, recursive);
     } else if (directory_iterator->is_regular_file() && add_files) {
       path_list.push_back(directory_iterator->path().filename().string());
+      auto guard = std::unique_lock(m_graph_mutex);
       m_graph->add_node(path_list, NodeType::file);
       path_list.pop_back();
     }
@@ -158,7 +182,7 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
     return {};
   }
 
-  auto path_list = std::vector<std::string> {path.filename().string()};
+  auto path_list = std::vector {path.filename().string()};
 
   auto current_path = path.parent_path();
   while (!current_path.empty()) {
@@ -170,9 +194,13 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
   return path_list;
 }
 void FileTree::to_graphviz(std::ostream& ostream) const {
+  auto guard = std::lock_guard(m_graph_mutex);
   m_graph->to_graphviz(ostream);
 }
 auto FileTree::operator==(const FileTree& rhs) const -> bool {
+  auto lhs_lock = std::unique_lock(m_graph_mutex, std::defer_lock);
+  auto rhs_lock = std::unique_lock(rhs.m_graph_mutex, std::defer_lock);
+  std::lock(lhs_lock, rhs_lock);
   return m_root_path == rhs.m_root_path && *m_graph == *rhs.m_graph;
 }
 auto FileTree::operator!=(const FileTree& rhs) const -> bool {
@@ -204,12 +232,20 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
   // Get the children under the path
   auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
-  auto node = m_graph->get_node(path_list);
-  if (!node) {
-    return false;
+  auto node = std::optional<FileGraph::NodeId> {};
+  {
+    auto guard = std::unique_lock(m_graph_mutex);
+    node = m_graph->get_node(path_list);
+    if (!node) {
+      return false;
+    }
   }
 
-  auto children = m_graph->get_node_children(*node);
+  auto children = std::vector<FileGraph::NodeId> {};
+  {
+    auto guard = std::unique_lock(m_graph_mutex);
+    children = m_graph->get_node_children(*node);
+  }
 
   // Create the Elements from the children
   std::transform(children.begin(),
@@ -217,6 +253,7 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
                  std::back_inserter(output),
                  [this](auto child)
                  {
+                   auto guard = std::unique_lock(m_graph_mutex);
                    auto type = m_graph->get_node_type(child);
                    auto current_path_list = m_graph->get_node_path(child);
 
@@ -243,6 +280,8 @@ auto FileTree::set_metadata(const std::filesystem::path& path,
   }
   auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
+
+  auto guard = std::unique_lock(m_graph_mutex);
   auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
@@ -259,6 +298,8 @@ auto FileTree::get_metadata(const std::filesystem::path& path,
   }
   auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
+
+  auto guard = std::unique_lock(m_graph_mutex);
   auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
@@ -276,6 +317,8 @@ auto FileTree::remove_metadata(const std::filesystem::path& path,
   }
   auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
+
+  auto guard = std::unique_lock(m_graph_mutex);
   auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
