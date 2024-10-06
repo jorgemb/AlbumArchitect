@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <execution>
@@ -88,7 +89,7 @@ auto main(int argc, char* argv[]) -> int {
       [](auto& element)
       {
         if (album_architect::album::PhotoMetadata::get_photo_state(element)
-            != album_architect::album::PhotoState::error)
+            == album_architect::album::PhotoState::no_info)
         {
           if (auto photo = album_architect::album::Photo::load(element)) {
             try {

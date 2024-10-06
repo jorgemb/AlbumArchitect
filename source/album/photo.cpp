@@ -59,6 +59,7 @@ auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
                   magic_enum::enum_name(algorithm),
                   m_file_element.get_path().string(),
                   e.what());
+    PhotoMetadata::set_photo_state(m_file_element, PhotoState::error);
     return {};
   }
 }
