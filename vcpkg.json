@@ -53,6 +53,10 @@
         "gif",
         "libheif"
       ]
+    },
+    {
+      "name": "tbb",
+      "version>=": "2021.13.0"
     }
   ],
   "default-features": [],

@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <deque>
+#include <execution>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -50,10 +51,12 @@ auto main(int argc, char* argv[]) -> int {
     }
   }
 
-  // Output all the directories
+  // Get all elements
   auto directory_stack =
       std::deque<std::pair<std::uint32_t, album_architect::files::Element>> {};
+  auto files_to_load = std::vector<album_architect::files::Element> {};
   directory_stack.emplace_back(0U, file_tree->get_root_element());
+
   while (!directory_stack.empty()) {
     // Get current element
     auto [level, current_element] = std::move(directory_stack.front());
@@ -67,28 +70,7 @@ auto main(int argc, char* argv[]) -> int {
 
     // Load photo and hash of current element
     if (current_element.get_type() == album_architect::files::PathType::file) {
-      auto metadata_calculated =
-          album_architect::album::PhotoMetadata::has_hash_stored(
-              current_element, ImageHashAlgorithm::p_hash)
-          && album_architect::album::PhotoMetadata::has_hash_stored(
-              current_element, ImageHashAlgorithm::average_hash);
-
-      // Get current state
-      const auto photo_state =
-          album_architect::album::PhotoMetadata::get_photo_state(
-              current_element);
-
-      if (photo_state != album_architect::album::PhotoState::error
-          && !metadata_calculated)
-      {
-        if (auto photo = album_architect::album::Photo::load(current_element)) {
-          // Try to calculate hashes
-          photo->get_image_hash(
-              album_architect::album::ImageHashAlgorithm::average_hash);
-          photo->get_image_hash(
-              album_architect::album::ImageHashAlgorithm::p_hash);
-        }
-      }
+      files_to_load.push_back(std::move(current_element));
     }
 
     // Add all the directories from the current element
@@ -96,6 +78,29 @@ auto main(int argc, char* argv[]) -> int {
       directory_stack.emplace_front(level + 1, std::move(child));
     }
   }
+
+  // Load all hashes
+  spdlog::info("LOADING HASHES");
+  std::for_each(
+      std::execution::par_unseq,
+      files_to_load.begin(),
+      files_to_load.end(),
+      [](auto& element)
+      {
+        if (album_architect::album::PhotoMetadata::get_photo_state(element)
+            != album_architect::album::PhotoState::error)
+        {
+          if (auto photo = album_architect::album::Photo::load(element)) {
+            try {
+              photo->get_image_hash(ImageHashAlgorithm::average_hash);
+              photo->get_image_hash(ImageHashAlgorithm::p_hash);
+            }catch(const cv::Exception& e) {
+              spdlog::error("Failed to hash photo: {}. Error: {}", element.get_path().string(), e.what());
+              album_architect::album::PhotoMetadata::set_photo_state(element, album_architect::album::PhotoState::error);
+            }
+          }
+        }
+      });
 
   // .. serialize
   spdlog::info("SERIALIZING");

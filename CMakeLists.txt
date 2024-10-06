@@ -55,6 +55,8 @@ find_package(OpenCV 4.8 REQUIRED COMPONENTS opencv_img_hash)
 find_package(OpenImageIO 2.5 REQUIRED CONFIG)
 find_package(unofficial-hash-library CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
+find_package(TBB CONFIG REQUIRED)
+add_compile_definitions(TBB_USE_ASSERT)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
@@ -62,7 +64,8 @@ target_link_libraries(AlbumArchitect_lib PRIVATE
         absl::btree
         absl::hash
         unofficial::hash-library
-        magic_enum::magic_enum)
+        magic_enum::magic_enum
+        TBB::tbb)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         Boost::graph
         Boost::filesystem

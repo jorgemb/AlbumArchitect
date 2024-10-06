@@ -8,7 +8,9 @@
 #include "album/photo.h"
 
 #include <fmt/format.h>
+#include <magic_enum.hpp>
 #include <opencv2/core/mat.hpp>
+#include <spdlog/spdlog.h>
 
 #include "album/image.h"
 #include "album/photo_metadata.h"
@@ -42,14 +44,23 @@ auto Photo::get_image() const -> cv::Mat {
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
   // Check if hash is already stored
   if (auto stored_hash =
-          PhotoMetadata::get_stored_hash(m_file_element, algorithm)) {
+          PhotoMetadata::get_stored_hash(m_file_element, algorithm))
+  {
     return *stored_hash;
   }
 
   // Calculate hash and store
-  auto image_hash = m_image.get_image_hash(algorithm);
-  PhotoMetadata::store_hash(m_file_element, algorithm, image_hash);
-  return image_hash;
+  try {
+    auto image_hash = m_image.get_image_hash(algorithm);
+    PhotoMetadata::store_hash(m_file_element, algorithm, image_hash);
+    return image_hash;
+  } catch (cv::Exception& e) {
+    spdlog::error("Failed to generate hash ({}) for photo: {}. Error: {}",
+                  magic_enum::enum_name(algorithm),
+                  m_file_element.get_path().string(),
+                  e.what());
+    return {};
+  }
 }
 auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) const -> bool {
   return PhotoMetadata::has_hash_stored(m_file_element, algorithm);
