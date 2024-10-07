@@ -95,9 +95,12 @@ auto main(int argc, char* argv[]) -> int {
             try {
               photo->get_image_hash(ImageHashAlgorithm::average_hash);
               photo->get_image_hash(ImageHashAlgorithm::p_hash);
-            }catch(const cv::Exception& e) {
-              spdlog::error("Failed to hash photo: {}. Error: {}", element.get_path().string(), e.what());
-              album_architect::album::PhotoMetadata::set_photo_state(element, album_architect::album::PhotoState::error);
+            } catch (const cv::Exception& e) {
+              spdlog::error("Failed to hash photo: {}. Error: {}",
+                            element.get_path().string(),
+                            e.what());
+              album_architect::album::PhotoMetadata::set_photo_state(
+                  element, album_architect::album::PhotoState::error);
             }
           }
         }
