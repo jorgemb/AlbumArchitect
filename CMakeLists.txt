@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.14)
 
 include(cmake/prelude.cmake)
 
+# Add required manifest features
+if(USE_GPU EQUAL "ON")
+    list(APPEND VCPKG_MANIFEST_FEATURES "gpu")
+endif ()
+
+
 project(
         AlbumArchitect
         VERSION 0.1.0
@@ -35,6 +41,8 @@ add_library(
         source/helper/cv_mat_operations.h
         source/album/photo.cpp
         source/album/photo.h
+        source/album/photo_metadata.cpp
+        source/album/photo_metadata.h
 )
 
 target_include_directories(
@@ -45,6 +53,12 @@ target_include_directories(
 
 target_compile_features(AlbumArchitect_lib PUBLIC cxx_std_17)
 
+# Add support for TBB on linux
+if (UNIX)
+    # According to fix here: https://github.com/microsoft/vcpkg/issues/31617
+    add_compile_definitions(TBB_USE_ASSERT)
+endif (UNIX)
+
 find_package(fmt REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Boost 1.83 REQUIRED COMPONENTS graph serialization filesystem)
@@ -53,6 +67,7 @@ find_package(OpenCV 4.8 REQUIRED COMPONENTS opencv_img_hash)
 find_package(OpenImageIO 2.5 REQUIRED CONFIG)
 find_package(unofficial-hash-library CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
+find_package(TBB CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
@@ -60,7 +75,8 @@ target_link_libraries(AlbumArchitect_lib PRIVATE
         absl::btree
         absl::hash
         unofficial::hash-library
-        magic_enum::magic_enum)
+        magic_enum::magic_enum
+        TBB::tbb)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         Boost::graph
         Boost::filesystem

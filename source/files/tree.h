@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <istream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -102,8 +103,8 @@ public:
   auto operator=(const FileTree& other) = delete;
 
   // Default move
-  FileTree(FileTree&& other) = default;
-  auto operator=(FileTree&& other) -> FileTree& = default;
+  FileTree(FileTree&& other) noexcept;
+  auto operator=(FileTree&& other) noexcept -> FileTree&;
 
   /// Creates a file tree from the specified root directory.
   /// \param path Path to a directory to search recursively.
@@ -150,8 +151,8 @@ public:
   /// \param key Key to get the value from
   /// \return Optional with a copy of the attribute
   auto get_metadata(const std::filesystem::path& path,
-                    const std::string& key)
-      const -> std::optional<PathAttribute>;
+                    const std::string& key) const
+      -> std::optional<PathAttribute>;
 
   /// Removes the metadata from the path with the given key
   /// \param node
@@ -173,8 +174,10 @@ public:
   void load(Archive& archive, const unsigned int /* version */) {
     auto str_path = std::string {};
     archive & str_path;
-    m_root_path = str_path;
 
+    // Lock mutex
+    auto guard = std::lock_guard(m_graph_mutex);
+    m_root_path = str_path;
     archive & m_graph;
   }
 
@@ -185,6 +188,7 @@ public:
   /// \param version
   template<class Archive>
   void save(Archive& archive, const unsigned int /* version */) const {
+    auto guard = std::lock_guard(m_graph_mutex);
     auto str_path = m_root_path.string();
 
     archive & str_path;
@@ -229,6 +233,7 @@ private:
 
   std::filesystem::path m_root_path;
   std::unique_ptr<FileGraph> m_graph;
+  mutable std::mutex m_graph_mutex;
 };
 
 }  // namespace album_architect::files

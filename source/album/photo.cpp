@@ -4,15 +4,16 @@
 
 #include <optional>
 #include <utility>
-#include <variant>
 
 #include "album/photo.h"
 
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <opencv2/core/mat.hpp>
+#include <spdlog/spdlog.h>
 
 #include "album/image.h"
+#include "album/photo_metadata.h"
 #include "files/tree.h"
 
 namespace album_architect::album {
@@ -22,56 +23,48 @@ using namespace std::string_literals;
 auto Photo::load(files::Element file_element) -> std::optional<Photo> {
   auto loaded_image = Image::load(file_element.get_path());
   if (!loaded_image) {
+    // Set metadata
+    PhotoMetadata::set_photo_state(file_element, PhotoState::error);
+
     return {};
   }
 
+  // Set metadata
+  PhotoMetadata::set_photo_state(file_element, PhotoState::ok);
   return Photo {std::move(file_element), std::move(loaded_image.value())};
 }
 Photo::Photo(files::Element&& file_element, Image&& image)
     : m_file_element(std::move(file_element))
     , m_image(std::move(image)) {}
-auto Photo::get_image() -> cv::Mat {
+auto Photo::get_image() const -> cv::Mat {
   auto out = cv::Mat {};
   m_image.get_image(out);
   return out;
 }
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
-  auto hash_store_key = PhotoMetadata::get_hash_key(algorithm);
-
-  // Check if hash is stored
-  auto hash_value = m_file_element.get_metadata(hash_store_key);
-  if (hash_value && std::holds_alternative<cv::Mat>(*hash_value)) {
-    return std::get<cv::Mat>(*hash_value);
+  // Check if hash is already stored
+  if (auto stored_hash =
+          PhotoMetadata::get_stored_hash(m_file_element, algorithm))
+  {
+    return *stored_hash;
   }
 
   // Calculate hash and store
-  auto image_hash = m_image.get_image_hash(algorithm);
-  m_file_element.set_metadata(hash_store_key, image_hash);
-  return image_hash;
+  try {
+    auto image_hash = m_image.get_image_hash(algorithm);
+    PhotoMetadata::store_hash(m_file_element, algorithm, image_hash);
+    return image_hash;
+  } catch (cv::Exception& e) {
+    spdlog::error("Failed to generate hash ({}) for photo: {}. Error: {}",
+                  magic_enum::enum_name(algorithm),
+                  m_file_element.get_path().string(),
+                  e.what());
+    PhotoMetadata::set_photo_state(m_file_element, PhotoState::error);
+    return {};
+  }
 }
 auto Photo::is_image_hash_in_cache(ImageHashAlgorithm algorithm) const -> bool {
   return PhotoMetadata::has_hash_stored(m_file_element, algorithm);
 }
-auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
-  return fmt::format("HASH_{}", magic_enum::enum_name(algorithm));
-}
-auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
-                                    ImageHashAlgorithm algorithm) -> bool {
-  // TODO: Add a function to only check if exists, so a copy is avoided on
-  // get_metadata
-  auto hash_value =
-      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
-  return hash_value && std::holds_alternative<cv::Mat>(*hash_value);
-}
-auto PhotoMetadata::get_stored_hash(const files::Element& file_element,
-                                    ImageHashAlgorithm algorithm)
-    -> std::optional<cv::Mat> {
-  auto hash_value =
-      file_element.get_metadata(PhotoMetadata::get_hash_key(algorithm));
-  if (!hash_value || !std::holds_alternative<cv::Mat>(*hash_value)) {
-    return {};
-  }
 
-  return {std::move(std::get<cv::Mat>(*hash_value))};
-}
 }  // namespace album_architect::album

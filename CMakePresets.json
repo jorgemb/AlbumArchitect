@@ -15,6 +15,13 @@
       }
     },
     {
+      "name": "use-gpu",
+      "hidden": true,
+      "cacheVariables": {
+        "USE_GPU": "ON"
+      }
+    },
+    {
       "name": "vcpkg",
       "hidden": true,
       "cacheVariables": {
@@ -80,7 +87,10 @@
     },
     {
       "name": "ci-linux",
-      "inherits": ["flags-gcc-clang", "ci-std"],
+      "inherits": [
+        "flags-gcc-clang",
+        "ci-std"
+      ],
       "generator": "Unix Makefiles",
       "hidden": true,
       "cacheVariables": {
@@ -89,13 +99,19 @@
     },
     {
       "name": "ci-darwin",
-      "inherits": ["flags-appleclang", "ci-std"],
+      "inherits": [
+        "flags-appleclang",
+        "ci-std"
+      ],
       "generator": "Xcode",
       "hidden": true
     },
     {
       "name": "ci-win64",
-      "inherits": ["flags-msvc", "ci-std"],
+      "inherits": [
+        "flags-msvc",
+        "ci-std"
+      ],
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "hidden": true
@@ -116,7 +132,11 @@
     },
     {
       "name": "ci-coverage",
-      "inherits": ["coverage-linux", "dev-mode", "vcpkg"],
+      "inherits": [
+        "coverage-linux",
+        "dev-mode",
+        "vcpkg"
+      ],
       "cacheVariables": {
         "COVERAGE_HTML_COMMAND": ""
       }
@@ -124,7 +144,11 @@
     {
       "name": "ci-sanitize",
       "binaryDir": "${sourceDir}/build/sanitize",
-      "inherits": ["ci-linux", "dev-mode", "vcpkg"],
+      "inherits": [
+        "ci-linux",
+        "dev-mode",
+        "vcpkg"
+      ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Sanitize",
         "CMAKE_CXX_FLAGS_SANITIZE": "-U_FORTIFY_SOURCE -O2 -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common",
@@ -146,15 +170,35 @@
     },
     {
       "name": "ci-macos",
-      "inherits": ["ci-build", "ci-darwin", "dev-mode", "ci-multi-config", "vcpkg"]
+      "inherits": [
+        "ci-build",
+        "ci-darwin",
+        "dev-mode",
+        "ci-multi-config",
+        "vcpkg"
+      ]
     },
     {
       "name": "ci-ubuntu",
-      "inherits": ["ci-build", "ci-linux", "clang-tidy", "vcpkg", "cppcheck", "dev-mode"]
+      "inherits": [
+        "ci-build",
+        "ci-linux",
+        "clang-tidy",
+        "vcpkg",
+        "cppcheck",
+        "dev-mode"
+      ]
     },
     {
       "name": "ci-windows",
-      "inherits": ["ci-build", "ci-win64", "dev-mode", "ci-multi-config", "vcpkg", "vcpkg-win64-static"]
+      "inherits": [
+        "ci-build",
+        "ci-win64",
+        "dev-mode",
+        "ci-multi-config",
+        "vcpkg",
+        "vcpkg-win64-static"
+      ]
     }
   ]
 }

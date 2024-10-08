@@ -15,23 +15,6 @@
 
 namespace album_architect::album {
 
-/// Helps managing the metadata of a Photo that is stored in the File
-/// element
-class PhotoMetadata {
-public:
-  /// Returns the hash key for the given hash algorithm
-  /// \param algorithm Algorithm to check
-  /// \return String with the hash value
-  static auto get_hash_key(ImageHashAlgorithm algorithm) -> std::string;
-
-  /// Checks if the given hash is stored in metadata of the Photo
-  static auto has_hash_stored(const files::Element& file_element,
-                              ImageHashAlgorithm algorithm) -> bool;
-
-  /// Returns the stored hash of the photo, if any
-  static auto get_stored_hash(const files::Element& file_element,
-                              ImageHashAlgorithm algorithm) -> std::optional<cv::Mat>;
-};
 
 /// A Photo represents the union of a file with an Image.
 class Photo {
@@ -43,7 +26,7 @@ public:
 
   /// Returns a cv::Mat with the image information.
   /// \return cv::Mat with image information
-  auto get_image() -> cv::Mat;
+  auto get_image() const -> cv::Mat;
 
   /// Returns a cv::Mat with the specified image hash. The value is
   /// cached and stored for future reference.
