@@ -17,6 +17,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_concepts.hpp>
 #include <boost/graph/graphviz.hpp>
+#include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
 
 namespace album_architect::files {
@@ -47,10 +48,12 @@ void FileGraph::to_graphviz(std::ostream& ostream) const {
   boost::write_graphviz(
       ostream,
       m_graph,
-      [this](std::ostream& out, const auto& vertex)
-      { out << m_graph[vertex].type; },
+      [this](std::ostream& out, const auto& vertex) {
+        out << fmt::format(" \"{}\"",
+                           magic_enum::enum_name(m_graph[vertex].type));
+      },
       [this](std::ostream& out, const auto& edge)
-      { out << m_graph[edge].name; });
+      { out << fmt::format(" \"{}\"", m_graph[edge].name); });
 }
 auto FileGraph::rename_node(boost::span<std::string> path_list,
                             const std::string& new_name) -> bool {

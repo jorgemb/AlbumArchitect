@@ -288,11 +288,11 @@ auto FileTree::end() -> FileTreeIterator {
   return FileTreeIterator();
 }
 void FileTree::to_stream(std::ostream& output) const {
-  auto archiver = boost::archive::binary_oarchive {output};
+  auto archiver = boost::archive::binary_oarchive{output};
   archiver << *this;
 }
 auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
-  auto archiver = boost::archive::binary_iarchive {input};
+  auto archiver = boost::archive::binary_iarchive{input};
   try {
     auto new_tree = files::FileTree {};
     archiver >> new_tree;
