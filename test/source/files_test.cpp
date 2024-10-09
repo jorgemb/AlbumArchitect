@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <ranges>
 #include <thread>
 #include <vector>
 
@@ -31,8 +32,9 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   REQUIRE_FALSE(invalid_tree);
 
   // Create a directory tree from the test tree
-  auto directory_tree = files::FileTree::build(resources_dir);
-  REQUIRE(directory_tree);
+  auto opt_directory_tree = files::FileTree::build(resources_dir);
+  REQUIRE(opt_directory_tree);
+  auto directory_tree = std::move(opt_directory_tree.value());
 
   // Element paths
   const auto album_one_path = resources_dir / "album_one";
@@ -40,14 +42,14 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   SECTION("Basic path discovery and checks") {
     // Check that some paths are available
     const auto not_valid_path = std::filesystem::path("/not/a/valid/path");
-    REQUIRE_FALSE(directory_tree->get_element(not_valid_path));
+    REQUIRE_FALSE(directory_tree.get_element(not_valid_path));
 
     // Check root element
-    const auto root_element = directory_tree->get_root_element();
+    const auto root_element = directory_tree.get_root_element();
     REQUIRE(root_element.get_path() == resources_dir);
 
     // Get other element
-    const auto album_one_element = directory_tree->get_element(album_one_path);
+    const auto album_one_element = directory_tree.get_element(album_one_path);
     REQUIRE(album_one_element);
     REQUIRE(album_one_element->get_path() == album_one_path);
     REQUIRE(album_one_element->get_type() == files::PathType::directory);
@@ -55,7 +57,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     const auto album_three_one_1_path =
         resources_dir / "album_three" / "album_three_one" / "three.one.1.txt";
     const auto album_three_one_1_element =
-        directory_tree->get_element(album_three_one_1_path);
+        directory_tree.get_element(album_three_one_1_path);
     REQUIRE(album_three_one_1_element);
     REQUIRE(album_three_one_1_element->get_path() == album_three_one_1_path);
     REQUIRE(album_three_one_1_element->get_type() == files::PathType::file);
@@ -68,7 +70,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   const auto val2 = cv::Mat::eye(10, 10, CV_8U);
 
   SECTION("Add metadata") {
-    auto album_one = directory_tree->get_element(album_one_path);
+    auto album_one = directory_tree.get_element(album_one_path);
 
     // Not metadata exists
     REQUIRE_FALSE(album_one->get_metadata(key1));
@@ -106,7 +108,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 
   SECTION("Serialization") {
     // Add metadata to the tree
-    auto album_one = directory_tree->get_element(album_one_path);
+    auto album_one = directory_tree.get_element(album_one_path);
     album_one->set_metadata(key1, val1);
     album_one->set_metadata(key2, val2);
 
@@ -114,7 +116,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
     auto temp_file = files::TemporaryFile {};
     {
       auto out_file = std::ofstream {temp_file.get_path()};
-      directory_tree->to_stream(out_file);
+      directory_tree.to_stream(out_file);
     }
 
     // Try to get the tree and compare
@@ -143,10 +145,10 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 
   SECTION("Siblings, children and parent") {
     auto children = std::vector<files::Element> {};
-    REQUIRE_FALSE(directory_tree->get_elements_under_path(
+    REQUIRE_FALSE(directory_tree.get_elements_under_path(
         fs::path("/this/is/an/invalid/path"), children));
 
-    REQUIRE(directory_tree->get_elements_under_path(resources_dir, children));
+    REQUIRE(directory_tree.get_elements_under_path(resources_dir, children));
 
     auto children_paths = std::vector<fs::path> {};
     std::transform(children.begin(),
@@ -158,7 +160,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
   }
 
   SECTION("Element management") {
-    auto root_element = directory_tree->get_element({});
+    auto root_element = directory_tree.get_element({});
     REQUIRE(root_element);
     REQUIRE(root_element->get_path() == resources_dir);
     REQUIRE(root_element->get_type()
@@ -179,7 +181,7 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
                  Catch::Matchers::UnorderedRangeEquals(root_children));
 
     // ... get siblings of an album
-    auto album_one = directory_tree->get_element(resources_dir / "album_one");
+    auto album_one = directory_tree.get_element(resources_dir / "album_one");
     REQUIRE(album_one);
 
     auto album_one_siblings = album_one->get_siblings();
@@ -206,6 +208,28 @@ TEST_CASE("Tree structure of directory", "[files][tree]") {
 
     // ... parent of root should be null
     REQUIRE_FALSE(album_one_parent->get_parent());
+  }
+
+  SECTION("Iteration") {
+    // Create list of expected paths
+    auto expected_paths = std::vector<fs::path> {};
+    std::copy(fs::recursive_directory_iterator(resources_dir),
+              fs::recursive_directory_iterator(),
+              std::back_inserter(expected_paths));
+    // .. include root element
+    expected_paths.push_back(resources_dir);
+    rng::sort(expected_paths);
+
+    // Create list of paths from iterator
+    auto calculated_paths = std::vector<fs::path> {};
+    std::transform(std::begin(directory_tree),
+                   std::end(directory_tree),
+                   std::back_inserter(calculated_paths),
+                   std::mem_fn(&files::Element::get_path));
+    rng::sort(calculated_paths);
+
+    REQUIRE_THAT(calculated_paths,
+                 Catch::Matchers::RangeEquals(expected_paths));
   }
 }
 

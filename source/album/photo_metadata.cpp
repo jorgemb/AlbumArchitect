@@ -11,7 +11,7 @@ namespace album_architect::album {
 using namespace std::string_literals;
 
 auto PhotoMetadata::get_hash_key(ImageHashAlgorithm algorithm) -> std::string {
-  return fmt::format("_HASH_{}_"s, magic_enum::enum_name(algorithm));
+  return fmt::format("_HASH_{}_", magic_enum::enum_name(algorithm));
 }
 auto PhotoMetadata::has_hash_stored(const files::Element& file_element,
                                     ImageHashAlgorithm algorithm) -> bool {
