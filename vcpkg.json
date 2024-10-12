@@ -7,6 +7,10 @@
       "version>=": "20240722.0"
     },
     {
+      "name": "annoy",
+      "version>=": "1.17.3"
+    },
+    {
       "name": "fmt",
       "version>=": "11.0.2#1"
     },

@@ -41,6 +41,9 @@ auto Photo::get_image() const -> cv::Mat {
   m_image.get_image(out);
   return out;
 }
+auto Photo::get_file_element() const -> files::Element {
+  return m_file_element;
+}
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat {
   // Check if hash is already stored
   if (auto stored_hash =

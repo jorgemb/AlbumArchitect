@@ -1,7 +1,11 @@
 #ifndef ALBUMARCHITECT_CV_MAT_OPERATIONS_H
 #define ALBUMARCHITECT_CV_MAT_OPERATIONS_H
 
+#include <cstdint>
+
 #include <opencv2/core.hpp>
+#include <opencv2/core/base.hpp>
+#include <opencv2/core/mat.hpp>
 
 namespace album_architect::cvmat {
 
@@ -19,11 +23,30 @@ inline auto compare_mat(cv::InputArray lhs, cv::InputArray rhs) -> bool {
     return false;
   }
 
-  // Check values using XOR (if matrices are equal then all values should be zero)
+  // Check values using XOR (if matrices are equal then all values should be
+  // zero)
   auto diff = cv::Mat {};
   cv::bitwise_xor(lhs, rhs, diff);
   auto equal = cv::countNonZero(diff) == 0;
   return equal;
+}
+
+/// Converts a Matrix that has type UCHAR and 8 bytes to a 64bit
+/// @param mat
+/// @return
+inline auto mat_to_uint64(cv::Mat mat) -> std::uint64_t {
+  // Check if the input mat is of the correct size and type
+  constexpr auto max_size = 8;
+  CV_Assert(mat.total() == max_size && mat.type() == CV_8UC1);
+
+  std::uint64_t result = 0;
+
+  // Iterate over the 8 bytes and shift them into the result
+  for (int i = 0; i < 8; ++i) {
+    result |= static_cast<std::uint64_t>(mat.at<uint8_t>(i)) << (8u * (7u - i));
+  }
+
+  return result;
 }
 
 }  // namespace album_architect::cvmat

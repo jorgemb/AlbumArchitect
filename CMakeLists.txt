@@ -43,6 +43,8 @@ add_library(
         source/album/photo.h
         source/album/photo_metadata.cpp
         source/album/photo_metadata.h
+        source/analysis/similarity_search.cpp
+        source/analysis/similarity_search.h
 )
 
 target_include_directories(
@@ -68,6 +70,7 @@ find_package(OpenImageIO 2.5 REQUIRED CONFIG)
 find_package(unofficial-hash-library CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
+find_package(Annoy CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_lib PRIVATE
         fmt::fmt
         spdlog::spdlog
@@ -76,7 +79,9 @@ target_link_libraries(AlbumArchitect_lib PRIVATE
         absl::hash
         unofficial::hash-library
         magic_enum::magic_enum
-        TBB::tbb)
+        TBB::tbb
+        Annoy::Annoy
+)
 target_link_libraries(AlbumArchitect_lib PUBLIC
         Boost::graph
         Boost::filesystem

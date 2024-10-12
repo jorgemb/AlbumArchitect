@@ -15,7 +15,6 @@
 
 namespace album_architect::album {
 
-
 /// A Photo represents the union of a file with an Image.
 class Photo {
 public:
@@ -27,6 +26,10 @@ public:
   /// Returns a cv::Mat with the image information.
   /// \return cv::Mat with image information
   auto get_image() const -> cv::Mat;
+
+  /// Returns the file element
+  /// @return
+  auto get_file_element() const -> files::Element;
 
   /// Returns a cv::Mat with the specified image hash. The value is
   /// cached and stored for future reference.
