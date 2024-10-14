@@ -44,7 +44,7 @@
     },
     {
       "name": "opencv",
-      "version>=": "4.8.0#1",
+      "version>=": "4.5.5#1",
       "features": [
         "contrib"
       ]
@@ -86,5 +86,5 @@
       ]
     }
   },
-  "builtin-baseline": "2ddc10c8afa00a762a69f21f6427849fe906ede0"
+  "builtin-baseline": "9558037875497b9db8cf38fcd7db68ec661bffe7"
 }

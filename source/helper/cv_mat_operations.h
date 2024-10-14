@@ -13,7 +13,7 @@ namespace album_architect::cvmat {
 /// \param lhs
 /// \param rhs
 /// \return
-inline auto compare_mat(cv::InputArray lhs, cv::InputArray rhs) -> bool {
+inline auto compare_mat(const cv::Mat& lhs, const cv::Mat& rhs) -> bool {
   // Check basic params
   if (lhs.size() != rhs.size()) {
     return false;
@@ -42,8 +42,9 @@ inline auto mat_to_uint64(cv::Mat mat) -> std::uint64_t {
   std::uint64_t result = 0;
 
   // Iterate over the 8 bytes and shift them into the result
-  for (int i = 0; i < 8; ++i) {
-    result |= static_cast<std::uint64_t>(mat.at<uint8_t>(i)) << (8u * (7u - i));
+  for (auto i = 0U; i < max_size; ++i) {
+    // NOLINTNEXTLINE(*-magic-numbers)
+    result |= static_cast<std::uint64_t>(mat.at<uint8_t>(i)) << (8U * (7U - i));
   }
 
   return result;

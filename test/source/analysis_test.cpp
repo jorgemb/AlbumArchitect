@@ -74,6 +74,7 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
   // Build the index and search for duplicates
   auto similarity_search = similarity_builder.build_search();
 
+  // Search exact duplicates
   {
     auto duplicate_photos = similarity_search.get_duplicated_photos();
     constexpr auto expected_duplicate_groups =
@@ -92,5 +93,11 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
     auto duplicates_of_other =
         similarity_search.get_duplicates_of(*other_photo);
     REQUIRE(duplicates_of_other.size() == 1);
+  }
+
+  // Search similar photos
+  {
+    auto similar_to_first = similarity_search.get_similars_of(photos[0]);
+    REQUIRE(similar_to_first.size() >= 3);
   }
 }

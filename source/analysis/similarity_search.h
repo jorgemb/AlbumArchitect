@@ -30,14 +30,26 @@ public:
   /// Default destructor
   ~SimilaritySearch();
 
+  // Delete copy, default move
+  SimilaritySearch(const SimilaritySearch& other) = delete;
+  SimilaritySearch(SimilaritySearch&& other) noexcept = default;
+  auto operator=(const SimilaritySearch& other) -> SimilaritySearch& = delete;
+  auto operator=(SimilaritySearch&& other) noexcept -> SimilaritySearch& = default;
+
   /// Returns all duplicated photo IDs
   /// @return
-  auto get_duplicated_photos() -> std::vector<std::vector<PhotoId>>;
+  auto get_duplicated_photos() const -> std::vector<std::vector<PhotoId>>;
 
   /// Returns all the duplicates of a given photo (including itself)
   /// @param photo
   /// @return
-  auto get_duplicates_of(album::Photo& photo) -> std::vector<PhotoId>;
+  auto get_duplicates_of(album::Photo& photo) const -> std::vector<PhotoId>;
+
+  /// Returns a list of all the photos that are similar to the provided one
+  /// @param photo
+  /// @return
+  auto get_similars_of(album::Photo& photo) const
+      -> std::vector<std::pair<PhotoId, std::uint8_t>>;
 
 private:
   std::unique_ptr<SimilarityIndex> m_similarity_index;

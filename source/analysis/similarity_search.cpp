@@ -8,13 +8,15 @@
 
 #include "similarity_search.h"
 
+#include <spdlog/spdlog.h>
+
 #include "helper/cv_mat_operations.h"
 
-// NOLINTBEGIN
+// NOLINTBEGIN(*)
 #define ANNOYLIB_MULTITHREADED_BUILD ;
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
-// NOLINTEND
+// NOLINTEND(*)
 
 namespace album_architect::analysis {
 
@@ -49,7 +51,7 @@ public:
   /// Index for pHash algorithm
   Annoy::AnnoyIndex<PhotoId,
                     uchar,
-                    Annoy::Angular,
+                    Annoy::Hamming,
                     Annoy::Kiss32Random,
                     Annoy::AnnoyIndexMultiThreadedBuildPolicy>
       p_hash_index;
@@ -81,7 +83,11 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
 auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
   // PHash build
   constexpr auto p_hash_trees = 2 * 8;  // Twice the size of each matrix(8)
-  m_similarity_index->p_hash_index.build(p_hash_trees);
+  char* error = nullptr;
+  if (!m_similarity_index->p_hash_index.build(p_hash_trees, -1, &error)) {
+    spdlog::error("Couldn't build similarity index. Error: {}", error);
+    free(error);
+  }
 
   // AverageHash build
   rng::sort(m_similarity_index->average_index,
@@ -93,8 +99,8 @@ auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
 SimilaritySearch::SimilaritySearch(
     std::unique_ptr<SimilarityIndex> similarity_index)
     : m_similarity_index(std::move(similarity_index)) {}
-SimilaritySearch::~SimilaritySearch() {}
-auto SimilaritySearch::get_duplicated_photos()
+SimilaritySearch::~SimilaritySearch() = default;
+auto SimilaritySearch::get_duplicated_photos() const
     -> std::vector<std::vector<PhotoId>> {
   // Check base case
   if (m_similarity_index->average_index.size() <= 1) {
@@ -134,7 +140,7 @@ auto SimilaritySearch::get_duplicated_photos()
 
   return result;
 }
-auto SimilaritySearch::get_duplicates_of(album::Photo& photo)
+auto SimilaritySearch::get_duplicates_of(album::Photo& photo) const
     -> std::vector<PhotoId> {
   // Calculate hash
   const auto photo_hash = cvmat::mat_to_uint64(
@@ -162,6 +168,30 @@ auto SimilaritySearch::get_duplicates_of(album::Photo& photo)
                  end,
                  std::back_inserter(result),
                  [](const auto& current) { return current.id; });
+  return result;
+}
+auto SimilaritySearch::get_similars_of(album::Photo& photo) const
+    -> std::vector<std::pair<PhotoId, std::uint8_t>> {
+  // Get the hash and find similar
+  constexpr auto max_similar = 50;
+  const auto photo_hash =
+      photo.get_image_hash(album::ImageHashAlgorithm::p_hash);
+
+  std::vector<PhotoId> similar_photos;
+  std::vector<std::uint8_t> distances;
+  m_similarity_index->p_hash_index.get_nns_by_vector(
+      photo_hash.data, max_similar, -1, &similar_photos, &distances);
+
+  // Get the list of elements
+  std::vector<std::pair<PhotoId, std::uint8_t>> result;
+  result.reserve(distances.size());
+
+  std::transform(similar_photos.begin(),
+                 similar_photos.end(),
+                 distances.begin(),
+                 std::back_inserter(result),
+                 [](const auto& photo_id, const auto& distance)
+                 { return std::make_pair(photo_id, distance); });
   return result;
 }
 }  // namespace album_architect::analysis

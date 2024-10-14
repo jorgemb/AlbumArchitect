@@ -27,12 +27,12 @@ public:
   /// Calculates the average hash of the given input
   /// @param input
   /// @return
-  static auto calculate_average_hash(cv::InputArray input) -> cv::Mat;
+  static auto calculate_average_hash(const cv::Mat& input) -> cv::Mat;
 
   /// Calculates the pHash of the given input
   /// @param input
   /// @return
-  static auto calculate_p_hash(cv::InputArray input) -> cv::Mat;
+  static auto calculate_p_hash(const cv::Mat& input) -> cv::Mat;
 };
 
 }  // namespace album_architect::hash
