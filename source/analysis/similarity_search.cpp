@@ -200,15 +200,14 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo,
   // Remove photos under threshold
   constexpr auto max_bits =
       static_cast<float>(std::numeric_limits<std::uint64_t>::digits);
-  const auto erase_start =
-      std::remove_if(result.begin(),
-                     result.end(),
-                     [&similarity_threshold, &max_bits](
-                         const auto& photo_pair)
-                     {
-                       auto similarity = (max_bits - photo_pair.second) / max_bits;
-                       return similarity <= similarity_threshold;
-                     });
+  const auto erase_start = std::remove_if(
+      result.begin(),
+      result.end(),
+      [&similarity_threshold, &max_bits](const auto& photo_pair)
+      {
+        auto similarity = (max_bits - photo_pair.second) / max_bits;
+        return similarity <= similarity_threshold;
+      });
   result.erase(erase_start, result.end());
 
   return result;

@@ -72,9 +72,9 @@ auto Element::get_siblings() const -> Element::ElementList {
   // Remove oneself from the sibling list
   auto own_path = get_path();
   std::ranges::copy_if(children,
-               std::back_inserter(siblings),
-               [&own_path](auto element)
-               { return element.get_path() != own_path; });
+                       std::back_inserter(siblings),
+                       [&own_path](auto element)
+                       { return element.get_path() != own_path; });
 
   return siblings;
 }
@@ -288,11 +288,11 @@ auto FileTree::end() -> FileTreeIterator {
   return FileTreeIterator();
 }
 void FileTree::to_stream(std::ostream& output) const {
-  auto archiver = boost::archive::binary_oarchive{output};
+  auto archiver = boost::archive::binary_oarchive {output};
   archiver << *this;
 }
 auto FileTree::from_stream(std::istream& input) -> std::optional<FileTree> {
-  auto archiver = boost::archive::binary_iarchive{input};
+  auto archiver = boost::archive::binary_iarchive {input};
   try {
     auto new_tree = files::FileTree {};
     archiver >> new_tree;
@@ -431,7 +431,8 @@ auto FileTreeIterator::operator++() -> FileTreeIterator& {
   std::ranges::move(children, std::back_inserter(m_remaining_elements));
   return *this;
 }
-auto operator==(const FileTreeIterator& lhs, const FileTreeIterator& rhs) -> bool {
+auto operator==(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
+    -> bool {
   return lhs.m_remaining_elements == rhs.m_remaining_elements;
 }
 auto operator!=(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
