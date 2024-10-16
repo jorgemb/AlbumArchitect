@@ -87,7 +87,10 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
 
     auto other_element =
         file_tree->get_element(images_dir / "Home" / "IMG_5515.JPG");
+    REQUIRE(other_element);
+    INFO("Loading test file: " << other_element->get_path().string());
     auto other_photo = album::Photo::load(other_element.value());
+    REQUIRE(other_photo);
     auto duplicates_of_other =
         similarity_search.get_duplicates_of(*other_photo);
     REQUIRE(duplicates_of_other.size() == 1);
