@@ -3,8 +3,11 @@
 //
 
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
+#include <limits>
 #include <ranges>
+#include <utility>
 
 #include "similarity_search.h"
 
@@ -170,17 +173,18 @@ auto SimilaritySearch::get_duplicates_of(album::Photo& photo) const
                  [](const auto& current) { return current.id; });
   return result;
 }
-auto SimilaritySearch::get_similars_of(album::Photo& photo) const
+auto SimilaritySearch::get_similars_of(album::Photo& photo,
+                                       float similarity_threshold,
+                                       std::size_t max_photos) const
     -> std::vector<std::pair<PhotoId, std::uint8_t>> {
   // Get the hash and find similar
-  constexpr auto max_similar = 50;
   const auto photo_hash =
       photo.get_image_hash(album::ImageHashAlgorithm::p_hash);
 
   std::vector<PhotoId> similar_photos;
   std::vector<std::uint8_t> distances;
   m_similarity_index->p_hash_index.get_nns_by_vector(
-      photo_hash.data, max_similar, -1, &similar_photos, &distances);
+      photo_hash.data, max_photos, -1, &similar_photos, &distances);
 
   // Get the list of elements
   std::vector<std::pair<PhotoId, std::uint8_t>> result;
@@ -192,6 +196,21 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo) const
                  std::back_inserter(result),
                  [](const auto& photo_id, const auto& distance)
                  { return std::make_pair(photo_id, distance); });
+
+  // Remove photos under threshold
+  constexpr auto max_bits =
+      static_cast<float>(std::numeric_limits<std::uint64_t>::digits);
+  const auto erase_start =
+      std::remove_if(result.begin(),
+                     result.end(),
+                     [&similarity_threshold, &max_bits](
+                         const auto& photo_pair)
+                     {
+                       auto similarity = (max_bits - photo_pair.second) / max_bits;
+                       return similarity <= similarity_threshold;
+                     });
+  result.erase(erase_start, result.end());
+
   return result;
 }
 }  // namespace album_architect::analysis

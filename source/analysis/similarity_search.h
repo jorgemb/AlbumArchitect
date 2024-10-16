@@ -34,7 +34,8 @@ public:
   SimilaritySearch(const SimilaritySearch& other) = delete;
   SimilaritySearch(SimilaritySearch&& other) noexcept = default;
   auto operator=(const SimilaritySearch& other) -> SimilaritySearch& = delete;
-  auto operator=(SimilaritySearch&& other) noexcept -> SimilaritySearch& = default;
+  auto operator=(SimilaritySearch&& other) noexcept
+      -> SimilaritySearch& = default;
 
   /// Returns all duplicated photo IDs
   /// @return
@@ -47,8 +48,12 @@ public:
 
   /// Returns a list of all the photos that are similar to the provided one
   /// @param photo
+  /// @param similarity_threshold
+  /// @param max_photos
   /// @return
-  auto get_similars_of(album::Photo& photo) const
+  auto get_similars_of(album::Photo& photo,
+                       float similarity_threshold = 0.8f,
+                       std::size_t max_photos = 100U) const
       -> std::vector<std::pair<PhotoId, std::uint8_t>>;
 
 private:

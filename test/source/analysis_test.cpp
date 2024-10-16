@@ -1,12 +1,11 @@
 #include <algorithm>
-#include <functional>
-#include <iterator>
 #include <optional>
 #include <ranges>
 #include <set>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_range_equals.hpp>
 
 #include "album/photo.h"
 #include "analysis/similarity_search.h"
@@ -15,7 +14,6 @@
 
 using namespace album_architect;  // NOLINT(*-build-using-namespace)
 namespace rng = std::ranges;
-namespace vws = std::ranges::views;
 
 /// Loads all photos that are in a file tree
 /// @param tree
@@ -97,7 +95,16 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
 
   // Search similar photos
   {
-    auto similar_to_first = similarity_search.get_similars_of(photos[0]);
-    REQUIRE(similar_to_first.size() >= 3);
+    auto similar_to_first =
+        similarity_search.get_similars_of(photos[0], 0.8F, 100);
+    REQUIRE(similar_to_first.size() == 3);
+
+    auto expected_similar = std::vector<std::size_t> {0, 24, 25};
+    auto calculated_similar = std::vector<std::size_t> {};
+    rng::transform(similar_to_first,
+                   std::back_inserter(calculated_similar),
+                   [](const auto& photo_data) { return photo_data.first; });
+    REQUIRE_THAT(calculated_similar,
+                 Catch::Matchers::RangeEquals(calculated_similar));
   }
 }
