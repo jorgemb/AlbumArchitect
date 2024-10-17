@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <istream>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -26,6 +27,7 @@ namespace album_architect::files {
 /// Forward declarations
 class FileTree;
 class FileGraph;
+class FileTreeIterator;
 enum class NodeType : std::uint8_t;
 
 /// Converts a NodeType into a PathType
@@ -201,6 +203,10 @@ public:
   auto operator==(const FileTree& rhs) const -> bool;
   auto operator!=(const FileTree& rhs) const -> bool;
 
+  // Iteration
+  auto begin() -> FileTreeIterator;
+  auto end() -> FileTreeIterator;
+
 private:
   /// Adds a directory that is a part of the filesystem
   /// \param path Path to use
@@ -234,6 +240,49 @@ private:
   std::filesystem::path m_root_path;
   std::unique_ptr<FileGraph> m_graph;
   mutable std::mutex m_graph_mutex;
+};
+
+/// Allows for recursive iteration of the whole FileTree
+class FileTreeIterator {
+public:
+  // Iterator definitions
+  // NOLINTBEGIN(*-identifier-naming)
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = Element;
+  using difference_type = std::ptrdiff_t;
+  using pointer = Element*;
+  using reference = Element&;
+  // NOLINTEND(*-identifier-naming)
+
+  /// Create the iterator from the starting element
+  /// @param starting_element
+  explicit FileTreeIterator(value_type starting_element);
+
+  /// Default constructor, for invalid checks
+  FileTreeIterator() = default;
+
+  // Copy and move operations
+  FileTreeIterator(const FileTreeIterator& other) = default;
+  FileTreeIterator(FileTreeIterator&& other) noexcept = default;
+  auto operator=(const FileTreeIterator& other) -> FileTreeIterator& = default;
+  auto operator=(FileTreeIterator&& other) noexcept
+      -> FileTreeIterator& = default;
+  ~FileTreeIterator() = default;
+
+  // Operations
+  auto operator*() -> reference;
+  auto operator->() -> pointer;
+
+  // Prefix operator
+  auto operator++() -> FileTreeIterator&;
+
+  friend auto operator==(const FileTreeIterator& lhs,
+                         const FileTreeIterator& rhs) -> bool;
+  friend auto operator!=(const FileTreeIterator& lhs,
+                         const FileTreeIterator& rhs) -> bool;
+
+private:
+  std::deque<value_type> m_remaining_elements;
 };
 
 }  // namespace album_architect::files

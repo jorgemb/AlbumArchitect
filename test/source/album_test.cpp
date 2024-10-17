@@ -121,7 +121,7 @@ TEST_CASE("Image loading", "[album][image]") {
 /// Compares an image with the modified counterpart using each hash type
 /// @param image
 /// @param modified_image
-void compare_hashes(const album::Image& image, cv::InputArray modified_image) {
+void compare_hashes(const album::Image& image, const cv::Mat& modified_image) {
   // Get original values
   auto original_mat = cv::Mat {};
   REQUIRE(image.get_image(original_mat));

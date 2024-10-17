@@ -26,7 +26,81 @@
 namespace fs = std::filesystem;
 
 namespace album_architect::files {
+Element::Element(PathType type, std::filesystem::path path, FileTree* parent)
+    : m_type(type)
+    , m_path(std::move(path))
+    , m_parent(parent) {}
+auto Element::get_type() const -> PathType {
+  return m_type;
+}
+auto Element::get_path() const -> const std::filesystem::path& {
+  return m_path;
+}
+auto Element::operator==(const Element& rhs) const -> bool {
+  return m_type == rhs.m_type && m_path == rhs.m_path
+      && m_parent == rhs.m_parent;
+}
+auto Element::operator!=(const Element& rhs) const -> bool {
+  return !(rhs == *this);
+}
+auto Element::get_children() const -> Element::ElementList {
+  auto elements = ElementList {};
+  m_parent->get_elements_under_path(get_path(), elements);
+  return elements;
+}
+auto Element::get_parent() const -> std::optional<Element> {
+  auto own_path = get_path();
+  if (!own_path.has_parent_path()) {
+    return {};
+  }
 
+  auto parent_path = own_path.parent_path();
+  return m_parent->get_element(parent_path);
+}
+auto Element::get_siblings() const -> Element::ElementList {
+  auto siblings = ElementList {};
+
+  // Get the children of the parent
+  auto parent = get_parent();
+  if (!parent) {
+    return {};
+  }
+
+  auto children = parent->get_children();
+  siblings.reserve(children.size());
+
+  // Remove oneself from the sibling list
+  auto own_path = get_path();
+  std::ranges::copy_if(children,
+                       std::back_inserter(siblings),
+                       [&own_path](auto element)
+                       { return element.get_path() != own_path; });
+
+  return siblings;
+}
+auto Element::set_metadata(const std::string& key,
+                           const PathAttribute& attribute)
+    -> std::optional<PathAttribute> {
+  return m_parent->set_metadata(m_path, key, attribute);
+}
+auto Element::get_metadata(const std::string& key) const
+    -> std::optional<PathAttribute> {
+  return m_parent->get_metadata(m_path, key);
+}
+auto Element::remove_metadata(const std::string& key)
+    -> std::optional<PathAttribute> {
+  return m_parent->remove_metadata(m_path, key);
+}
+auto from_node_type(const NodeType& path_type) -> PathType {
+  switch (path_type) {
+    case NodeType::directory:
+      return PathType::directory;
+    case NodeType::file:
+      return PathType::file;
+    default:
+      return PathType::invalid;
+  }
+}
 FileTree::FileTree(FileTree&& other) noexcept {
   auto guard = std::lock_guard(other.m_graph_mutex);
 
@@ -95,11 +169,11 @@ auto FileTree::get_element(const std::filesystem::path& path)
     return {};
   }
 
-  auto relative_path = std::filesystem::relative(path, m_root_path);
+  const auto relative_path = std::filesystem::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
 
   auto guard = std::unique_lock(m_graph_mutex);
-  auto node = m_graph->get_node(path_list);
+  const auto node = m_graph->get_node(path_list);
 
   if (!node) {
     return {};
@@ -122,7 +196,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   }
 
   // Check that it is a directory
-  if (!std::filesystem::is_directory(path)) {
+  if (!fs::is_directory(path)) {
     spdlog::error("Path {} is not a directory.", path.string());
     return false;
   }
@@ -131,7 +205,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   auto temporary_cwd = TempCurrentDir(m_root_path);
 
   // Add the file to the internal representation
-  auto relative_path = std::filesystem::relative(path, m_root_path);
+  const auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
   if (path != m_root_path) {
     auto guard = std::unique_lock(m_graph_mutex);
@@ -165,7 +239,7 @@ auto FileTree::is_subpath(const std::filesystem::path& path) const -> bool {
   }
 
   auto error_code = std::error_code {};
-  auto relative_path = fs::relative(path, m_root_path, error_code);
+  const auto relative_path = fs::relative(path, m_root_path, error_code);
   if (error_code) {
     spdlog::error("Couldn't add directory {}. Error: {}",
                   path.string(),
@@ -190,9 +264,10 @@ auto FileTree::to_path_list(const std::filesystem::path& path)
     current_path = current_path.parent_path();
   }
 
-  std::reverse(path_list.begin(), path_list.end());
+  std::ranges::reverse(path_list);
   return path_list;
 }
+
 void FileTree::to_graphviz(std::ostream& ostream) const {
   auto guard = std::lock_guard(m_graph_mutex);
   m_graph->to_graphviz(ostream);
@@ -205,6 +280,12 @@ auto FileTree::operator==(const FileTree& rhs) const -> bool {
 }
 auto FileTree::operator!=(const FileTree& rhs) const -> bool {
   return !(rhs == *this);
+}
+auto FileTree::begin() -> FileTreeIterator {
+  return FileTreeIterator(get_root_element());
+}
+auto FileTree::end() -> FileTreeIterator {
+  return FileTreeIterator();
 }
 void FileTree::to_stream(std::ostream& output) const {
   auto archiver = boost::archive::binary_oarchive {output};
@@ -230,7 +311,7 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
   }
 
   // Get the children under the path
-  auto relative_path = fs::relative(path, m_root_path);
+  const auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
   auto node = std::optional<FileGraph::NodeId> {};
   {
@@ -248,22 +329,22 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
   }
 
   // Create the Elements from the children
-  std::transform(children.begin(),
-                 children.end(),
-                 std::back_inserter(output),
-                 [this](auto child)
-                 {
-                   auto guard = std::unique_lock(m_graph_mutex);
-                   auto type = m_graph->get_node_type(child);
-                   auto current_path_list = m_graph->get_node_path(child);
+  std::ranges::transform(
+      children,
+      std::back_inserter(output),
+      [this](auto child)
+      {
+        auto guard = std::unique_lock(m_graph_mutex);
+        auto type = m_graph->get_node_type(child);
+        auto current_path_list = m_graph->get_node_path(child);
 
-                   auto current_path = m_root_path;
-                   for (auto&& element : current_path_list) {
-                     current_path.append(std::move(element));
-                   }
+        auto current_path = m_root_path;
+        for (auto&& element : current_path_list) {
+          current_path.append(std::move(element));
+        }
 
-                   return Element {from_node_type(type), current_path, this};
-                 });
+        return Element {from_node_type(type), current_path, this};
+      });
 
   return true;
 }
@@ -278,11 +359,11 @@ auto FileTree::set_metadata(const std::filesystem::path& path,
   if (!is_subpath(path)) {
     return {};
   }
-  auto relative_path = fs::relative(path, m_root_path);
+  const auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
 
   auto guard = std::unique_lock(m_graph_mutex);
-  auto node = m_graph->get_node(path_list);
+  const auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
   }
@@ -296,11 +377,11 @@ auto FileTree::get_metadata(const std::filesystem::path& path,
   if (!is_subpath(path)) {
     return {};
   }
-  auto relative_path = fs::relative(path, m_root_path);
+  const auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
 
   auto guard = std::unique_lock(m_graph_mutex);
-  auto node = m_graph->get_node(path_list);
+  const auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
   }
@@ -315,91 +396,47 @@ auto FileTree::remove_metadata(const std::filesystem::path& path,
   if (!is_subpath(path)) {
     return {};
   }
-  auto relative_path = fs::relative(path, m_root_path);
+  const auto relative_path = fs::relative(path, m_root_path);
   auto path_list = to_path_list(relative_path);
 
   auto guard = std::unique_lock(m_graph_mutex);
-  auto node = m_graph->get_node(path_list);
+  const auto node = m_graph->get_node(path_list);
   if (!node) {
     return {};
   }
 
   return m_graph->remove_node_metadata(node.value(), key);
 }
-Element::Element(PathType type, std::filesystem::path path, FileTree* parent)
-    : m_type(type)
-    , m_path(std::move(path))
-    , m_parent(parent) {}
-auto Element::get_type() const -> PathType {
-  return m_type;
+FileTreeIterator::FileTreeIterator(value_type starting_element) {
+  m_remaining_elements.push_back(std::move(starting_element));
 }
-auto Element::get_path() const -> const std::filesystem::path& {
-  return m_path;
+auto FileTreeIterator::operator*() -> reference {
+  return m_remaining_elements.front();
 }
-auto Element::operator==(const Element& rhs) const -> bool {
-  return m_type == rhs.m_type && m_path == rhs.m_path
-      && m_parent == rhs.m_parent;
+auto FileTreeIterator::operator->() -> pointer {
+  return &m_remaining_elements.front();
 }
-auto Element::operator!=(const Element& rhs) const -> bool {
-  return !(rhs == *this);
-}
-auto Element::get_children() const -> Element::ElementList {
-  auto elements = ElementList {};
-  m_parent->get_elements_under_path(get_path(), elements);
-  return elements;
-}
-auto Element::get_parent() const -> std::optional<Element> {
-  auto own_path = get_path();
-  if (!own_path.has_parent_path()) {
-    return {};
+auto FileTreeIterator::operator++() -> FileTreeIterator& {
+  // Check if there are remaining elements
+  if (m_remaining_elements.empty()) {
+    return *this;
   }
 
-  auto parent_path = own_path.parent_path();
-  return m_parent->get_element(parent_path);
-}
-auto Element::get_siblings() const -> Element::ElementList {
-  auto siblings = ElementList {};
+  // Push all children of the current element
+  auto current_element = m_remaining_elements.front();
+  m_remaining_elements.pop_front();
 
-  // Get the children of the parent
-  auto parent = get_parent();
-  if (!parent) {
-    return {};
-  }
-
-  auto children = parent->get_children();
-  siblings.reserve(children.size());
-
-  // Remove oneself from the sibling list
-  auto own_path = get_path();
-  std::copy_if(children.begin(),
-               children.end(),
-               std::back_inserter(siblings),
-               [&own_path](auto element)
-               { return element.get_path() != own_path; });
-
-  return siblings;
+  // Add all the children from the current element
+  auto children = current_element.get_children();
+  std::ranges::move(children, std::back_inserter(m_remaining_elements));
+  return *this;
 }
-auto Element::set_metadata(const std::string& key,
-                           const PathAttribute& attribute)
-    -> std::optional<PathAttribute> {
-  return m_parent->set_metadata(m_path, key, attribute);
+auto operator==(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
+    -> bool {
+  return lhs.m_remaining_elements == rhs.m_remaining_elements;
 }
-auto Element::get_metadata(const std::string& key) const
-    -> std::optional<PathAttribute> {
-  return m_parent->get_metadata(m_path, key);
-}
-auto Element::remove_metadata(const std::string& key)
-    -> std::optional<PathAttribute> {
-  return m_parent->remove_metadata(m_path, key);
-}
-auto from_node_type(const NodeType& path_type) -> PathType {
-  switch (path_type) {
-    case NodeType::directory:
-      return PathType::directory;
-    case NodeType::file:
-      return PathType::file;
-    default:
-      return PathType::invalid;
-  }
+auto operator!=(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
+    -> bool {
+  return !(lhs == rhs);
 }
 }  // namespace album_architect::files

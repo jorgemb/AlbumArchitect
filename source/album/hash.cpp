@@ -53,14 +53,14 @@ auto Hash::calculate_sha256(const std::filesystem::path& path)
     -> std::optional<std::string> {
   return calculate_hash<SHA256>(path);
 }
-auto Hash::calculate_average_hash(cv::InputArray input) -> cv::Mat {
+auto Hash::calculate_average_hash(const cv::Mat& input) -> cv::Mat {
   auto hasher = cv::img_hash::AverageHash::create();
 
   auto output = cv::Mat {};
   hasher->compute(input, output);
   return output;
 }
-auto Hash::calculate_p_hash(cv::InputArray input) -> cv::Mat {
+auto Hash::calculate_p_hash(const cv::Mat& input) -> cv::Mat {
   auto hasher = cv::img_hash::PHash::create();
 
   auto output = cv::Mat {};

@@ -7,8 +7,12 @@
       "version>=": "20240722.0"
     },
     {
+      "name": "annoy",
+      "version>=": "1.17.3"
+    },
+    {
       "name": "fmt",
-      "version>=": "11.0.2"
+      "version>=": "11.0.2#1"
     },
     {
       "name": "spdlog",
@@ -16,19 +20,19 @@
     },
     {
       "name": "boost-core",
-      "version>=": "1.83.0"
+      "version>=": "1.85.0#2"
     },
     {
       "name": "boost-graph",
-      "version>=": "1.83.0"
+      "version>=": "1.85.0#1"
     },
     {
       "name": "boost-serialization",
-      "version>=": "1.83.0"
+      "version>=": "1.85.0#1"
     },
     {
       "name": "boost-filesystem",
-      "version>=": "1.83.0"
+      "version>=": "1.85.0#1"
     },
     {
       "name": "hash-library",
@@ -40,7 +44,7 @@
     },
     {
       "name": "opencv",
-      "version>=": "4.8.0#1",
+      "version>=": "4.5.5#1",
       "features": [
         "contrib"
       ]
@@ -82,5 +86,5 @@
       ]
     }
   },
-  "builtin-baseline": "dd3adcf020e69077e83e92a0a293ceca734f6288"
+  "builtin-baseline": "9558037875497b9db8cf38fcd7db68ec661bffe7"
 }
