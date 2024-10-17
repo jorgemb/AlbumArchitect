@@ -49,6 +49,12 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
 
   // Get all photos
   auto photos = load_photos(*file_tree);
+  rng::sort(photos,
+            [](const auto& lhs, const auto& rhs)
+            {
+              return lhs.get_file_element().get_path()
+                  < rhs.get_file_element().get_path();
+            });
 
   // Add photos to the similarity builder
   auto similarity_builder = analysis::SimilaritySearchBuilder {};
@@ -85,8 +91,9 @@ TEST_CASE("Similarity test", "[SimilarityTest]") {
     auto duplicates_of_second = similarity_search.get_duplicates_of(photos[1]);
     REQUIRE(duplicates_of_second.size() == 2);
 
-    auto other_element =
-        file_tree->get_element(images_dir / "Home" / "IMG_5515.JPG");
+    auto other_element = file_tree->get_element(
+        images_dir / "size" / "medium_size"
+        / "apollo-11-crew-in-raft-before-recovery_9457415403_o.jpg");
     REQUIRE(other_element);
     INFO("Loading test file: " << other_element->get_path().string());
     auto other_photo = album::Photo::load(other_element.value());
