@@ -241,9 +241,10 @@ TEST_CASE("Photo Basics", "[album][photo]") {
 
           // Load the photo and load the hash
           auto hash = photo->get_image_hash(hash_type);
+          REQUIRE(hash);
 
           // Check that hash is not only zeroes
-          REQUIRE(cv::countNonZero(hash) > 0);
+          REQUIRE(cv::countNonZero(*hash) > 0);
 
           // Check that hash is now in cache
           REQUIRE(photo->is_image_hash_in_cache(hash_type));
@@ -263,6 +264,8 @@ TEST_CASE("Photo Basics", "[album][photo]") {
 
       // After loading, it should be marked as loaded
       auto photo = album::Photo::load(*current);
+      REQUIRE(photo);
+      REQUIRE(photo->get_image());
       REQUIRE(album::PhotoMetadata::get_photo_state(*current)
               == album::PhotoState::ok);
     }

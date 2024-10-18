@@ -13,6 +13,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "album/image.h"
 #include "helper/cv_mat_operations.h"
 
 // NOLINTBEGIN(*)
@@ -32,10 +33,10 @@ template<class HashType, class IdType = std::size_t>
 struct HashId {
   /// Default constructor
   /// @param hash
-  /// @param id
-  HashId(const HashType& hash, const IdType& id)
+  /// @param idx
+  HashId(const HashType& hash, const IdType& idx)
       : hash(hash)
-      , id(id) {}
+      , id(idx) {}
 
   HashType hash;
   IdType id;
@@ -50,6 +51,11 @@ public:
 
   /// Default destructor
   ~SimilarityIndex() = default;
+
+  SimilarityIndex(const SimilarityIndex& other) = default;
+  SimilarityIndex(SimilarityIndex&& other) noexcept = default;
+  auto operator=(const SimilarityIndex& other) -> SimilarityIndex& = delete;
+  auto operator=(SimilarityIndex&& other) noexcept -> SimilarityIndex& = delete;
 
   /// Index for pHash algorithm
   Annoy::AnnoyIndex<PhotoId,
@@ -73,13 +79,21 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
 
   // Add pHash
   const auto p_hash = photo.get_image_hash(album::ImageHashAlgorithm::p_hash);
-  m_similarity_index->p_hash_index.add_item(photo_id, p_hash.data);
-
-  // Add average hash
   const auto average_hash =
       photo.get_image_hash(album::ImageHashAlgorithm::average_hash);
+
+  // Couldn't calculate hash
+  if (!p_hash || !average_hash) {
+    spdlog::error("Couldn't calculate hash of image {}",
+                  photo.get_file_element().get_path().string());
+    return std::numeric_limits<PhotoId>::max();
+  }
+
+  m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
+
+  // Add average hash
   m_similarity_index->average_index.emplace_back(
-      cvmat::mat_to_uint64(average_hash), photo_id);
+      cvmat::mat_to_uint64(*average_hash), photo_id);
 
   return photo_id;
 }
@@ -146,8 +160,11 @@ auto SimilaritySearch::get_duplicated_photos() const
 auto SimilaritySearch::get_duplicates_of(album::Photo& photo) const
     -> std::vector<PhotoId> {
   // Calculate hash
-  const auto photo_hash = cvmat::mat_to_uint64(
-      photo.get_image_hash(album::ImageHashAlgorithm::average_hash));
+  auto average_hash = photo.get_image_hash(album::ImageHashAlgorithm::average_hash);
+  if(!average_hash) {
+    return {};
+  }
+  const auto photo_hash = cvmat::mat_to_uint64(*average_hash);
 
   // Find where the image starts
   const auto start = std::find_if(m_similarity_index->average_index.begin(),
@@ -180,11 +197,14 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo,
   // Get the hash and find similar
   const auto photo_hash =
       photo.get_image_hash(album::ImageHashAlgorithm::p_hash);
+  if(!photo_hash) {
+    return {};
+  }
 
   std::vector<PhotoId> similar_photos;
   std::vector<std::uint8_t> distances;
   m_similarity_index->p_hash_index.get_nns_by_vector(
-      photo_hash.data, max_photos, -1, &similar_photos, &distances);
+      photo_hash->data, max_photos, -1, &similar_photos, &distances);
 
   // Get the list of elements
   std::vector<std::pair<PhotoId, std::uint8_t>> result;
