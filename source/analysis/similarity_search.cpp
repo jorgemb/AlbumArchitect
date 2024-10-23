@@ -160,8 +160,9 @@ auto SimilaritySearch::get_duplicated_photos() const
 auto SimilaritySearch::get_duplicates_of(album::Photo& photo) const
     -> std::vector<PhotoId> {
   // Calculate hash
-  auto average_hash = photo.get_image_hash(album::ImageHashAlgorithm::average_hash);
-  if(!average_hash) {
+  auto average_hash =
+      photo.get_image_hash(album::ImageHashAlgorithm::average_hash);
+  if (!average_hash) {
     return {};
   }
   const auto photo_hash = cvmat::mat_to_uint64(*average_hash);
@@ -197,7 +198,7 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo,
   // Get the hash and find similar
   const auto photo_hash =
       photo.get_image_hash(album::ImageHashAlgorithm::p_hash);
-  if(!photo_hash) {
+  if (!photo_hash) {
     return {};
   }
 

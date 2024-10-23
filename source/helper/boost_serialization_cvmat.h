@@ -41,7 +41,7 @@ void load(Archive& archive, ::cv::Mat& mat, const unsigned int /*version*/) {
 
   mat.create(rows, cols, elem_type);
 
-  size_t data_size = static_cast<size_t>(mat.cols * mat.rows) * elem_size;
+  const size_t data_size = static_cast<size_t>(mat.cols * mat.rows) * elem_size;
   archive& boost::serialization::make_array(mat.ptr(), data_size);
 }
 

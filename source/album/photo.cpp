@@ -7,9 +7,8 @@
 
 #include "album/photo.h"
 
-#include <OpenImageIO/imageio.h>
-#include <fmt/format.h>
 #include <magic_enum.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <spdlog/spdlog.h>
 
@@ -28,15 +27,13 @@ auto Photo::load(files::Element file_element) -> std::optional<Photo> {
   }
 
   // Check if the photo would be possible to be loaded
-  auto image_input = OIIO::ImageInput::create(file_element.get_path().string());
-  if (!image_input) {
+  if (!Image::check_path_is_image(file_element.get_path())) {
     PhotoMetadata::set_photo_state(file_element, PhotoState::error);
-    spdlog::error("File {} does not point to a valid Image.",
+    spdlog::error("File {} does not point to a valid photo.",
                   file_element.get_path().string());
     return {};
   }
 
-  // Set metadata
   return Photo {std::move(file_element)};
 }
 Photo::Photo(files::Element&& file_element)
@@ -61,7 +58,7 @@ auto Photo::load_image() -> bool {
 }
 auto Photo::get_image() -> std::optional<cv::Mat> {
   // Check if image is loaded
-  if(!load_image() || !m_image) {
+  if (!load_image() || !m_image) {
     return {};
   }
 
@@ -76,16 +73,16 @@ auto Photo::get_file_element() const -> files::Element {
 }
 auto Photo::get_image_hash(ImageHashAlgorithm algorithm)
     -> std::optional<cv::Mat> {
-  // Check if image is loaded
-  if(!load_image() || !m_image) {
-    return {};
-  }
-
   // Check if hash is already stored
   if (auto stored_hash =
           PhotoMetadata::get_stored_hash(m_file_element, algorithm))
   {
-    return *stored_hash;
+    return stored_hash;
+  }
+
+  // Check if image is loaded
+  if (!load_image() || !m_image) {
+    return {};
   }
 
   // Calculate hash and store
