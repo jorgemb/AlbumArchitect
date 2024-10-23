@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS build
 
 ENV TZ=US \
     DEBIAN_FRONTEND=noninteractive
@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y \
     automake \
     bison \
     build-essential \
-    clang-tidy-14 \
-    clang-14 \
+    clang-tidy \
+    clang \
     cmake \
     cppcheck \
     curl \
@@ -28,7 +28,6 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-setuptools \
     python3-jinja2 \
-    libstdc++-12-dev \
     tar \
     unzip \
     zip \
@@ -36,13 +35,13 @@ RUN apt-get update && apt-get install -y \
 
 # Get VCPKG and install dependencies
 ENV VCPKG_ROOT="/vcpkg"
-ENV CC="/usr/bin/clang-14"
-ENV CXX="/usr/bin/clang++-14"
+ENV CC="/usr/bin/clang"
+ENV CXX="/usr/bin/clang++"
 
 # Set alternatives to programs
-RUN update-alternatives --install \
-    /usr/bin/clang-tidy clang-tidy \
-    /usr/bin/clang-tidy-14 140
+#RUN update-alternatives --install \
+#    /usr/bin/clang-tidy clang-tidy \
+#    /usr/bin/clang-tidy-14 140
 
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
