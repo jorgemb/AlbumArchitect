@@ -14,7 +14,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -26,10 +26,12 @@ jobs:
       run: pip3 install codespell
 
     - name: Install linter
-      run: sudo apt-get install -y clang-format-14
+      run: sudo apt-get install -y clang-format
+#      run: sudo apt-get install -y clang-format-14
 
     - name: Lint
-      run: cmake -D FORMAT_COMMAND=clang-format-14 -P cmake/lint.cmake
+#      run: cmake -D FORMAT_COMMAND=clang-format-14 -P cmake/lint.cmake
+      run: cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake
 
     - name: Spell check
       if: always()
@@ -38,7 +40,7 @@ jobs:
   coverage:
     needs: [lint]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     # To enable coverage, delete the last line from the conditional below and
     # edit the "<name>" placeholder to your GitHub name.
@@ -80,11 +82,13 @@ jobs:
   test:
     needs: [lint]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     env:
-      CC: /usr/bin/clang-14
-      CXX: /usr/bin/clang++-14
+#      CC: /usr/bin/clang-14
+#      CXX: /usr/bin/clang++-14
+       CC: /usr/bin/clang
+       CXX: /usr/bin/clang++
 
     steps:
     - name: Checkout
@@ -104,9 +108,9 @@ jobs:
           cppcheck \
           curl \
           git \
-          clang-14 \
-          clang-tidy-14 \
-          clang-format-14 \
+          clang \
+          clang-tidy \
+          clang-format \
           cppcheck \
           libtool \
           libx11-dev \
@@ -122,15 +126,14 @@ jobs:
           python3 \
           python3-setuptools \
           python3-jinja2 \
-          libstdc++-12-dev \
           tar \
           unzip \
           zip 
         
         
-        sudo update-alternatives --install \
-          /usr/bin/clang-tidy clang-tidy \
-          /usr/bin/clang-tidy-14 140
+#        sudo update-alternatives --install \
+#          /usr/bin/clang-tidy clang-tidy \
+#          /usr/bin/clang-tidy-14 140
 
     - name: Install vcpkg
       uses: friendlyanon/setup-vcpkg@v1
@@ -173,7 +176,7 @@ jobs:
     # Deploy docs only when builds succeed
     needs: [test]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     # To enable, first you have to create an orphaned gh-pages branch:
     #
