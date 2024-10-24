@@ -37,6 +37,12 @@ public:
   /// @return
   static auto load(const std::filesystem::path& path) -> std::optional<Image>;
 
+  /// Tries to determine if a given path contains an image that looks like it
+  /// could be loaded.
+  /// @param path
+  /// @return
+  static auto check_path_is_image(const std::filesystem::path& path) -> bool;
+
   /// Default constructor
   explicit Image(std::shared_ptr<ImageImpl> impl);
 

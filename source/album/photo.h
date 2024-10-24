@@ -25,7 +25,7 @@ public:
 
   /// Returns a cv::Mat with the image information.
   /// \return cv::Mat with image information
-  auto get_image() const -> cv::Mat;
+  auto get_image() -> std::optional<cv::Mat>;
 
   /// Returns the file element
   /// @return
@@ -34,7 +34,7 @@ public:
   /// Returns a cv::Mat with the specified image hash. The value is
   /// cached and stored for future reference.
   /// \return cv::Mat with hash
-  auto get_image_hash(ImageHashAlgorithm algorithm) -> cv::Mat;
+  auto get_image_hash(ImageHashAlgorithm algorithm) -> std::optional<cv::Mat>;
 
   /// Returns True if the given hash is stored in the cache.
   /// \return true if hash in cache.
@@ -43,11 +43,15 @@ public:
 private:
   /// Default constructor.
   /// \param file_element Element that represents the file information
-  /// \param image Actual image
-  Photo(files::Element&& file_element, Image&& image);
+  explicit Photo(files::Element&& file_element);
+
+  /// Tries to load the image from the disk, to support lazy loading until
+  /// it is needed.
+  /// @return
+  auto load_image() -> bool;
 
   files::Element m_file_element;
-  Image m_image;
+  std::optional<Image> m_image;
 };
 
 }  // namespace album_architect::album

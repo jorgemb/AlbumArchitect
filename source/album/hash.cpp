@@ -3,13 +3,18 @@
 //
 
 #include <array>
+#include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <string>
 
 #include "hash.h"
 
 #include <hash-library/md5.h>
 #include <hash-library/sha256.h>
+#include <opencv2/core/mat.hpp>
 #include <opencv2/img_hash/average_hash.hpp>
 #include <opencv2/img_hash/phash.hpp>
 #include <spdlog/spdlog.h>
@@ -17,12 +22,13 @@
 namespace album_architect::hash {
 
 /// Size of the buffer for image loading
-constexpr auto image_load_buffer_size = std::size_t {4096U};
+constexpr static auto image_load_buffer_size = std::size_t {4096U};
 
 /// General function for calculating a hash
 /// @tparam T
 /// @param path
 /// @return
+namespace {
 template<class T>
 auto calculate_hash(const std::filesystem::path& path)
     -> std::optional<std::string> {
@@ -44,6 +50,7 @@ auto calculate_hash(const std::filesystem::path& path)
 
   return hash.getHash();
 }
+}  // namespace
 
 auto Hash::calculate_md5(const std::filesystem::path& path)
     -> std::optional<std::string> {
@@ -54,14 +61,14 @@ auto Hash::calculate_sha256(const std::filesystem::path& path)
   return calculate_hash<SHA256>(path);
 }
 auto Hash::calculate_average_hash(const cv::Mat& input) -> cv::Mat {
-  auto hasher = cv::img_hash::AverageHash::create();
+  const auto hasher = cv::img_hash::AverageHash::create();
 
   auto output = cv::Mat {};
   hasher->compute(input, output);
   return output;
 }
 auto Hash::calculate_p_hash(const cv::Mat& input) -> cv::Mat {
-  auto hasher = cv::img_hash::PHash::create();
+  const auto hasher = cv::img_hash::PHash::create();
 
   auto output = cv::Mat {};
   hasher->compute(input, output);

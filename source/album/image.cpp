@@ -2,14 +2,18 @@
 // Created by jorge on 09/08/24.
 //
 
-#include <array>
+#include <filesystem>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
 #include <utility>
 
 #include "image.h"
 
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
-#include <hash-library/md5.h>
+#include <OpenImageIO/imageio.h>
 #include <spdlog/spdlog.h>
 
 #include "hash.h"
@@ -69,6 +73,10 @@ auto Image::load(const std::filesystem::path& path) -> std::optional<Image> {
                                                     spec.nchannels,
                                                     std::move(metadata));
   return std::make_optional<Image>(implementation);
+}
+auto Image::check_path_is_image(const std::filesystem::path& path) -> bool {
+  auto image_input = OIIO::ImageInput::create(path.string());
+  return static_cast<bool>(image_input);
 }
 Image::Image(std::shared_ptr<ImageImpl> impl)
     : m_impl(std::move(impl)) {}
