@@ -79,7 +79,7 @@ RUN --mount=type=cache,target=/app/build/ \
 
 
 
-FROM ubuntu:22.04 AS runtime
+FROM ubuntu:24.04 AS runtime
 
 # Copy application
 WORKDIR /app

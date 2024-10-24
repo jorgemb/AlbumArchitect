@@ -103,15 +103,13 @@ jobs:
           automake \
           bison \
           build-essential \
+          clang-format \
           clang-tidy \
+          clang \
           cmake \
           cppcheck \
           curl \
           git \
-          clang \
-          clang-tidy \
-          clang-format \
-          cppcheck \
           libtool \
           libx11-dev \
           libxext-dev \
