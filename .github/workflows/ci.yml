@@ -20,7 +20,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: false
-          tags: jorgemb/albumarchitect:$GITHUB_REF
+          tags: jorgemb/albumarchitect:$(date +%s)
           context: .
           file: docker/build-clang.Dockerfile
 
