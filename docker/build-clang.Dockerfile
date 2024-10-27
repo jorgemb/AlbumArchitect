@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     clang-tidy \
     clang-format \
+    codespell \
     clang \
     cmake \
     cppcheck \
@@ -39,8 +40,6 @@ ENV CC="/usr/bin/clang"
 ENV CXX="/usr/bin/clang++"
 
 
-FROM base AS build
-
 # Set alternatives to programs
 #RUN update-alternatives --install \
 #    /usr/bin/clang-tidy clang-tidy \
@@ -50,8 +49,7 @@ ENV VCPKG_ROOT="/vcpkg"
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
 
-RUN --mount=type=cache,target=$VCPKG_ROOT/packages \
-    VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
+RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
     && git init . \
     && git remote add origin https://github.com/microsoft/vcpkg \
     && git fetch origin $VCPKG_BASELINE \
@@ -59,40 +57,46 @@ RUN --mount=type=cache,target=$VCPKG_ROOT/packages \
     && ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test
 
-FROM build AS configure
+FROM base AS build
+
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # Configure and build project
 WORKDIR /app
 COPY cmake cmake
 COPY source source
 COPY test test
-COPY CMakeLists.txt CMakePresets.json vcpkg.json ./
+COPY CMakeLists.txt CMakePresets.json vcpkg.json .codespellrc .clang-format .clang-tidy ./
+
+FROM build as test
 
 # Lint and spelling
-RUN --mount=type=cache,target=/app/build/ \
-    cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake \
+RUN cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake -B build/ . \
     && cmake -P cmake/spell.cmake
 
-RUN --mount=type=cache,target=/app/build/ \
-    cmake -B build/ --preset=ci-sanitize . \
+# Sanitize and test
+RUN cmake --preset=ci-sanitize . \
     && cmake --build build/sanitize -j 4
 
-# .. perform tests
+# .. perform build and tests
+RUN cmake --preset=ci-ubuntu && \
+    cmake --build build --config Release -j 4
+
 WORKDIR /app/build
-RUN --mount=type=cache,target=/app/build/ \
-    ctest --output-on-failure --no-tests=error -j 4 \
+RUN ctest --output-on-failure --no-tests=error -C Release -j 4
+
 
 FROM build as release
 
 # Build
-RUN --mount=type=cache,target=/app/build/ \
-    cmake -B build/ --preset=ci-ubuntu . \
+RUN cmake --preset=ci-ubuntu \
     && cmake --build build --config Release -j 4
 
 # .. create distributable
 WORKDIR /app
-RUN --mount=type=cache,target=/app/build/ \
-    cmake --install build --config Release --prefix dist
+RUN cmake --install build --config Release --prefix dist
 #    && for file in $(ldd dist/bin/AlbumArchitect | grep "=>" | cut -d" " -f3); do cp $file dist/bin/ ; done
 
 
@@ -100,7 +104,7 @@ FROM ubuntu:24.04 AS runtime
 
 # Copy application
 WORKDIR /app
-COPY --from=configure /app/dist/bin/ .
+COPY --from=release /app/dist/bin/ .
 
 ENTRYPOINT ["/app/AlbumArchitect"]
 SHELL ["--help"]
