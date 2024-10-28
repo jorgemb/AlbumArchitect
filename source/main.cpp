@@ -68,29 +68,17 @@ auto main(int argc, char* argv[]) -> int {
 
   // Load all hashes
   spdlog::info("LOADING HASHES");
-  std::for_each(
-      std::execution::par_unseq,
-      file_elements.begin(),
-      file_elements.end(),
-      [](auto& element)
-      {
-        if (PhotoMetadata::get_photo_state(element)
-            == album_architect::album::PhotoState::no_info)
-        {
-          if (auto photo = album_architect::album::Photo::load(element)) {
-            try {
-              photo->get_image_hash(ImageHashAlgorithm::average_hash);
-              photo->get_image_hash(ImageHashAlgorithm::p_hash);
-            } catch (const cv::Exception& e) {
-              spdlog::error("Failed to hash photo: {}. Error: {}",
-                            element.get_path().string(),
-                            e.what());
-              PhotoMetadata::set_photo_state(
-                  element, album_architect::album::PhotoState::error);
-            }
-          }
-        }
-      });
+  std::for_each(std::execution::par_unseq,
+                file_elements.begin(),
+                file_elements.end(),
+                [](auto& element)
+                {
+                  if (auto photo = album_architect::album::Photo::load(element))
+                  {
+                    photo->get_image_hash(ImageHashAlgorithm::average_hash);
+                    photo->get_image_hash(ImageHashAlgorithm::p_hash);
+                  }
+                });
 
   // .. serialize
   spdlog::info("SERIALIZING");

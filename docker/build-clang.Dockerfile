@@ -1,6 +1,6 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS base
 
-ENV TZ=US \
+ENV TZ=UTC \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
@@ -8,8 +8,10 @@ RUN apt-get update && apt-get install -y \
     automake \
     bison \
     build-essential \
-    clang-tidy-14 \
-    clang-14 \
+    clang-tidy \
+    clang-format \
+    codespell \
+    clang \
     cmake \
     cppcheck \
     curl \
@@ -28,27 +30,26 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-setuptools \
     python3-jinja2 \
-    libstdc++-12-dev \
     tar \
     unzip \
     zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Get VCPKG and install dependencies
-ENV VCPKG_ROOT="/vcpkg"
-ENV CC="/usr/bin/clang-14"
-ENV CXX="/usr/bin/clang++-14"
+ENV CC="/usr/bin/clang"
+ENV CXX="/usr/bin/clang++"
+
 
 # Set alternatives to programs
-RUN update-alternatives --install \
-    /usr/bin/clang-tidy clang-tidy \
-    /usr/bin/clang-tidy-14 140
+#RUN update-alternatives --install \
+#    /usr/bin/clang-tidy clang-tidy \
+#    /usr/bin/clang-tidy-14 140
 
+ENV VCPKG_ROOT="/vcpkg"
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
 
-RUN --mount=type=cache,target=$VCPKG_ROOT/packages \
-    VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
+RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
     && git init . \
     && git remote add origin https://github.com/microsoft/vcpkg \
     && git fetch origin $VCPKG_BASELINE \
@@ -56,35 +57,54 @@ RUN --mount=type=cache,target=$VCPKG_ROOT/packages \
     && ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test
 
+FROM base AS build
+
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # Configure and build project
 WORKDIR /app
 COPY cmake cmake
 COPY source source
 COPY test test
-COPY CMakeLists.txt CMakePresets.json vcpkg.json ./
+COPY CMakeLists.txt CMakePresets.json vcpkg.json .codespellrc .clang-format .clang-tidy ./
 
-RUN --mount=type=cache,target=/app/build/ \
-    cmake -B build/ --preset=ci-ubuntu . \
-    && cmake --build build --config Release -j 4
+FROM build as test
 
-# .. perform tests
+# Lint and spelling
+RUN cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake -B build/ . \
+    && cmake -P cmake/spell.cmake
+
+# Sanitize and test
+RUN cmake --preset=ci-sanitize . \
+    && cmake --build build/sanitize -j 4
+
+# .. perform build and tests
+RUN cmake --preset=ci-ubuntu && \
+    cmake --build build --config Release -j 4
+
 WORKDIR /app/build
-RUN --mount=type=cache,target=/app/build/ \
-    ctest --output-on-failure --no-tests=error -C Release -j 4
+RUN ctest --output-on-failure --no-tests=error -C Release -j 4
+
+
+FROM build as release
+
+# Build
+RUN cmake --preset=ci-ubuntu \
+    && cmake --build build --config Release -j 4
 
 # .. create distributable
 WORKDIR /app
-RUN --mount=type=cache,target=/app/build/ \
-    cmake --install build --config Release --prefix dist
+RUN cmake --install build --config Release --prefix dist
 #    && for file in $(ldd dist/bin/AlbumArchitect | grep "=>" | cut -d" " -f3); do cp $file dist/bin/ ; done
 
 
-
-FROM ubuntu:22.04 AS runtime
+FROM ubuntu:24.04 AS runtime
 
 # Copy application
 WORKDIR /app
-COPY --from=build /app/dist/bin/ .
+COPY --from=release /app/dist/bin/ .
 
 ENTRYPOINT ["/app/AlbumArchitect"]
 SHELL ["--help"]

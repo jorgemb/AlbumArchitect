@@ -2,10 +2,18 @@
 // Created by jorelmb on 29/09/24.
 //
 
+#include <optional>
+#include <string>
+#include <utility>
+
 #include "photo_metadata.h"
 
 #include <fmt/format.h>
 #include <magic_enum.hpp>
+#include <opencv2/core/mat.hpp>
+
+#include "album/image.h"
+#include "files/tree.h"
 
 namespace album_architect::album {
 using namespace std::string_literals;
