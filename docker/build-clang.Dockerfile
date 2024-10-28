@@ -46,15 +46,11 @@ ENV CXX="/usr/bin/clang++"
 #    /usr/bin/clang-tidy-14 140
 
 ENV VCPKG_ROOT="/vcpkg"
+RUN git clone https://github.com/microsoft/vcpkg
+
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
-
-RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
-    && git init . \
-    && git remote add origin https://github.com/microsoft/vcpkg \
-    && git fetch origin $VCPKG_BASELINE \
-    && git reset --hard FETCH_HEAD \
-    && ./bootstrap-vcpkg.sh \
+RUN ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test
 
 FROM base AS build
