@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 include(cmake/prelude.cmake)
 
 # Add required manifest features
-if(USE_GPU EQUAL "ON")
+if (USE_GPU EQUAL "ON")
     list(APPEND VCPKG_MANIFEST_FEATURES "gpu")
 endif ()
 
@@ -94,8 +94,16 @@ target_link_libraries(AlbumArchitect_lib PUBLIC
 
 # ---- Declare executable ----
 
-add_executable(AlbumArchitect_exe source/main.cpp)
+add_executable(AlbumArchitect_exe source/main.cpp
+        source/commands.cpp
+        source/commands.h)
 add_executable(AlbumArchitect::exe ALIAS AlbumArchitect_exe)
+find_package(CLI11 CONFIG REQUIRED)
+target_link_libraries(AlbumArchitect_exe PRIVATE
+        CLI11::CLI11
+        fmt::fmt
+        spdlog::spdlog
+)
 
 set_property(TARGET AlbumArchitect_exe PROPERTY OUTPUT_NAME AlbumArchitect)
 

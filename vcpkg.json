@@ -35,6 +35,10 @@
       "version>=": "1.85.0#1"
     },
     {
+      "name": "cli11",
+      "version>=": "2.4.2#1"
+    },
+    {
       "name": "hash-library",
       "version>=": "8#3"
     },
