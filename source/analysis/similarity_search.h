@@ -6,8 +6,8 @@
 #define ALBUMARCHITECT_SIMILARITY_SEARCH_H
 #include <cstddef>
 #include <functional>
-#include <map>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -72,13 +72,14 @@ public:
 
   /* Copy and move operations */
   SimilaritySearchBuilder(const SimilaritySearchBuilder& other) = delete;
-  SimilaritySearchBuilder(SimilaritySearchBuilder&& other) noexcept = default;
+  SimilaritySearchBuilder(SimilaritySearchBuilder&& other) noexcept = delete;
   auto operator=(const SimilaritySearchBuilder& other)
       -> SimilaritySearchBuilder& = delete;
   auto operator=(SimilaritySearchBuilder&& other) noexcept
-      -> SimilaritySearchBuilder& = default;
+      -> SimilaritySearchBuilder& = delete;
 
-  /// Adds a photo to the index builder and returns a unique ID
+  /// Adds a photo to the index builder and returns a unique ID. This
+  /// function should be thread safe.
   /// @param photo
   /// @return
   auto add_photo(album::Photo& photo) -> PhotoId;
@@ -88,6 +89,8 @@ public:
 private:
   std::unique_ptr<class SimilarityIndex> m_similarity_index;
   std::size_t m_current_id = 0;
+
+  std::mutex m_add_mutex;
 };
 
 }  // namespace album_architect::analysis

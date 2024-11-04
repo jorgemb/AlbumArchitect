@@ -24,7 +24,7 @@ struct CommonParameters {
 struct AnalysisParameters {
   // Duplicates
   bool analyze_duplicates = false;
-  std::filesystem::path duplicates_start_path;  // Initial path to review
+  // std::filesystem::path duplicates_start_path;  // Initial path to review
 
   // Similarities
   std::vector<std::filesystem::path> similar_photos_to_check;

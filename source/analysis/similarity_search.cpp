@@ -89,11 +89,14 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
     return std::numeric_limits<PhotoId>::max();
   }
 
-  m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
+  {
+    auto guard = std::lock_guard(m_add_mutex);
+    m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
 
-  // Add average hash
-  m_similarity_index->average_index.emplace_back(
-      cvmat::mat_to_uint64(*average_hash), photo_id);
+    // Add average hash
+    m_similarity_index->average_index.emplace_back(
+        cvmat::mat_to_uint64(*average_hash), photo_id);
+  }
 
   return photo_id;
 }

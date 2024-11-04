@@ -44,13 +44,13 @@ auto is_directory_path(std::string path) -> std::string {
 }
 
 auto main(int argc, char* argv[]) -> int {
+  spdlog::set_level(spdlog::level::info);
   auto app = CLI::App {
       "AlbumArchitect is an application for help organizing photos, finding "
       "similar and duplicates."};
 
   // Get the common options
   auto common_parameters = album_architect::commands::CommonParameters {};
-  auto verbose = int {};
   app.add_option("--photos-path,-p",
                  common_parameters.photos_base_path,
                  "Path to the photos folder")
@@ -63,26 +63,12 @@ auto main(int argc, char* argv[]) -> int {
   app.add_flag("--update,-u",
                common_parameters.update_baseline,
                "Update the photos cache (or use cache only).");
-  app.add_flag("--verbose,-v",
-               verbose,
-               "Increase verbosity. Can be sent several times.")
-      ->default_val(0);
-  // Set log verbosity
-  auto log_level = spdlog::level::err;
-  switch (verbose) {
-    case 1:
-      log_level = spdlog::level::info;
-      break;
-    case 2:
-      log_level = spdlog::level::debug;
-      break;
-    case 3:
-      log_level = spdlog::level::trace;
-      break;
-    default:;
-      log_level = spdlog::level::err;
-  }
+  app.add_flag_callback(
+      "--verbose,-v",
+      []() { spdlog::set_level(spdlog::level::debug); },
+      "Increase verbosity. Can be sent several times.");
 
+  // Analisis parameters
   auto analysis_parameters = album_architect::commands::AnalysisParameters {};
   auto* analyze_command =
       app.add_subcommand("analyze", "Perform an analysis on the photos")
@@ -96,12 +82,12 @@ auto main(int argc, char* argv[]) -> int {
   analyze_command->add_flag("--analyze-duplicates,-d",
                             analysis_parameters.analyze_duplicates,
                             "Performs an analysis for full duplicates");
-  analyze_command
-      ->add_option("--duplicate-start-path",
-                   analysis_parameters.duplicates_start_path,
-                   "Determine from which folder to start the duplicate search.")
-      ->default_val(common_parameters.photos_base_path)
-      ->check(is_directory_path);
+  // analyze_command
+  //     ->add_option("--duplicate-start-path",
+  //                  analysis_parameters.duplicates_start_path,
+  //                  "Determine from which folder to start the duplicate search.")
+  //     ->default_val(common_parameters.photos_base_path)
+  //     ->check(is_directory_path);
   analyze_command->add_option("--check-similars,-s",
                               analysis_parameters.similar_photos_to_check,
                               "Path to photos for which similar are being "
