@@ -99,9 +99,11 @@ add_executable(AlbumArchitect_exe source/main.cpp
         source/commands.h)
 add_executable(AlbumArchitect::exe ALIAS AlbumArchitect_exe)
 find_package(CLI11 CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 target_link_libraries(AlbumArchitect_exe PRIVATE
         CLI11::CLI11
         fmt::fmt
+        nlohmann_json::nlohmann_json
         spdlog::spdlog
 )
 

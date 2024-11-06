@@ -7,7 +7,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <mutex>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -15,6 +18,7 @@
 
 #include <CLI/Error.hpp>
 #include <fmt/format.h>
+#include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
 #include "album/photo.h"
@@ -22,6 +26,8 @@
 #include "files/tree.h"
 
 namespace album_architect::commands {
+
+namespace rng = std::ranges;
 
 namespace {
 auto get_baseline(const CommonParameters& parameters)
@@ -65,37 +71,53 @@ void perform_analysis(const CommonParameters& common,
     throw CLI::ValidationError("Error while creating file tree");
   }
 
-  // Get the files list
-  auto files = std::vector<files::Element> {};
-  std::copy(file_tree->begin(), file_tree->end(), std::back_inserter(files));
-  auto photos = std::vector<std::optional<album::Photo>> {};
-  std::transform(files.begin(),
-                 files.end(),
-                 std::back_inserter(photos),
-                 [](const auto& file) { return album::Photo::load(file); });
+  // Get the files list and create analysis object
+  auto id_photo_map = std::map<analysis::PhotoId, files::Element> {};
+  auto id_photo_map_mutex = std::mutex {};
 
-  // Remove invalid
-  auto remove_iter = std::remove_if(
-      photos.begin(), photos.end(), [](const auto& photo) { return !photo; });
-  photos.erase(remove_iter, photos.end());
+  auto similarity_builder = analysis::SimilaritySearchBuilder {};
+  auto files =
+      std::vector<files::Element> {file_tree->begin(), file_tree->end()};
+  std::for_each(
+      std::execution::par_unseq,
+      files.begin(),
+      files.end(),
+      [&id_photo_map, &similarity_builder, &id_photo_map_mutex](auto& element)
+      {
+        if (auto photo = album::Photo::load(element)) {
+          auto photo_id = similarity_builder.add_photo(*photo);
+
+          auto guard = std::lock_guard(id_photo_map_mutex);
+          id_photo_map.emplace(photo_id, element);
+        }
+      });
 
   // Make an analysis object
-  auto similarity_builder = analysis::SimilaritySearchBuilder {};
-  std::for_each(std::execution::par,
-                photos.begin(),
-                photos.end(),
-                [&similarity_builder](auto& photo)
-                {
-                  similarity_builder.add_photo(*photo);
-
-                  // Release the photo to free the memory
-                  photo.reset();
-                });
+  spdlog::debug("Building similarity index");
   auto similarity = similarity_builder.build_search();
+
+  // Report object
+  auto report = nlohmann::json {};
 
   // Duplicates
   if (analysis.analyze_duplicates) {
     spdlog::info("Performing duplicates analysis");
+    auto duplicates = similarity.get_duplicated_photos();
+    spdlog::info("Found {} duplicate photos.", duplicates.size());
+
+    // Add to the report
+    auto report_duplicates = nlohmann::json::array();
+    for(auto const& current: duplicates) {
+      auto group = nlohmann::json::array();
+      rng::transform(current, std::back_inserter(group),
+        [&id_photo_map](const auto& photo_id)
+        {
+          return id_photo_map.at(photo_id).get_path().string();
+        });
+
+      report_duplicates.emplace_back(std::move(group));
+    }
+    report["duplicates"] = report_duplicates;
   }
 
   if (!analysis.similar_photos_to_check.empty()) {
@@ -104,11 +126,19 @@ void perform_analysis(const CommonParameters& common,
   }
 
   // Store the final baseline
-  if (common.update_baseline) {
-    if (auto output_file = std::ofstream(common.cache_path)) {
-      spdlog::info("Writing to cache file: {}", common.cache_path.string());
-      file_tree->to_stream(output_file);
-    }
+  if (auto output_file = std::ofstream(common.cache_path)) {
+    spdlog::info("Writing to cache file: {}", common.cache_path.string());
+    file_tree->to_stream(output_file);
+  }
+
+  // Write the report
+  if (!analysis.output_path) {
+    spdlog::info("Writing report to stdout");
+    fmt::println("{}", report.dump());
+  } else {
+    spdlog::info("Writing report to {}", analysis.output_path->string());
+    auto output_file = std::ofstream(*analysis.output_path);
+    output_file << report.dump();
   }
 }
 }  // namespace album_architect::commands

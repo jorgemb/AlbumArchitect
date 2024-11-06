@@ -47,6 +47,10 @@
       "version>=": "0.9.6#1"
     },
     {
+      "name": "nlohmann-json",
+      "version>=": "3.11.3#1"
+    },
+    {
       "name": "opencv",
       "version>=": "4.5.5#1",
       "default-features": false,
