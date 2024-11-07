@@ -85,7 +85,8 @@ auto main(int argc, char* argv[]) -> int {
   // analyze_command
   //     ->add_option("--duplicate-start-path",
   //                  analysis_parameters.duplicates_start_path,
-  //                  "Determine from which folder to start the duplicate search.")
+  //                  "Determine from which folder to start the duplicate
+  //                  search.")
   //     ->default_val(common_parameters.photos_base_path)
   //     ->check(is_directory_path);
   analyze_command->add_option("--check-similars,-s",

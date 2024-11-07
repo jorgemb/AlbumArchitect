@@ -107,13 +107,12 @@ void perform_analysis(const CommonParameters& common,
 
     // Add to the report
     auto report_duplicates = nlohmann::json::array();
-    for(auto const& current: duplicates) {
+    for (auto const& current : duplicates) {
       auto group = nlohmann::json::array();
-      rng::transform(current, std::back_inserter(group),
-        [&id_photo_map](const auto& photo_id)
-        {
-          return id_photo_map.at(photo_id).get_path().string();
-        });
+      rng::transform(current,
+                     std::back_inserter(group),
+                     [&id_photo_map](const auto& photo_id)
+                     { return id_photo_map.at(photo_id).get_path().string(); });
 
       report_duplicates.emplace_back(std::move(group));
     }
