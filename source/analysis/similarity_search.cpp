@@ -3,17 +3,20 @@
 //
 
 #include <algorithm>
-#include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 #include "similarity_search.h"
 
 #include <spdlog/spdlog.h>
 
 #include "album/image.h"
+#include "album/photo.h"
 #include "helper/cv_mat_operations.h"
 
 // NOLINTBEGIN(*)
@@ -103,10 +106,12 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
 auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
   // PHash build
   constexpr auto p_hash_trees = 2 * 8;  // Twice the size of each matrix(8)
-  char* error = nullptr;
-  if (!m_similarity_index->p_hash_index.build(p_hash_trees, -1, &error)) {
+
+  if (char* error = {};
+      !m_similarity_index->p_hash_index.build(p_hash_trees, -1, &error))
+  {
+    auto error_ptr = std::unique_ptr<char, decltype(&free)>(error, &free);
     spdlog::error("Couldn't build similarity index. Error: {}", error);
-    free(error);
   }
 
   // AverageHash build
@@ -119,6 +124,8 @@ auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
 SimilaritySearch::SimilaritySearch(
     std::unique_ptr<SimilarityIndex> similarity_index)
     : m_similarity_index(std::move(similarity_index)) {}
+
+// NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
 SimilaritySearch::~SimilaritySearch() = default;
 auto SimilaritySearch::get_duplicated_photos() const
     -> std::vector<std::vector<PhotoId>> {

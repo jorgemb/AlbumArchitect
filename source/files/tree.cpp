@@ -4,8 +4,9 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
+#include <iterator>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -431,12 +432,12 @@ auto FileTreeIterator::operator++() -> FileTreeIterator& {
   std::ranges::move(children, std::back_inserter(m_remaining_elements));
   return *this;
 }
-auto operator==(const FileTreeIterator& lhs,
-                const FileTreeIterator& rhs) -> bool {
+auto operator==(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
+    -> bool {
   return lhs.m_remaining_elements == rhs.m_remaining_elements;
 }
-auto operator!=(const FileTreeIterator& lhs,
-                const FileTreeIterator& rhs) -> bool {
+auto operator!=(const FileTreeIterator& lhs, const FileTreeIterator& rhs)
+    -> bool {
   return !(lhs == rhs);
 }
 }  // namespace album_architect::files

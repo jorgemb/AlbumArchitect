@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 
 #include "photo_metadata.h"
 
