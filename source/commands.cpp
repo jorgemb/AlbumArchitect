@@ -139,9 +139,10 @@ void perform_analysis(const CommonParameters& common,
         std::back_inserter(report_current),
         [&id_photo_map](const auto& current_photo)
         {
-          auto result = fmt::format(R"({{"path": "{}", "similarity" : {} }})",
-                                    id_photo_map.at(current_photo.first).get_path().string(),
-                                    current_photo.second);
+          auto result = fmt::format(
+              R"({{"path": "{}", "similarity" : {} }})",
+              id_photo_map.at(current_photo.first).get_path().string(),
+              current_photo.second);
           return nlohmann::json::parse(result);
         });
     report_similars[current_photo.string()] = std::move(report_current);

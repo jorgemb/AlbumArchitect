@@ -51,7 +51,7 @@ class SimilarityIndex {
 public:
   /// Default constructor
   SimilarityIndex()
-      : p_hash_index(8) {} //NOLINT(*-magic-numbers)
+      : p_hash_index(8) {}  // NOLINT(*-magic-numbers)
 
   /// Default destructor
   ~SimilarityIndex() = default;
