@@ -133,16 +133,15 @@ void perform_analysis(const CommonParameters& common,
     // Get the similarity hash
     auto current_similars = similarity.get_similars_of(*image);
     auto report_current = nlohmann::json::array();
-    std::transform(
-        current_similars.begin(),
-        current_similars.end(),
+    rng::transform(
+        current_similars,
         std::back_inserter(report_current),
-        [&id_photo_map](const auto& current_photo)
+        [&id_photo_map](const auto& id_similarity_pair)
         {
           auto result = fmt::format(
               R"({{"path": "{}", "similarity" : {} }})",
-              id_photo_map.at(current_photo.first).get_path().string(),
-              current_photo.second);
+              id_photo_map.at(id_similarity_pair.first).get_path().string(),
+              id_similarity_pair.second);
           return nlohmann::json::parse(result);
         });
     report_similars[current_photo.string()] = std::move(report_current);
