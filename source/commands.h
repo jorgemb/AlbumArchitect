@@ -17,7 +17,6 @@ namespace album_architect::commands {
 struct CommonParameters {
   std::filesystem::path photos_base_path;
   std::filesystem::path cache_path;
-  bool update_baseline = false;
 };
 
 /// Parameters for performing analysis

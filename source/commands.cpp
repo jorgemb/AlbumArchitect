@@ -40,18 +40,24 @@ auto get_baseline(const CommonParameters& parameters)
     spdlog::info("Loading cache from {}", parameters.cache_path.string());
     file_tree = files::FileTree::from_stream(file_data);
 
-    // Couldn't load cache, and baseline is not being updated. This means
-    // we cannot continue
-    if (!file_tree && !parameters.update_baseline) {
+    // Couldn't load cache
+    if (!file_tree) {
       spdlog::error("Couldn't load cache from {}",
                     parameters.cache_path.string());
-      return {};
+    } else if(file_tree && file_tree->get_root_element().get_path() != parameters.cache_path) {
+      // Check if base path has changed
+      spdlog::warn(
+          "A different root path was provided. Recreating cache. Previous "
+          "path: {}, new path: {}",
+          file_tree->get_root_element().get_path(),
+          parameters.cache_path.string());
+      file_tree = {};
     }
   }
 
   // If no file tree was created then create a new one
   if (!file_tree) {
-    spdlog::info("No cache file was loaded. Creating new one.");
+    spdlog::info("Creating new cache path at {}", parameters.cache_path.string());
     file_tree = files::FileTree::build(parameters.photos_base_path);
     if (!file_tree) {
       spdlog::error("Couldn't open photo base path: {}",

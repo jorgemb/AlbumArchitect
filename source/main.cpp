@@ -60,9 +60,6 @@ auto main(int argc, char* argv[]) -> int {
                  common_parameters.cache_path,
                  "Path to the cache file.")
       ->default_val(".albumarchitect.cache");
-  app.add_flag("--update,-u",
-               common_parameters.update_baseline,
-               "Update the photos cache (or use cache only).");
   app.add_flag_callback(
       "--verbose,-v",
       []() { spdlog::set_level(spdlog::level::debug); },
