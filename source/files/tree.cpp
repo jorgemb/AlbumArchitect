@@ -340,8 +340,8 @@ auto FileTree::get_elements_under_path(const std::filesystem::path& path,
         auto current_path_list = m_graph->get_node_path(child);
 
         auto current_path = m_root_path;
-        for (auto&& element : current_path_list) {
-          current_path.append(std::move(element));
+        for (auto& element : current_path_list) {
+          current_path.append(element);
         }
 
         return Element {from_node_type(type), current_path, this};
