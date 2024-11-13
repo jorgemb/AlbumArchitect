@@ -68,7 +68,7 @@ auto main(int argc, char* argv[]) -> int {
       []() { spdlog::set_level(spdlog::level::debug); },
       "Increase verbosity. Can be sent several times.");
 
-  // Analisis parameters
+  // Analysis parameters
   auto analysis_parameters = album_architect::commands::AnalysisParameters {};
   auto* analyze_command =
       app.add_subcommand("analyze", "Perform an analysis on the photos")

@@ -20,7 +20,7 @@ struct CommonParameters {
   bool update_baseline = false;
 };
 
-/// Parameters for performing analisis
+/// Parameters for performing analysis
 struct AnalysisParameters {
   // Duplicates
   bool analyze_duplicates = false;
