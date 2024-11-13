@@ -50,8 +50,7 @@ struct HashId {
 class SimilarityIndex {
 public:
   /// Default constructor
-  SimilarityIndex()
-      : p_hash_index(8) {}  // NOLINT(*-magic-numbers)
+  SimilarityIndex() = default;
 
   /// Default destructor
   ~SimilarityIndex() = default;
@@ -67,7 +66,7 @@ public:
                     Annoy::Hamming,
                     Annoy::Kiss32Random,
                     Annoy::AnnoyIndexMultiThreadedBuildPolicy>
-      p_hash_index;
+      p_hash_index {8};
 
   // Index for AverageSearch
   std::vector<HashId<std::uint64_t>> average_index;

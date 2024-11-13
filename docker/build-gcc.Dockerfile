@@ -42,7 +42,7 @@ COPY vcpkg.json vcpkg.json
 RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
     && git init . \
     && git remote add origin https://github.com/microsoft/vcpkg \
-    && git fetch origin $VCPKG_BASELINE \
+    && git fetch origin "$VCPKG_BASELINE" \
     && git reset --hard FETCH_HEAD \
     && ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test
