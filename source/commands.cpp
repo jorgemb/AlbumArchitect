@@ -119,10 +119,34 @@ void perform_analysis(const CommonParameters& common,
     report["duplicates"] = report_duplicates;
   }
 
-  if (!analysis.similar_photos_to_check.empty()) {
-    spdlog::info("Performing similar photo analysis with {} photos.",
-                 analysis.similar_photos_to_check.size());
+  spdlog::info("Performing similar photo analysis with {} photos.",
+               analysis.similar_photos_to_check.size());
+  auto report_similars = nlohmann::json::object();
+  for (auto const& current_photo : analysis.similar_photos_to_check) {
+    // Try loading the image
+    auto image = album::Image::load(current_photo);
+    if (!image) {
+      spdlog::error("Couldn't load image from {}", current_photo.string());
+      continue;
+    }
+
+    // Get the similarity hash
+    auto current_similars = similarity.get_similars_of(*image);
+    auto report_current = nlohmann::json::array();
+    std::transform(
+        current_similars.begin(),
+        current_similars.end(),
+        std::back_inserter(report_current),
+        [&id_photo_map](const auto& current_photo)
+        {
+          auto result = fmt::format(R"({{"path": "{}", "similarity" : {} }})",
+                                    id_photo_map.at(current_photo.first).get_path().string(),
+                                    current_photo.second);
+          return nlohmann::json::parse(result);
+        });
+    report_similars[current_photo.string()] = std::move(report_current);
   }
+  report["similars"] = report_similars;
 
   // Store the final baseline
   if (auto output_file = std::ofstream(common.cache_path)) {

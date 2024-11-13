@@ -51,13 +51,30 @@ public:
   /// @param similarity_threshold
   /// @param max_photos
   /// @return
+  // NOLINTBEGIN(*-magic-numbers)
   auto get_similars_of(album::Photo& photo,
-                       float similarity_threshold = 0.8f,
+                       float similarity_threshold = 0.8F,
                        std::size_t max_photos = 100U) const
       -> std::vector<std::pair<PhotoId, std::uint8_t>>;
+  // NOLINTEND(*-magic-numbers)
+
+  /// Returns a list of all the photos that are similar to the provided one
+  /// @param image
+  /// @param similarity_threshold
+  /// @param max_photos
+  /// @return
+  // NOLINTBEGIN(*-magic-numbers)
+  auto get_similars_of(album::Image& image,
+                       float similarity_threshold = 0.8F,
+                       std::size_t max_photos = 100U) const
+      -> std::vector<std::pair<PhotoId, std::uint8_t>>;
+  // NOLINTEND(*-magic-numbers)
 
 private:
   std::unique_ptr<SimilarityIndex> m_similarity_index;
+
+  /// Contains internal helper functions
+  struct HelperFunctions;
 };
 
 /// Helper class for creating the index that will be used later for

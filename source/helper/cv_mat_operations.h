@@ -43,7 +43,7 @@ inline auto mat_to_uint64(cv::Mat mat) -> std::uint64_t {
 
   // Iterate over the 8 bytes and shift them into the result
   for (auto i = 0U; i < max_size; ++i) {
-    // NOLINTNEXTLINE(*-magic-numbers)
+    // NOLINTNEXTLINE(*-magic-numbers,*-narrowing-conversions)
     result |= static_cast<std::uint64_t>(mat.at<uint8_t>(i)) << (8U * (7U - i));
   }
 
