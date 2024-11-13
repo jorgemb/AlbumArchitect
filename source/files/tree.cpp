@@ -4,8 +4,9 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
+#include <iterator>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>

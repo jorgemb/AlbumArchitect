@@ -6,8 +6,8 @@
 #define ALBUMARCHITECT_SIMILARITY_SEARCH_H
 #include <cstddef>
 #include <functional>
-#include <map>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -51,13 +51,30 @@ public:
   /// @param similarity_threshold
   /// @param max_photos
   /// @return
+  // NOLINTBEGIN(*-magic-numbers)
   auto get_similars_of(album::Photo& photo,
-                       float similarity_threshold = 0.8f,
+                       float similarity_threshold = 0.8F,
                        std::size_t max_photos = 100U) const
       -> std::vector<std::pair<PhotoId, std::uint8_t>>;
+  // NOLINTEND(*-magic-numbers)
+
+  /// Returns a list of all the photos that are similar to the provided one
+  /// @param image
+  /// @param similarity_threshold
+  /// @param max_photos
+  /// @return
+  // NOLINTBEGIN(*-magic-numbers)
+  auto get_similars_of(album::Image& image,
+                       float similarity_threshold = 0.8F,
+                       std::size_t max_photos = 100U) const
+      -> std::vector<std::pair<PhotoId, std::uint8_t>>;
+  // NOLINTEND(*-magic-numbers)
 
 private:
   std::unique_ptr<SimilarityIndex> m_similarity_index;
+
+  /// Contains internal helper functions
+  struct HelperFunctions;
 };
 
 /// Helper class for creating the index that will be used later for
@@ -72,13 +89,14 @@ public:
 
   /* Copy and move operations */
   SimilaritySearchBuilder(const SimilaritySearchBuilder& other) = delete;
-  SimilaritySearchBuilder(SimilaritySearchBuilder&& other) noexcept = default;
+  SimilaritySearchBuilder(SimilaritySearchBuilder&& other) noexcept = delete;
   auto operator=(const SimilaritySearchBuilder& other)
       -> SimilaritySearchBuilder& = delete;
   auto operator=(SimilaritySearchBuilder&& other) noexcept
-      -> SimilaritySearchBuilder& = default;
+      -> SimilaritySearchBuilder& = delete;
 
-  /// Adds a photo to the index builder and returns a unique ID
+  /// Adds a photo to the index builder and returns a unique ID. This
+  /// function should be thread safe.
   /// @param photo
   /// @return
   auto add_photo(album::Photo& photo) -> PhotoId;
@@ -88,6 +106,8 @@ public:
 private:
   std::unique_ptr<class SimilarityIndex> m_similarity_index;
   std::size_t m_current_id = 0;
+
+  std::mutex m_add_mutex;
 };
 
 }  // namespace album_architect::analysis

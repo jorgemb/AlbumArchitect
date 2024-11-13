@@ -3,17 +3,21 @@
 //
 
 #include <algorithm>
-#include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 #include "similarity_search.h"
 
+#include <opencv2/core/mat.hpp>
 #include <spdlog/spdlog.h>
 
 #include "album/image.h"
+#include "album/photo.h"
 #include "helper/cv_mat_operations.h"
 
 // NOLINTBEGIN(*)
@@ -47,7 +51,7 @@ class SimilarityIndex {
 public:
   /// Default constructor
   SimilarityIndex()
-      : p_hash_index(8) {}
+      : p_hash_index(8) {}  // NOLINT(*-magic-numbers)
 
   /// Default destructor
   ~SimilarityIndex() = default;
@@ -89,21 +93,26 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
     return std::numeric_limits<PhotoId>::max();
   }
 
-  m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
+  {
+    auto guard = std::lock_guard(m_add_mutex);
+    m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
 
-  // Add average hash
-  m_similarity_index->average_index.emplace_back(
-      cvmat::mat_to_uint64(*average_hash), photo_id);
+    // Add average hash
+    m_similarity_index->average_index.emplace_back(
+        cvmat::mat_to_uint64(*average_hash), photo_id);
+  }
 
   return photo_id;
 }
 auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
   // PHash build
   constexpr auto p_hash_trees = 2 * 8;  // Twice the size of each matrix(8)
-  char* error = nullptr;
-  if (!m_similarity_index->p_hash_index.build(p_hash_trees, -1, &error)) {
+
+  if (char* error = {};
+      !m_similarity_index->p_hash_index.build(p_hash_trees, -1, &error))
+  {
+    auto error_ptr = std::unique_ptr<char, decltype(&free)>(error, &free);
     spdlog::error("Couldn't build similarity index. Error: {}", error);
-    free(error);
   }
 
   // AverageHash build
@@ -116,6 +125,8 @@ auto SimilaritySearchBuilder::build_search() -> SimilaritySearch {
 SimilaritySearch::SimilaritySearch(
     std::unique_ptr<SimilarityIndex> similarity_index)
     : m_similarity_index(std::move(similarity_index)) {}
+
+// NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
 SimilaritySearch::~SimilaritySearch() = default;
 auto SimilaritySearch::get_duplicated_photos() const
     -> std::vector<std::vector<PhotoId>> {
@@ -191,6 +202,47 @@ auto SimilaritySearch::get_duplicates_of(album::Photo& photo) const
                  [](const auto& current) { return current.id; });
   return result;
 }
+
+struct SimilaritySearch::HelperFunctions {
+  static auto get_similars_of_hash(const SimilaritySearch* search,
+                                   const cv::Mat& hash,
+                                   float similarity_threshold,
+                                   std::size_t max_photos)
+      -> std::vector<std::pair<PhotoId, std::uint8_t>> {
+    // Try similarity
+    std::vector<PhotoId> similar_photos;
+    std::vector<std::uint8_t> distances;
+    search->m_similarity_index->p_hash_index.get_nns_by_vector(
+        hash.data, max_photos, -1, &similar_photos, &distances);
+
+    // Get the list of elements
+    std::vector<std::pair<PhotoId, std::uint8_t>> result;
+    result.reserve(distances.size());
+
+    std::transform(similar_photos.begin(),
+                   similar_photos.end(),
+                   distances.begin(),
+                   std::back_inserter(result),
+                   [](const auto& photo_id, const auto& distance)
+                   { return std::make_pair(photo_id, distance); });
+
+    // Remove photos under threshold
+    constexpr auto max_bits =
+        static_cast<float>(std::numeric_limits<std::uint64_t>::digits);
+    const auto erase_start = std::remove_if(
+        result.begin(),
+        result.end(),
+        [&similarity_threshold, &max_bits](const auto& photo_pair)
+        {
+          auto similarity = (max_bits - photo_pair.second) / max_bits;
+          return similarity <= similarity_threshold;
+        });
+    result.erase(erase_start, result.end());
+
+    return result;
+  }
+};
+
 auto SimilaritySearch::get_similars_of(album::Photo& photo,
                                        float similarity_threshold,
                                        std::size_t max_photos) const
@@ -202,35 +254,21 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo,
     return {};
   }
 
-  std::vector<PhotoId> similar_photos;
-  std::vector<std::uint8_t> distances;
-  m_similarity_index->p_hash_index.get_nns_by_vector(
-      photo_hash->data, max_photos, -1, &similar_photos, &distances);
-
-  // Get the list of elements
-  std::vector<std::pair<PhotoId, std::uint8_t>> result;
-  result.reserve(distances.size());
-
-  std::transform(similar_photos.begin(),
-                 similar_photos.end(),
-                 distances.begin(),
-                 std::back_inserter(result),
-                 [](const auto& photo_id, const auto& distance)
-                 { return std::make_pair(photo_id, distance); });
-
-  // Remove photos under threshold
-  constexpr auto max_bits =
-      static_cast<float>(std::numeric_limits<std::uint64_t>::digits);
-  const auto erase_start = std::remove_if(
-      result.begin(),
-      result.end(),
-      [&similarity_threshold, &max_bits](const auto& photo_pair)
-      {
-        auto similarity = (max_bits - photo_pair.second) / max_bits;
-        return similarity <= similarity_threshold;
-      });
-  result.erase(erase_start, result.end());
-
-  return result;
+  return HelperFunctions::get_similars_of_hash(
+      this, *photo_hash, similarity_threshold, max_photos);
+}
+auto SimilaritySearch::get_similars_of(album::Image& image,
+                                       float similarity_threshold,
+                                       std::size_t max_photos) const
+    -> std::vector<std::pair<PhotoId, std::uint8_t>> {
+  try {
+    const auto p_hash = image.get_image_hash(album::ImageHashAlgorithm::p_hash);
+    return HelperFunctions::get_similars_of_hash(
+        this, p_hash, similarity_threshold, max_photos);
+  } catch (cv::Exception& e) {
+    spdlog::error("Failed to get similar images from image. Error: {}",
+                  e.what());
+    return {};
+  }
 }
 }  // namespace album_architect::analysis

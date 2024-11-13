@@ -2,6 +2,8 @@
 // Created by jorge on 09/08/24.
 //
 
+#include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <map>
 #include <memory>
