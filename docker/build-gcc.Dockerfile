@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y \
     cmake \
     cppcheck \
     curl \
-    git \
-    gcc-14 \
     g++-14 \
+    gcc-14 \
+    git \
     libtool \
     libx11-dev \
     libxext-dev \
@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y \
     openimageio-tools \
     pkg-config \
     python3 \
-    python3-setuptools \
     python3-jinja2 \
+    python3-setuptools \
     tar \
     unzip \
     zip \
