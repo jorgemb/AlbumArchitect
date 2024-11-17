@@ -44,13 +44,13 @@ auto get_baseline(const CommonParameters& parameters)
     if (!file_tree) {
       spdlog::error("Couldn't load cache from {}",
                     parameters.cache_path.string());
-    } else if(file_tree && file_tree->get_root_element().get_path() != parameters.cache_path) {
+    } else if(file_tree && file_tree->get_root_element().get_path() != parameters.photos_base_path) {
       // Check if base path has changed
       spdlog::warn(
           "A different root path was provided. Recreating cache. Previous "
           "path: {}, new path: {}",
-          file_tree->get_root_element().get_path(),
-          parameters.cache_path.string());
+          file_tree->get_root_element().get_path().string(),
+          parameters.photos_base_path.string());
       file_tree = {};
     }
   }
@@ -81,6 +81,7 @@ void perform_analysis(const CommonParameters& common,
   auto id_photo_map = std::map<analysis::PhotoId, files::Element> {};
   auto id_photo_map_mutex = std::mutex {};
 
+  spdlog::info("Gathering information for similarity index");
   auto similarity_builder = analysis::SimilaritySearchBuilder {};
   auto files =
       std::vector<files::Element> {file_tree->begin(), file_tree->end()};
