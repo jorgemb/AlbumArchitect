@@ -29,6 +29,10 @@ jobs:
           tags: jorgemb/albumarchitect:dev-${{ env.IMAGE_TAG }}
           context: .
           file: docker/build-clang.Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      
 
 #  lint:
 #    runs-on: ubuntu-24.04

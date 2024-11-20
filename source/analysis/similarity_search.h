@@ -64,7 +64,7 @@ public:
   /// @param max_photos
   /// @return
   // NOLINTBEGIN(*-magic-numbers)
-  auto get_similars_of(album::Image& image,
+  auto get_similars_of(const album::Image& image,
                        float similarity_threshold = 0.8F,
                        std::size_t max_photos = 100U) const
       -> std::vector<std::pair<PhotoId, std::uint8_t>>;

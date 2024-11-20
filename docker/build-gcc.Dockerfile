@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y \
     cmake \
     cppcheck \
     curl \
-    git \
-    gcc-14 \
     g++-14 \
+    gcc-14 \
+    git \
     libtool \
     libx11-dev \
     libxext-dev \
@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y \
     openimageio-tools \
     pkg-config \
     python3 \
-    python3-setuptools \
     python3-jinja2 \
+    python3-setuptools \
     tar \
     unzip \
     zip \
@@ -42,7 +42,7 @@ COPY vcpkg.json vcpkg.json
 RUN VCPKG_BASELINE=$(cat vcpkg.json | grep "builtin-baseline" | cut -d"\"" -f4) \
     && git init . \
     && git remote add origin https://github.com/microsoft/vcpkg \
-    && git fetch origin $VCPKG_BASELINE \
+    && git fetch origin "$VCPKG_BASELINE" \
     && git reset --hard FETCH_HEAD \
     && ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test

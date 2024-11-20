@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y \
     automake \
     bison \
     build-essential \
-    clang-tidy \
-    clang-format \
-    codespell \
     clang \
+    clang-format \
+    clang-tidy \
     cmake \
+    codespell \
     cppcheck \
     curl \
     git \
@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -y \
     openimageio-tools \
     pkg-config \
     python3 \
-    python3-setuptools \
     python3-jinja2 \
+    python3-setuptools \
     tar \
     unzip \
     zip \
@@ -66,7 +66,7 @@ COPY source source
 COPY test test
 COPY CMakeLists.txt CMakePresets.json vcpkg.json .codespellrc .clang-format .clang-tidy ./
 
-FROM build as test
+FROM build AS test
 
 # Lint and spelling
 RUN cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake -B build/ . \

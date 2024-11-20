@@ -40,18 +40,28 @@ auto get_baseline(const CommonParameters& parameters)
     spdlog::info("Loading cache from {}", parameters.cache_path.string());
     file_tree = files::FileTree::from_stream(file_data);
 
-    // Couldn't load cache, and baseline is not being updated. This means
-    // we cannot continue
-    if (!file_tree && !parameters.update_baseline) {
+    // Couldn't load cache
+    if (!file_tree) {
       spdlog::error("Couldn't load cache from {}",
                     parameters.cache_path.string());
-      return {};
+    } else if (file_tree
+               && file_tree->get_root_element().get_path()
+                   != parameters.photos_base_path)
+    {
+      // Check if base path has changed
+      spdlog::warn(
+          "A different root path was provided. Recreating cache. Previous "
+          "path: {}, new path: {}",
+          file_tree->get_root_element().get_path().string(),
+          parameters.photos_base_path.string());
+      file_tree = {};
     }
   }
 
   // If no file tree was created then create a new one
   if (!file_tree) {
-    spdlog::info("No cache file was loaded. Creating new one.");
+    spdlog::info("Creating new cache path at {}",
+                 parameters.cache_path.string());
     file_tree = files::FileTree::build(parameters.photos_base_path);
     if (!file_tree) {
       spdlog::error("Couldn't open photo base path: {}",
@@ -75,6 +85,7 @@ void perform_analysis(const CommonParameters& common,
   auto id_photo_map = std::map<analysis::PhotoId, files::Element> {};
   auto id_photo_map_mutex = std::mutex {};
 
+  spdlog::info("Gathering information for similarity index");
   auto similarity_builder = analysis::SimilaritySearchBuilder {};
   auto files =
       std::vector<files::Element> {file_tree->begin(), file_tree->end()};
@@ -133,16 +144,15 @@ void perform_analysis(const CommonParameters& common,
     // Get the similarity hash
     auto current_similars = similarity.get_similars_of(*image);
     auto report_current = nlohmann::json::array();
-    std::transform(
-        current_similars.begin(),
-        current_similars.end(),
+    rng::transform(
+        current_similars,
         std::back_inserter(report_current),
-        [&id_photo_map](const auto& current_photo)
+        [&id_photo_map](const auto& id_similarity_pair)
         {
           auto result = fmt::format(
               R"({{"path": "{}", "similarity" : {} }})",
-              id_photo_map.at(current_photo.first).get_path().string(),
-              current_photo.second);
+              id_photo_map.at(id_similarity_pair.first).get_path().string(),
+              id_similarity_pair.second);
           return nlohmann::json::parse(result);
         });
     report_similars[current_photo.string()] = std::move(report_current);

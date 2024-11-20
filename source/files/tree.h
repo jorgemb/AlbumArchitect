@@ -178,7 +178,7 @@ public:
     archive & str_path;
 
     // Lock mutex
-    auto guard = std::lock_guard(m_graph_mutex);
+    auto guard = std::scoped_lock(m_graph_mutex);
     m_root_path = str_path;
     archive & m_graph;
   }
@@ -190,7 +190,7 @@ public:
   /// \param version
   template<class Archive>
   void save(Archive& archive, const unsigned int /* version */) const {
-    auto guard = std::lock_guard(m_graph_mutex);
+    auto guard = std::scoped_lock(m_graph_mutex);
     auto str_path = m_root_path.string();
 
     archive & str_path;
@@ -239,7 +239,7 @@ private:
 
   std::filesystem::path m_root_path;
   std::unique_ptr<FileGraph> m_graph;
-  mutable std::mutex m_graph_mutex;
+  mutable std::shared_mutex m_graph_mutex;
 };
 
 /// Allows for recursive iteration of the whole FileTree

@@ -50,8 +50,7 @@ struct HashId {
 class SimilarityIndex {
 public:
   /// Default constructor
-  SimilarityIndex()
-      : p_hash_index(8) {}  // NOLINT(*-magic-numbers)
+  SimilarityIndex() = default;
 
   /// Default destructor
   ~SimilarityIndex() = default;
@@ -67,7 +66,7 @@ public:
                     Annoy::Hamming,
                     Annoy::Kiss32Random,
                     Annoy::AnnoyIndexMultiThreadedBuildPolicy>
-      p_hash_index;
+      p_hash_index {8};
 
   // Index for AverageSearch
   std::vector<HashId<std::uint64_t>> average_index;
@@ -94,7 +93,7 @@ auto SimilaritySearchBuilder::add_photo(album::Photo& photo) -> PhotoId {
   }
 
   {
-    auto guard = std::lock_guard(m_add_mutex);
+    auto guard = std::scoped_lock(m_add_mutex);
     m_similarity_index->p_hash_index.add_item(photo_id, p_hash->data);
 
     // Add average hash
@@ -257,7 +256,7 @@ auto SimilaritySearch::get_similars_of(album::Photo& photo,
   return HelperFunctions::get_similars_of_hash(
       this, *photo_hash, similarity_threshold, max_photos);
 }
-auto SimilaritySearch::get_similars_of(album::Image& image,
+auto SimilaritySearch::get_similars_of(const album::Image& image,
                                        float similarity_threshold,
                                        std::size_t max_photos) const
     -> std::vector<std::pair<PhotoId, std::uint8_t>> {
