@@ -24,12 +24,14 @@ jobs:
 
       - name: Build Image
         uses: docker/build-push-action@v6
+        env:
+          VCPKG_BINARY_SOURCES: "{{ secrets.VCPKG_BINARY_SOURCES }}"
         with:
           push: false
           tags: jorgemb/albumarchitect:dev-${{ env.IMAGE_TAG }}
           context: .
           build-args: |
-            VCPKG_BINARY_SOURCES={{ secrets.VCPKG_BINARY_SOURCES }}
+            VCPKG_BINARY_SOURCES=$VCPKG_BINARY_SOURCES
           file: docker/build-clang.Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
