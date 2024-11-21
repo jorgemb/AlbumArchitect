@@ -48,6 +48,9 @@ ENV CXX="/usr/bin/clang++"
 ENV VCPKG_ROOT="/vcpkg"
 RUN git clone https://github.com/microsoft/vcpkg
 
+# Binary sources dir helps with caching values on an external site
+ARG VCPKG_BINARY_SOURCES
+
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
 RUN ./bootstrap-vcpkg.sh \
