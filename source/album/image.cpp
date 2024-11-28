@@ -18,7 +18,7 @@
 #include <OpenImageIO/imageio.h>
 #include <spdlog/spdlog.h>
 
-#include "hash.h"
+#include "album/hash.h"
 
 namespace album_architect::album {
 

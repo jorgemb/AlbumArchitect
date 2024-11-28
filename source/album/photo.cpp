@@ -7,7 +7,7 @@
 
 #include "album/photo.h"
 
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <spdlog/spdlog.h>

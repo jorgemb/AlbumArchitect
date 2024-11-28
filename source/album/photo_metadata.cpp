@@ -10,7 +10,7 @@
 #include "photo_metadata.h"
 
 #include <fmt/format.h>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <opencv2/core/mat.hpp>
 
 #include "album/image.h"

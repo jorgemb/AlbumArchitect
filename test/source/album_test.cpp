@@ -12,7 +12,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/img_hash/average_hash.hpp>
 #include <opencv2/img_hash/phash.hpp>
