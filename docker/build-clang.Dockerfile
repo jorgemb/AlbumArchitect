@@ -72,7 +72,7 @@ RUN cmake --preset=ci-sanitize . \
     && cmake --build build/sanitize -j 4
 
 # .. perform build and tests
-RUN cmake --preset=ci-ubuntu && \
+RUN cmake --preset=ci-ubuntu . && \
     cmake --build build --config Release -j 4
 
 WORKDIR /app/build
@@ -80,7 +80,8 @@ RUN ctest --output-on-failure --no-tests=error -C Release -j 4
 
 
 # Build
-RUN cmake --preset=ci-ubuntu \
+WORKDIR /app
+RUN cmake --preset=ci-ubuntu . \
     && cmake --build build --config Release -j 4
 
 # .. create distributable
