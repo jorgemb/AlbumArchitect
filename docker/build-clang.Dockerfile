@@ -46,15 +46,17 @@ ENV CXX="/usr/bin/clang++"
 #    /usr/bin/clang-tidy-14 140
 
 ENV VCPKG_ROOT="/vcpkg"
-RUN git clone https://github.com/microsoft/vcpkg
+RUN git clone https://github.com/microsoft/vcpkg && \
+    mkdir -p /.cache/vcpkg
 
 # Binary sources dir helps with caching values on an external site
-ARG VCPKG_BINARY_SOURCES
+ARG VCPKG_EXTERNAL_BINARY_SOURCES
+ENV VCPKG_BINARY_SOURCES="clear;default,readwrite;${VCPKG_EXTERNAL_BINARY_SOURCES}"
 
 WORKDIR $VCPKG_ROOT
 COPY vcpkg.json vcpkg.json
 RUN ./bootstrap-vcpkg.sh \
-    && ./vcpkg install --clean-after-build --x-feature=test
+    && ./vcpkg install --x-feature=test
 
 # Configure and build project
 WORKDIR /app
