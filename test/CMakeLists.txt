@@ -22,8 +22,9 @@ target_link_libraries(
         AlbumArchitect_lib
         Catch2::Catch2WithMain
         Boost::graph
+        ${OpenCV_LIBS}
 )
-target_compile_features(AlbumArchitect_test PRIVATE cxx_std_17)
+target_compile_features(AlbumArchitect_test PRIVATE cxx_std_20)
 target_compile_definitions(AlbumArchitect_test PRIVATE TEST_RESOURCES_DIR="${TEST_RESOURCES_DIR}")
 
 catch_discover_tests(AlbumArchitect_test)

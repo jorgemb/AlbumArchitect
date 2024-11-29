@@ -16,23 +16,23 @@
     },
     {
       "name": "spdlog",
-      "version>=": "1.14.1"
+      "version>=": "1.15.0#1"
     },
     {
       "name": "boost-core",
-      "version>=": "1.85.0#2"
+      "version>=": "1.86.0"
     },
     {
       "name": "boost-graph",
-      "version>=": "1.85.0#1"
+      "version>=": "1.86.0"
     },
     {
       "name": "boost-serialization",
-      "version>=": "1.85.0#1"
+      "version>=": "1.86.0"
     },
     {
       "name": "boost-filesystem",
-      "version>=": "1.85.0#1"
+      "version>=": "1.86.0"
     },
     {
       "name": "cli11",
@@ -44,7 +44,7 @@
     },
     {
       "name": "magic-enum",
-      "version>=": "0.9.6#1"
+      "version>=": "0.9.7"
     },
     {
       "name": "nlohmann-json",
@@ -52,7 +52,7 @@
     },
     {
       "name": "opencv",
-      "version>=": "4.5.5#1",
+      "version>=": "4.10.0",
       "default-features": false,
       "features": [
         "contrib"
@@ -60,16 +60,15 @@
     },
     {
       "name": "openimageio",
-      "version>=": "2.5.14.0",
+      "version>=": "3.0.0.3#1",
       "features": [
-        "opencv",
         "gif",
         "libheif"
       ]
     },
     {
       "name": "tbb",
-      "version>=": "2021.13.0"
+      "version>=": "2022.0.0"
     }
   ],
   "default-features": [],
@@ -95,5 +94,5 @@
       ]
     }
   },
-  "builtin-baseline": "e60236ee051183f1122066bee8c54a0b47c43a60"
+  "builtin-baseline": "65d5e1300da19ef007978a8c347680cc3e19c44f"
 }

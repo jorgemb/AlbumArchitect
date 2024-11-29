@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS base
+FROM ubuntu:24.04 AS build
 
 ENV TZ=UTC \
     DEBIAN_FRONTEND=noninteractive
@@ -56,20 +56,12 @@ COPY vcpkg.json vcpkg.json
 RUN ./bootstrap-vcpkg.sh \
     && ./vcpkg install --clean-after-build --x-feature=test
 
-FROM base AS build
-
-RUN apt-get update && apt-get install -y \
-    && rm -rf /var/lib/apt/lists/*
-
-
 # Configure and build project
 WORKDIR /app
 COPY cmake cmake
 COPY source source
 COPY test test
 COPY CMakeLists.txt CMakePresets.json vcpkg.json .codespellrc .clang-format .clang-tidy ./
-
-FROM build AS test
 
 # Lint and spelling
 RUN cmake -D FORMAT_COMMAND=clang-format -P cmake/lint.cmake -B build/ . \
@@ -87,8 +79,6 @@ WORKDIR /app/build
 RUN ctest --output-on-failure --no-tests=error -C Release -j 4
 
 
-FROM build as release
-
 # Build
 RUN cmake --preset=ci-ubuntu \
     && cmake --build build --config Release -j 4
@@ -103,7 +93,7 @@ FROM ubuntu:24.04 AS runtime
 
 # Copy application
 WORKDIR /app
-COPY --from=release /app/dist/bin/ .
+COPY --from=build /app/dist/bin/ .
 
 ENTRYPOINT ["/app/AlbumArchitect"]
 SHELL ["--help"]
