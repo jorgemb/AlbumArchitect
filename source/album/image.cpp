@@ -13,12 +13,13 @@
 
 #include "image.h"
 
+#include <OpenImageIO/half.h>
 #include <OpenImageIO/imagebuf.h>
-#include <OpenImageIO/imagebufalgo.h>
+#include <OpenImageIO/imagebufalgo_opencv.h>
 #include <OpenImageIO/imageio.h>
 #include <spdlog/spdlog.h>
 
-#include "hash.h"
+#include "album/hash.h"
 
 namespace album_architect::album {
 
