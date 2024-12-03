@@ -215,7 +215,7 @@ auto FileTree::add_directory(const std::filesystem::path& path,
   }
 
   // Iterate through all the files
-  for (auto directory_iterator = fs::directory_iterator(relative_path);
+  for (auto directory_iterator = fs::directory_iterator(path);
        directory_iterator != fs::directory_iterator();
        ++directory_iterator)
   {
